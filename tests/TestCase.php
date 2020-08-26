@@ -54,7 +54,7 @@ abstract class TestCase extends PHPUnit {
 	 */
 	public static function setUpBeforeClass(): void {
 		parent::setUpBeforeClass();
-		$env = Dotenv::createUnsafeMutable( __DIR__ . '/../../env' );
+		$env = Dotenv::createUnsafeMutable( __DIR__ . '/../env' );
 		$env->load();
 	}
 }
