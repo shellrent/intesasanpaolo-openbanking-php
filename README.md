@@ -36,7 +36,7 @@ Se trovi un problema di sicurezza con il pacchetto, scrivi una mail a sviluppo@s
 </p>
 <p>
   <a href="https://openbanking.intesasanpaolo.com" target="_blank">
-    <img height="200" src="./docs/assets/logo-intesasanpaolo.png">
+    <img height="100" src="./docs/assets/logo-intesasanpaolo.png">
   </a>
 </p>
   
