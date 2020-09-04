@@ -1,6 +1,6 @@
 # Intesa Sanpaolo Open Banking Client Api
 
-CLient API in php per l'Open Banking offerto da Intesa Sanpaolo <a href="https://openbanking.intesasanpaolo.com/#/">https://openbanking.intesasanpaolo.com/#/</a>
+CLient in PHP per le API di Open Banking offerte da Intesa Sanpaolo <a href="https://openbanking.intesasanpaolo.com/#/">https://openbanking.intesasanpaolo.com/#/</a>
 
 ## Installazione
 
@@ -30,12 +30,13 @@ Se trovi un problema di sicurezza con il pacchetto, scrivi una mail a sviluppo@s
 
 <!--special start-->
 <p>
-
   <a href="https://www.shellrent.com" target="_blank">
-      <img height="220" src="./docs/assets/shellrent.jpg">
-    </a>
+      <img height="200" src="./docs/assets/shellrent.jpg">
+  </a>
+</p>
+<p>
   <a href="https://openbanking.intesasanpaolo.com" target="_blank">
-    <img width="200" src="./docs/assets/logo-intesasanpaolo.png">
+    <img height="200" src="./docs/assets/logo-intesasanpaolo.png">
   </a>
 </p>
   
