@@ -1,8 +1,30 @@
 {
     "name": "shellrent/intesasanpaolo-openbanking-php",
     "description": "Php Client for Intesa Sanpaolo's Open Banking Project",
-    "type": "library",
-    "minimum-stability": "stable",
+	 "keywords": [
+        "Intesa Sanpaolo",
+        "Open Banking",
+        "Open Banking API",
+        "Bank API",
+        "Bank API PHP",
+        "PHP"
+    ],
+	"type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Tobia Zanarella",
+            "email": "tobia.zanarella@shellrent.com",
+            "homepage": "https://www.shellrent.com",
+            "role": "Developer"
+        },
+        {
+            "name": "Armando Caprio",
+            "email": "armando@shellrent.com",
+            "homepage": "https://www.shellrent.com",
+            "role": "Developer"
+        }
+    ],
     "require": {
         "php": "^7.3",
         "php-http/guzzle6-adapter": "^1.1"

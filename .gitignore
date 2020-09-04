@@ -1,6 +1,7 @@
-/composer.lock
+/nbproject/*
+/.idea/*
 /vendor
 /composer.phar
+
 /env/*
 !/env/.env.example
-/nbproject/*
