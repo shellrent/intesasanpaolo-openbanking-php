@@ -1,47 +1,50 @@
 {
-    "name": "shellrent/intesasanpaolo-openbanking-php",
-    "description": "Php Client for Intesa Sanpaolo's Open Banking Project",
-	 "keywords": [
-        "Intesa Sanpaolo",
-        "Open Banking",
-        "Open Banking API",
-        "Bank API",
-        "Bank API PHP",
-        "PHP"
-    ],
+	"name": "shellrent/intesasanpaolo-openbanking-php",
+	"description": "Php Client for Intesa Sanpaolo's Open Banking Project",
+	"keywords": [
+		"Intesa Sanpaolo",
+		"Open Banking",
+		"Open Banking API",
+		"Bank API",
+		"Bank API PHP",
+		"PHP"
+	],
 	"type": "library",
-    "license": "MIT",
-    "authors": [
-        {
-            "name": "Tobia Zanarella",
-            "email": "tobia.zanarella@shellrent.com",
-            "homepage": "https://www.shellrent.com",
-            "role": "Developer"
-        },
-        {
-            "name": "Armando Caprio",
-            "email": "armando@shellrent.com",
-            "homepage": "https://www.shellrent.com",
-            "role": "Developer"
-        }
-    ],
-    "require": {
-        "php": "^7.3",
-        "php-http/guzzle6-adapter": "^1.1"
-    },
-    "require-dev": {
-        "phpunit/phpunit": "^9.0",
-        "fzaninotto/faker": "^1.9",
-        "vlucas/phpdotenv": "^5.1"
-    },
-	 "autoload": {
+	"license": "MIT",
+	"authors": [
+		{
+			"name": "Tobia Zanarella",
+			"email": "tobia.zanarella@shellrent.com",
+			"homepage": "https://www.shellrent.com",
+			"role": "Developer"
+		},
+		{
+			"name": "Armando Caprio",
+			"email": "armando@shellrent.com",
+			"homepage": "https://www.shellrent.com",
+			"role": "Developer"
+		}
+	],
+	"require": {
+		"php": "^7.3",
+		"php-http/guzzle6-adapter": "^1.1"
+	},
+	"require-dev": {
+		"phpunit/phpunit": "^9.0",
+		"fzaninotto/faker": "^1.9",
+		"vlucas/phpdotenv": "^5.1"
+	},
+	"autoload": {
 		"psr-4": {
-			"Shellrent\\OpenBanking\\": "src/" 
+			"Shellrent\\OpenBanking\\": "src/"
 		}
 	},
 	"autoload-dev": {
 		"psr-4": {
 			"Shellrent\\OpenBanking\\Tests\\": "tests/"
 		}
+	},
+	"scripts": {
+		"test": "vendor/bin/phpunit"
 	}
 }
