@@ -2,7 +2,7 @@
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/shellrent/intesasanpaolo-openbanking-php.svg?style=flat-square)](https://packagist.org/packages/shellrent/intesasanpaolo-openbanking-php)
 
-CLient in PHP per le API di Open Banking offerte da Intesa Sanpaolo <a href="https://openbanking.intesasanpaolo.com/#/">https://openbanking.intesasanpaolo.com/#/</a>
+Client non ufficiale in PHP per le API di Open Banking offerte da Banca Intesa Sanpaolo <a href="https://openbanking.intesasanpaolo.com/#/">https://openbanking.intesasanpaolo.com</a>
 
 ## Installazione
 
