@@ -1,6 +1,6 @@
-# Intesa Sanpaolo's Open Banking Project Client Api
+# Intesa Sanpaolo Open Banking Client Api
 
-Php Client for Intesa Sanpaolo's Open Banking Project <a href="https://openbanking.intesasanpaolo.com/#/">https://openbanking.intesasanpaolo.com/#/</a>
+CLient API in php per l'Open Banking offerto da Intesa Sanpaolo <a href="https://openbanking.intesasanpaolo.com/#/">https://openbanking.intesasanpaolo.com/#/</a>
 
 ## Installazione
 
@@ -43,8 +43,8 @@ Se trovi un problema di sicurezza con il pacchetto, scrivi una mail a sviluppo@s
 
 ## Credits
 
-- [Tobia Zanarella](https://github.com/ShellrentSrl)
-- [Armando Caprio](https://github.com/ShellrentSrl)
+- [Tobia Zanarella](https://github.com/shellrent)
+- [Armando Caprio](https://github.com/shellrent)
 - [Shellrent Srl](https://www.shellrent.com)
 - [All Contributors](../../contributors)
 
