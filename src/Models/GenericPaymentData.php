@@ -46,8 +46,21 @@ abstract class GenericPaymentData extends GenericPayment {
 	 * @param stdClass $data
 	 */
 	protected function hydrateData( stdClass $data ) {
-		$this->OrderId = $data->{'order-id'};
-		$this->PaymentId = $data->{'payment-id'};
+		/* Order ID may be "orderId" or "order-id" depending on the API request */
+		if( isset( $data->orderId ) ) {
+			$this->OrderId = $data->orderId;
+			
+		} elseif( isset( $data->{'order-id'} ) ) {
+			$this->OrderId = $data->{'order-id'};
+		}
+		
+		/* Order ID may be "paymentId" or "payment-id" depending on the API request */
+		if( isset( $data->paymentId ) ) {
+			$this->PaymentId = $data->paymentId;
+			
+		} elseif( isset( $data->{'payment-id'} ) ) {
+			$this->PaymentId = $data->{'payment-id'};
+		}
 		
 		$this->setDebtorName( $data->debtorName );
 		$this->setDebtorIban( $data->debtorIBAN );
