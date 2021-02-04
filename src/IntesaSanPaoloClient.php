@@ -24,7 +24,8 @@ use Shellrent\OpenBanking\Exceptions\HttpException;
 class IntesaSanPaoloClient {
 	/**
 	 * Client HTTP
-	 * @var \GuzzleHttp\Client
+	 *
+	 * @var Client
 	 */
 	private $HttpClient;
 	
@@ -72,7 +73,8 @@ class IntesaSanPaoloClient {
 	
 	/**
 	 * oAuth2 Bearer
-	 * @var \DateTime
+	 *
+	 * @var DateTime
 	 */
 	private $Oauth2BearerExpiry;
 	
@@ -107,7 +109,8 @@ class IntesaSanPaoloClient {
 	
 	/**
 	 * Login: oAuth2 request
-	 * @throws \Shellrent\OpenBanking\Exceptions\Exception
+	 *
+	 * @throws Exception
 	 */
 	private function login() {
 		$response = $this->HttpClient->request( 'POST', $this->Oauth2Url, [
@@ -135,11 +138,13 @@ class IntesaSanPaoloClient {
 	
 	/**
 	 * Sends an API request
+	 *
 	 * @param string $method
 	 * @param string $url
 	 * @param array $queryParameters
 	 * @param string $body
-	 * @return \stdClass
+	 *
+	 * @return stdClass
 	 */
 	private function request( string $method, string $url, array $queryParameters = [], string $body = null ): ?stdClass {
 		$now = new DateTime();
@@ -168,9 +173,11 @@ class IntesaSanPaoloClient {
 	
 	/**
 	 * Build a Transactions collection
+	 *
 	 * @param string $url
 	 * @param array $params
-	 * @return \Shellrent\OpenBanking\Models\Collections\Transactions
+	 *
+	 * @return Transactions
 	 */
 	private function buildTransactions( string $url, array $params = [] ): Transactions {
 		$transactions = null;
@@ -211,10 +218,20 @@ class IntesaSanPaoloClient {
 	
 	/**
 	 * Get the current Balance
-	 * @return \Shellrent\OpenBanking\Models\Balance
+	 *
+	 * @param DateTime $date
+	 *
+	 * @throws HttpException
+	 * @return Balance
 	 */
-	public function getBalance(): Balance {
-		$balanceResponse = $this->request( 'GET', sprintf( '%s/accounts/%s/balance', $this->ApiBaseUri, $this->Iban ) );
+	public function getBalance( DateTime $date ): Balance {
+		$params = [];
+		
+		if( $date ) {
+			$params['date'] = $date->format( 'Ymd' );
+		}
+		
+		$balanceResponse = $this->request( 'GET', sprintf( '%s/accounts/%s/balance', $this->ApiBaseUri, $this->Iban ), $params );
 		
 		return new Balance( $balanceResponse );
 	}
@@ -222,8 +239,10 @@ class IntesaSanPaoloClient {
 	
 	/**
 	 * Get transactions for a specific date
+	 *
 	 * @param DateTime $date
-	 * @return \Shellrent\OpenBanking\Models\Collections\Transactions
+	 *
+	 * @return Transactions
 	 */
 	public function getTransactions( DateTime $date ): Transactions {
 		return $this->buildTransactions( sprintf( '%s/accounts/%s/transactions', $this->ApiBaseUri, $this->Iban ), [
@@ -234,8 +253,8 @@ class IntesaSanPaoloClient {
 	
 	/**
 	 * Get transactions for today
-	 * @param DateTime $date
-	 * @return \Shellrent\OpenBanking\Models\Collections\Transactions
+	 *
+	 * @return Transactions
 	 */
 	public function getTodayTransactions(): Transactions {
 		return $this->buildTransactions( sprintf( '%s/accounts/%s/transactions/today', $this->ApiBaseUri, $this->Iban ) );
@@ -244,8 +263,10 @@ class IntesaSanPaoloClient {
 	
 	/**
 	 * Creates a new Instant Payment (SCT-Instant-Execution)
-	 * @param \Shellrent\OpenBanking\Models\PaymentExecution $payment
-	 * @return \Shellrent\OpenBanking\Models\PaymentExecuted
+	 *
+	 * @param PaymentExecution $payment
+	 *
+	 * @return PaymentExecuted
 	 */
 	public function createInstantPayment( PaymentExecution $payment ): PaymentExecuted {
 		$data = [
@@ -276,9 +297,11 @@ class IntesaSanPaoloClient {
 	
 	/**
 	 * Get a list of the payments (SCT Instant - Payments List API)
+	 *
 	 * @param DateTime $fromDate If null, defaults to "1 month ago"
 	 * @param DateTime $toDate
-	 * @return \Shellrent\OpenBanking\Models\Collections\PaymentInfos
+	 *
+	 * @return PaymentInfos
 	 */
 	public function getPaymentsList( DateTime $fromDate = null, DateTime $toDate = null ): PaymentInfos {
 		if( is_null( $fromDate ) ) {
