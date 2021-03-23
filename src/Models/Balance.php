@@ -4,9 +4,6 @@ namespace Shellrent\OpenBanking\Models;
 
 use stdClass;
 
-use Shellrent\OpenBanking\Models\GenericModel;
-
-
 class Balance extends GenericModel {
 	/**
 	 * @var string

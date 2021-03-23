@@ -4,11 +4,8 @@ namespace Shellrent\OpenBanking\Models\Collections;
 
 use DateTime;
 use stdClass;
-
-use Shellrent\OpenBanking\Models\Collections\ModelsCollectionInterface;
 use Shellrent\OpenBanking\Models\GenericModel;
 use Shellrent\OpenBanking\Models\PaymentInfo;
-
 
 class PaymentInfos extends GenericModel implements ModelsCollectionInterface {
 	/**
@@ -22,17 +19,17 @@ class PaymentInfos extends GenericModel implements ModelsCollectionInterface {
 	private $PageSize;
 	
 	/**
-	 * @var \DateTime
+	 * @var DateTime
 	 */
 	private $InquiryFromDate;
 	
 	/**
-	 * @var \DateTime
+	 * @var DateTime
 	 */
 	private $InquiryToDate;
 	
 	/**
-	 * @var \Shellrent\OpenBanking\Models\PaymentInfo[]
+	 * @var PaymentInfo[]
 	 */
 	private $Payments = [];
 	
@@ -84,7 +81,7 @@ class PaymentInfos extends GenericModel implements ModelsCollectionInterface {
 	
 	
 	/**
-	 * @return \DateTime
+	 * @return DateTime
 	 */
 	public function getInquiryFromDate(): ?DateTime {
 		return $this->InquiryFromDate;
@@ -92,7 +89,7 @@ class PaymentInfos extends GenericModel implements ModelsCollectionInterface {
 	
 	
 	/**
-	 * @return \DateTime
+	 * @return DateTime
 	 */
 	public function getInquiryToDate(): ?DateTime {
 		return $this->InquiryToDate;
@@ -100,7 +97,7 @@ class PaymentInfos extends GenericModel implements ModelsCollectionInterface {
 	
 	
 	/**
-	 * @return \Shellrent\OpenBanking\Models\PaymentInfo[]
+	 * @return PaymentInfo[]
 	 */
 	public function getPayments(): array {
 		return $this->Payments;

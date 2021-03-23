@@ -4,7 +4,6 @@ namespace Shellrent\OpenBanking;
 
 use DateTime;
 use DateInterval;
-use Shellrent\OpenBanking\Models\PaymentInfo;
 use Shellrent\OpenBanking\Models\PaymentSimulated;
 use Shellrent\OpenBanking\Models\PaymentStatus;
 use stdClass;
@@ -166,9 +165,6 @@ class IntesaSanPaoloClient {
 			}
 			
 			$requestParams = [
-				RequestOptions::DEBUG => 2,
-				
-				
 				RequestOptions::HEADERS => [
 					'apikey' => $this->ClientId,
 					'Authorization' => sprintf( 'Bearer %s', $this->Oauth2Bearer ),
@@ -196,7 +192,7 @@ class IntesaSanPaoloClient {
 		} catch( ClientException $ex ) {
 			throw new HttpException( $ex );
 		}
-		var_dump((string)$response->getBody());
+		
 		return json_decode( $response->getBody() );
 	}
 	
@@ -390,8 +386,7 @@ class IntesaSanPaoloClient {
 			$data['resubmit'] = true;
 			$data['resubmitId'] = $payment->getResubmitId();
 		}
-		var_dump( $data );
-		var_dump( json_encode( $data ) );
+		
 		$paymentExecutedResponse = $this->request( 'POST', sprintf( '%s/payments/sct/instant', $this->getApiBaseUri() ), [], $data );
 		
 		return new PaymentExecuted( $paymentExecutedResponse );
@@ -411,8 +406,6 @@ class IntesaSanPaoloClient {
 		}
 		
 		$paymentStatusResponse = $this->request( 'GET', sprintf( '%s/payments/sct/instant/%s/history/%s', $this->getApiBaseUri(), $this->Iban, $orderId ), $params );
-		
-		print_r( $paymentStatusResponse );
 		
 		return new PaymentStatus( $paymentStatusResponse );
 	}

@@ -5,9 +5,6 @@ namespace Shellrent\OpenBanking\Models;
 use DateTime;
 use stdClass;
 
-use Shellrent\OpenBanking\Models\GenericModel;
-
-
 class Transaction extends GenericModel {
 	/**
 	 * @var string
@@ -20,17 +17,17 @@ class Transaction extends GenericModel {
 	private $Reference;
 	
 	/**
-	 * @var \DateTime
+	 * @var DateTime
 	 */
 	private $Date;
 	
 	/**
-	 * @var \DateTime
+	 * @var DateTime
 	 */
 	private $ValueDate;
 	
 	/**
-	 * @var \DateTime
+	 * @var DateTime
 	 */
 	private $AccountingDate;
 	

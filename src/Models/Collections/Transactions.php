@@ -3,8 +3,6 @@
 namespace Shellrent\OpenBanking\Models\Collections;
 
 use stdClass;
-
-use Shellrent\OpenBanking\Models\Collections\ModelsCollectionInterface;
 use Shellrent\OpenBanking\Models\GenericModel;
 use Shellrent\OpenBanking\Models\Transaction;
 
@@ -71,12 +69,12 @@ class Transactions extends GenericModel implements ModelsCollectionInterface {
 	private $CreditLine;
 	
 	/**
-	 * @var \Shellrent\OpenBanking\Models\Transaction[]
+	 * @var Transaction[]
 	 */
 	private $UnaccountedTransactions = [];
 	
 	/**
-	 * @var \Shellrent\OpenBanking\Models\Transaction[]
+	 * @var Transaction[]
 	 */
 	private $AccountedTransactions = [];
 	
@@ -212,6 +210,7 @@ class Transactions extends GenericModel implements ModelsCollectionInterface {
 	
 	/**
 	 * @return string
+	 * @noinspection PhpUnused
 	 */
 	public function getInitialAccountingBalance(): ?string {
 		return $this->InitialAccountingBalance;
@@ -220,6 +219,7 @@ class Transactions extends GenericModel implements ModelsCollectionInterface {
 	
 	/**
 	 * @return string
+	 * @noinspection PhpUnused
 	 */
 	public function getFinalAccountingBalance(): ?string {
 		return $this->FinalAccountingBalance;
@@ -235,7 +235,7 @@ class Transactions extends GenericModel implements ModelsCollectionInterface {
 	
 	
 	/**
-	 * @return \Shellrent\OpenBanking\Models\Transaction[]
+	 * @return Transaction[]
 	 */
 	public function getUnaccountedTransactions(): array {
 		return $this->UnaccountedTransactions;
@@ -243,7 +243,7 @@ class Transactions extends GenericModel implements ModelsCollectionInterface {
 	
 	
 	/**
-	 * @return \Shellrent\OpenBanking\Models\Transaction[]
+	 * @return Transaction[]
 	 */
 	public function getAccountedTransactions(): array {
 		return $this->AccountedTransactions;
