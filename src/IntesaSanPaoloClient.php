@@ -5,20 +5,18 @@ namespace Shellrent\OpenBanking;
 use DateTime;
 use DateInterval;
 use stdClass;
-
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Uri;
 use GuzzleHttp\RequestOptions;
 use GuzzleHttp\Exception\ClientException;
-
+use Shellrent\OpenBanking\Exceptions\Exception;
+use Shellrent\OpenBanking\Exceptions\HttpException;
 use Shellrent\OpenBanking\Models\Balance;
 use Shellrent\OpenBanking\Models\Collections\Transactions;
 use Shellrent\OpenBanking\Models\Collections\PaymentInfos;
 use Shellrent\OpenBanking\Models\PaymentExecution;
 use Shellrent\OpenBanking\Models\PaymentExecuted;
-
-use Shellrent\OpenBanking\Exceptions\Exception;
-use Shellrent\OpenBanking\Exceptions\HttpException;
+use Shellrent\OpenBanking\MutualAuthentication\Certificate;
 
 
 class IntesaSanPaoloClient {
@@ -33,7 +31,7 @@ class IntesaSanPaoloClient {
 	 * Environment
 	 * @var bool
 	 */
-	private $Live = false;
+	private $Live;
 	
 	/**
 	 * App Client ID
@@ -60,12 +58,6 @@ class IntesaSanPaoloClient {
 	private $BaseUri;
 	
 	/**
-	 * URI for oAuth2
-	 * @var string
-	 */
-	private $Oauth2Url;
-	
-	/**
 	 * oAuth2 Bearer
 	 * @var string
 	 */
@@ -79,10 +71,10 @@ class IntesaSanPaoloClient {
 	private $Oauth2BearerExpiry;
 	
 	/**
-	 * Base URI for API requests
-	 * @var string
+	 * Mutual Authentication Certificate object
+	 * @var Certificate
 	 */
-	private $ApiBaseUri;
+	private $Certificate;
 	
 	
 	
@@ -100,10 +92,20 @@ class IntesaSanPaoloClient {
 		$this->Iban = $iban;
 		
 		$this->BaseUri = 'https://external-api.intesasanpaolo.com';
-		$this->ApiBaseUri = sprintf( '%s/%s/v1', $this->BaseUri, $this->Live ? 'live' : 'sandbox' );
-		$this->Oauth2Url = sprintf( '%s/auth/oauth/v2/token', $this->BaseUri );
 		
 		$this->HttpClient = new Client();
+	}
+	
+	
+	/**
+	 * Builds the base URI for API requests
+	 * @return string
+	 */
+	private function getApiBaseUri(): string {
+		$live = $this->Live ? 'live' : 'sandbox';
+		$mutualAuthentication = $this->Certificate ? 'twa/' : '';
+		
+		return sprintf( '%s/%s%s/v1', $this->BaseUri, $mutualAuthentication, $live );
 	}
 	
 	
@@ -113,7 +115,7 @@ class IntesaSanPaoloClient {
 	 * @throws Exception
 	 */
 	private function login() {
-		$response = $this->HttpClient->request( 'POST', $this->Oauth2Url, [
+		$response = $this->HttpClient->request( 'POST', sprintf( '%s/auth/oauth/v2/token', $this->BaseUri ), [
 			RequestOptions::HEADERS => [
 				'Host' => 'external-api.intesasanpaolo.com',
 				'Content-Type' => 'application/x-www-form-urlencoded',
@@ -217,6 +219,38 @@ class IntesaSanPaoloClient {
 	
 	
 	/**
+	 * Enables the use of mutual authentication with an SSL Certificate
+	 * @param Certificate $certificate
+	 * @throws Exception
+	 * @return $this
+	 */
+	public function enableMutualAuthentication( Certificate $certificate ): self {
+		if( empty( $certificate->getPemCertificatePath() ) and empty( $certificate->getPkcs12CertificatePath() ) ) {
+			throw new Exception( 'Certificate object must contain one of the two certificate accepted formats' );
+		}
+		
+		if( empty( $certificate->getPrivateKeyPath() ) ) {
+			throw new Exception( 'Cannot enable Mutual Authentication without a private key' );
+		}
+		
+		$this->Certificate = $certificate;
+		
+		return $this;
+	}
+	
+	
+	/**
+	 * Disables the use of mutual authentication with an SSL Certificate
+	 * @return $this
+	 */
+	public function disableMutualAuthentication(): self {
+		$this->Certificate = null;
+		
+		return $this;
+	}
+	
+	
+	/**
 	 * Get the current Balance
 	 *
 	 * @param DateTime $date
@@ -231,7 +265,7 @@ class IntesaSanPaoloClient {
 			$params['date'] = $date->format( 'Ymd' );
 		}
 		
-		$balanceResponse = $this->request( 'GET', sprintf( '%s/accounts/%s/balance', $this->ApiBaseUri, $this->Iban ), $params );
+		$balanceResponse = $this->request( 'GET', sprintf( '%s/accounts/%s/balance', $this->getApiBaseUri(), $this->Iban ), $params );
 		
 		return new Balance( $balanceResponse );
 	}
@@ -245,7 +279,7 @@ class IntesaSanPaoloClient {
 	 * @return Transactions
 	 */
 	public function getTransactions( DateTime $date ): Transactions {
-		return $this->buildTransactions( sprintf( '%s/accounts/%s/transactions', $this->ApiBaseUri, $this->Iban ), [
+		return $this->buildTransactions( sprintf( '%s/accounts/%s/transactions', $this->getApiBaseUri(), $this->Iban ), [
 			'date' => $date->format( 'Ymd' ),
 		]);
 	}
@@ -257,7 +291,7 @@ class IntesaSanPaoloClient {
 	 * @return Transactions
 	 */
 	public function getTodayTransactions(): Transactions {
-		return $this->buildTransactions( sprintf( '%s/accounts/%s/transactions/today', $this->ApiBaseUri, $this->Iban ) );
+		return $this->buildTransactions( sprintf( '%s/accounts/%s/transactions/today', $this->getApiBaseUri(), $this->Iban ) );
 	}
 	
 	
@@ -289,7 +323,7 @@ class IntesaSanPaoloClient {
 			$data['resubmitId'] = '';
 		}
 		
-		$paymentExecutedResponse = $this->request( 'POST', sprintf( '%s/payments/sct/instant', $this->ApiBaseUri ), [], json_encode( $data ) );
+		$paymentExecutedResponse = $this->request( 'POST', sprintf( '%s/payments/sct/instant', $this->getApiBaseUri() ), [], json_encode( $data ) );
 		
 		return new PaymentExecuted( $paymentExecutedResponse );
 	}
@@ -320,7 +354,7 @@ class IntesaSanPaoloClient {
 			$params['toDate'] = $toDate->format( 'Ymd' );
 		}
 		
-		$url = sprintf( '%s/payments/sct/instant/%s/history', $this->ApiBaseUri, $this->Iban );
+		$url = sprintf( '%s/payments/sct/instant/%s/history', $this->getApiBaseUri(), $this->Iban );
 		
 		$payments = null;
 		
