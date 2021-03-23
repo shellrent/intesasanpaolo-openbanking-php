@@ -5,9 +5,6 @@ namespace Shellrent\OpenBanking\Models;
 use stdClass;
 use DateTime;
 
-use Shellrent\OpenBanking\Models\GenericPayment;
-
-
 abstract class GenericPaymentData extends GenericPayment {
 	/**
 	 * @var string
@@ -86,6 +83,10 @@ abstract class GenericPaymentData extends GenericPayment {
 		
 		if( isset( $data->resubmitId ) ) {
 			$this->setResubmitId( $data->resubmitId );
+		}
+		
+		if( isset( $data->simulationId ) ) {
+			$this->setSimulationId( $data->simulationId );
 		}
 		
 		if( isset( $data->endToEndId ) and !empty( $data->endToEndId ) ) {

@@ -4,11 +4,12 @@ namespace Shellrent\OpenBanking\Models;
 
 use stdClass;
 
-class PaymentInfo extends GenericPaymentInfo {
+abstract class GenericPaymentInfo extends GenericPaymentData {
 	/**
+	 * [ Completed, Canceled, Rejected, Returned ]
 	 * @var string
 	 */
-	private $RemittanceInformation;
+	private $Status;
 	
 	
 	/**
@@ -18,14 +19,14 @@ class PaymentInfo extends GenericPaymentInfo {
 	protected function hydrateData( stdClass $data ) {
 		parent::hydrateData( $data );
 		
-		$this->RemittanceInformation = $data->remittanceInformation;
+		$this->Status = $data->status;
 	}
 	
 	
 	/**
 	 * @return string|null
 	 */
-	public function getRemittanceInformation(): ?string {
-		return $this->RemittanceInformation;
+	public function getStatus(): ?string {
+		return $this->Status;
 	}
 }

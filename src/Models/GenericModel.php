@@ -8,12 +8,12 @@ use stdClass;
 
 abstract class GenericModel {
 	/**
-	 * @var \DateTime
+	 * @var DateTime
 	 */
 	private $InquiryDate = null;
 	
 	/**
-	 * @var \DateTime
+	 * @var DateTime
 	 */
 	private $ExecutionDate = null;
 	
@@ -27,7 +27,7 @@ abstract class GenericModel {
 	
 	
 	/**
-	 * @param \stdClass $data
+	 * @param stdClass $data
 	 */
 	public final function hydrate( stdClass $data ) {
 		if( isset( $data->payload ) ) {
@@ -47,7 +47,7 @@ abstract class GenericModel {
 	
 	
 	/**
-	 * @return \DateTime
+	 * @return DateTime
 	 */
 	public final function getInquiryDate(): ?DateTime {
 		return $this->InquiryDate;
@@ -55,7 +55,7 @@ abstract class GenericModel {
 	
 	
 	/**
-	 * @return \DateTime
+	 * @return DateTime
 	 */
 	public final function getExecutionDate(): ?DateTime {
 		return $this->ExecutionDate;

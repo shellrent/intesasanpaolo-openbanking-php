@@ -4,6 +4,9 @@ namespace Shellrent\OpenBanking;
 
 use DateTime;
 use DateInterval;
+use Shellrent\OpenBanking\Models\PaymentInfo;
+use Shellrent\OpenBanking\Models\PaymentSimulated;
+use Shellrent\OpenBanking\Models\PaymentStatus;
 use stdClass;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Uri;
@@ -16,7 +19,6 @@ use Shellrent\OpenBanking\Models\Collections\Transactions;
 use Shellrent\OpenBanking\Models\Collections\PaymentInfos;
 use Shellrent\OpenBanking\Models\PaymentExecution;
 use Shellrent\OpenBanking\Models\PaymentExecuted;
-use Shellrent\OpenBanking\MutualAuthentication\Certificate;
 
 
 class IntesaSanPaoloClient {
@@ -71,10 +73,16 @@ class IntesaSanPaoloClient {
 	private $Oauth2BearerExpiry;
 	
 	/**
-	 * Mutual Authentication Certificate object
-	 * @var Certificate
+	 * Mutual Authentication Certificate paths
+	 * @var string[]|string|null
 	 */
-	private $Certificate;
+	private $MutualAuthenticationCertificate;
+	
+	/**
+	 * Mutual Authentication private key paths
+	 * @var string[]|string|null
+	 */
+	private $MutualAuthenticationPrivateKey;
 	
 	
 	
@@ -103,7 +111,7 @@ class IntesaSanPaoloClient {
 	 */
 	private function getApiBaseUri(): string {
 		$live = $this->Live ? 'live' : 'sandbox';
-		$mutualAuthentication = $this->Certificate ? 'twa/' : '';
+		$mutualAuthentication = $this->MutualAuthenticationCertificate ? 'twa/' : '';
 		
 		return sprintf( '%s/%s%s/v1', $this->BaseUri, $mutualAuthentication, $live );
 	}
@@ -144,11 +152,12 @@ class IntesaSanPaoloClient {
 	 * @param string $method
 	 * @param string $url
 	 * @param array $queryParameters
-	 * @param string $body
+	 * @param array|object $jsonBody
+	 * @param string $plainBody
 	 *
 	 * @return stdClass
 	 */
-	private function request( string $method, string $url, array $queryParameters = [], string $body = null ): ?stdClass {
+	private function request( string $method, string $url, array $queryParameters = [], $jsonBody = null, string $plainBody = null ): ?stdClass {
 		$now = new DateTime();
 		
 		try {
@@ -156,19 +165,38 @@ class IntesaSanPaoloClient {
 				$this->login();
 			}
 			
-			$response = $this->HttpClient->request( $method, $url, [
+			$requestParams = [
+				RequestOptions::DEBUG => 2,
+				
+				
 				RequestOptions::HEADERS => [
 					'apikey' => $this->ClientId,
 					'Authorization' => sprintf( 'Bearer %s', $this->Oauth2Bearer ),
 				],
 				RequestOptions::QUERY => $queryParameters,
-				RequestOptions::BODY => $body,
-			]);
+			];
+			
+			if( !empty( $jsonBody ) ) {
+				$requestParams[RequestOptions::JSON] = $jsonBody;
+				
+			} elseif( !empty( $plainBody ) ) {
+				$requestParams[RequestOptions::BODY] = $plainBody;
+			}
+			
+			if( $this->MutualAuthenticationCertificate ) {
+				$requestParams[RequestOptions::CERT] = $this->MutualAuthenticationCertificate;
+				
+				if( $this->MutualAuthenticationPrivateKey ) {
+					$requestParams[RequestOptions::SSL_KEY] = $this->MutualAuthenticationPrivateKey;
+				}
+			}
+			
+			$response = $this->HttpClient->request( $method, $url, $requestParams );
 			
 		} catch( ClientException $ex ) {
 			throw new HttpException( $ex );
 		}
-		
+		var_dump((string)$response->getBody());
 		return json_decode( $response->getBody() );
 	}
 	
@@ -220,20 +248,37 @@ class IntesaSanPaoloClient {
 	
 	/**
 	 * Enables the use of mutual authentication with an SSL Certificate
-	 * @param Certificate $certificate
-	 * @throws Exception
+	 * @param string $certificatePath Path to the SSL Certificate; must be in PEM format or PKCS#12-encoded format if Guzzle is 7.3.0+
+	 * @param string|null $certificatePassphrase String containing the passphrase for the Certificate
+	 * @param string|null $privateKeyPath Path to the Private Key file
+	 * @param string|null $privateKeyPassphrase String containing the passphrase for the Private Key
 	 * @return $this
 	 */
-	public function enableMutualAuthentication( Certificate $certificate ): self {
-		if( empty( $certificate->getPemCertificatePath() ) and empty( $certificate->getPkcs12CertificatePath() ) ) {
-			throw new Exception( 'Certificate object must contain one of the two certificate accepted formats' );
+	public function enableMutualAuthentication( string $certificatePath, ?string $certificatePassphrase = null, string $privateKeyPath = null, string $privateKeyPassphrase = null ): self {
+		if( !empty( $certificatePassphrase ) ) {
+			$this->MutualAuthenticationCertificate = [
+				$certificatePath,
+				$certificatePassphrase,
+			];
+			
+		} else {
+			$this->MutualAuthenticationCertificate = $certificatePath;
 		}
 		
-		if( empty( $certificate->getPrivateKeyPath() ) ) {
-			throw new Exception( 'Cannot enable Mutual Authentication without a private key' );
+		if( !empty( $privateKeyPath ) ) {
+			if( !empty( $privateKeyPassphrase ) ) {
+				$this->MutualAuthenticationPrivateKey = [
+					$privateKeyPath,
+					$privateKeyPassphrase,
+				];
+				
+			} else {
+				$this->MutualAuthenticationPrivateKey = $privateKeyPath;
+			}
+			
+		} else {
+			$this->MutualAuthenticationPrivateKey = null;
 		}
-		
-		$this->Certificate = $certificate;
 		
 		return $this;
 	}
@@ -244,7 +289,8 @@ class IntesaSanPaoloClient {
 	 * @return $this
 	 */
 	public function disableMutualAuthentication(): self {
-		$this->Certificate = null;
+		$this->MutualAuthenticationCertificate = null;
+		$this->MutualAuthenticationPrivateKey = null;
 		
 		return $this;
 	}
@@ -296,6 +342,31 @@ class IntesaSanPaoloClient {
 	
 	
 	/**
+	 * Simulates an Instant Payment (SCT-Instant-Simulation)
+	 *
+	 * @param PaymentExecution $payment
+	 *
+	 * @return PaymentSimulated
+	 */
+	public function simulateInstantPayment( PaymentExecution $payment ): PaymentSimulated {
+		$data = [
+			'debtorName'			=> $payment->getDebtorName(),
+			'debtorIBAN'			=> $payment->getDebtorIban(),
+			'creditorName'			=> $payment->getCreditorName(),
+			'creditorIBAN'			=> $payment->getCreditorIban(),
+			'amount'				=> $payment->getAmount(),
+			'paymentInformation'	=> $payment->getPaymentInformation(),
+			'endToEndId'			=> empty( $payment->getEndToEndId() ) ? '' : $payment->getEndToEndId(),
+			'siaCode'				=> empty( $payment->getSiaCode() ) ? '' : $payment->getSiaCode(),
+		];
+		
+		$paymentSimulationResponse = $this->request( 'POST', sprintf( '%s/payments/sct/instant/simulation', $this->getApiBaseUri() ), [], $data );
+		
+		return new PaymentSimulated( $paymentSimulationResponse );
+	}
+	
+	
+	/**
 	 * Creates a new Instant Payment (SCT-Instant-Execution)
 	 *
 	 * @param PaymentExecution $payment
@@ -312,20 +383,38 @@ class IntesaSanPaoloClient {
 			'paymentInformation'	=> $payment->getPaymentInformation(),
 			'endToEndId'			=> $payment->getEndToEndId(),
 			'siaCode'				=> $payment->getSiaCode(),
+			'simulationId'			=> $payment->getSimulationId(),
 		];
 		
 		if( $payment->getResubmit() ) {
 			$data['resubmit'] = true;
 			$data['resubmitId'] = $payment->getResubmitId();
-			
-		} else {
-			$data['resubmit'] = false;
-			$data['resubmitId'] = '';
 		}
-		
-		$paymentExecutedResponse = $this->request( 'POST', sprintf( '%s/payments/sct/instant', $this->getApiBaseUri() ), [], json_encode( $data ) );
+		var_dump( $data );
+		var_dump( json_encode( $data ) );
+		$paymentExecutedResponse = $this->request( 'POST', sprintf( '%s/payments/sct/instant', $this->getApiBaseUri() ), [], $data );
 		
 		return new PaymentExecuted( $paymentExecutedResponse );
+	}
+	
+	
+	/**
+	 * Get the status of a payment (SCT Instant - Payment Status API)
+	 * @param string $orderId
+	 * @return PaymentStatus
+	 */
+	public function getPaymentStatus( string $orderId, string $paymentId = null ): PaymentStatus {
+		$params = [];
+		
+		if( $paymentId ) {
+			$params['paymentId'] = $paymentId;
+		}
+		
+		$paymentStatusResponse = $this->request( 'GET', sprintf( '%s/payments/sct/instant/%s/history/%s', $this->getApiBaseUri(), $this->Iban, $orderId ), $params );
+		
+		print_r( $paymentStatusResponse );
+		
+		return new PaymentStatus( $paymentStatusResponse );
 	}
 	
 	
