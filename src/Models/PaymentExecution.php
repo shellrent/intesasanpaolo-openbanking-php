@@ -4,9 +4,6 @@ namespace Shellrent\OpenBanking\Models;
 
 use stdClass;
 
-use Shellrent\OpenBanking\Models\GenericPayment;
-
-
 class PaymentExecution extends GenericPayment {
 	/**
 	 * @var string

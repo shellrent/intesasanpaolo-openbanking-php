@@ -2,9 +2,6 @@
 
 namespace Shellrent\OpenBanking\Models;
 
-use Shellrent\OpenBanking\Models\GenericModel;
-
-
 abstract class GenericPayment extends GenericModel {
 	/**
 	 * @var string
@@ -45,6 +42,11 @@ abstract class GenericPayment extends GenericModel {
 	 * @var string
 	 */
 	private $ResubmitId;
+	
+	/**
+	 * @var string
+	 */
+	private $SimulationId;
 	
 	
 	
@@ -109,6 +111,14 @@ abstract class GenericPayment extends GenericModel {
 	 */
 	public function getResubmitId(): ?string {
 		return $this->ResubmitId;
+	}
+	
+	
+	/**
+	 * @return string|null
+	 */
+	public function getSimulationId(): ?string {
+		return $this->SimulationId;
 	}
 	
 	
@@ -195,6 +205,17 @@ abstract class GenericPayment extends GenericModel {
 	 */
 	public function setResubmitId( string $ResubmitId ): self {
 		$this->ResubmitId = $ResubmitId;
+		
+		return $this;
+	}
+	
+	
+	/**
+	 * @param string $SimulationId
+	 * @return $this
+	 */
+	public function setSimulationId( string $SimulationId ): self {
+		$this->SimulationId = $SimulationId;
 		
 		return $this;
 	}
