@@ -6,11 +6,10 @@ use stdClass;
 
 class PaymentSimulated extends GenericPaymentResult {
 	/**
+	 * [ ACCP accepted, RJCT rejected ]
 	 * @var string
 	 */
 	private $ValidationStatus;
-	
-	
 	
 	/**
 	 * Hydrates specific data
@@ -23,7 +22,6 @@ class PaymentSimulated extends GenericPaymentResult {
 		
 		$this->ValidationStatus = $payload->validationStatus;
 	}
-	
 	
 	/**
 	 * @return string|null

@@ -387,6 +387,10 @@ class IntesaSanPaoloClient {
 			$data['resubmitId'] = $payment->getResubmitId();
 		}
 		
+		if( is_null( $data['siaCode'] ) ) {
+			$data['siaCode'] = '';
+		}
+		
 		$paymentExecutedResponse = $this->request( 'POST', sprintf( '%s/payments/sct/instant', $this->getApiBaseUri() ), [], $data );
 		
 		return new PaymentExecuted( $paymentExecutedResponse );
