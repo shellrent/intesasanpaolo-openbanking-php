@@ -100,7 +100,12 @@ class Transaction extends GenericModel {
 			$this->AccountingDate = new DateTime( $data->accountingDate );
 		}
 		
-		$this->ValueDate = new DateTime( $data->valueDate );
+		if( isset( $data->valueDate ) and !empty( $data->valueDate ) ) {
+			$this->ValueDate = new DateTime( $data->valueDate );
+			
+		} else {
+			$this->ValueDate = new DateTime();
+		}
 		
 		$this->Currency = (string)$data->currency;
 		$this->Amount = (float)$data->amount;
