@@ -356,6 +356,17 @@ class IntesaSanPaoloClient {
 			'siaCode'				=> empty( $payment->getSiaCode() ) ? '' : $payment->getSiaCode(),
 		];
 		
+		/* Sandbox: endToEndId and siaCode must be present and empty; Live: if empty, they must be omitted */
+		if( $this->Live ) {
+			if( empty( $data['endToEndId'] ) ) {
+				unset( $data['endToEndId'] );
+			}
+			
+			if( empty( $data['siaCode'] ) ) {
+				unset( $data['siaCode'] );
+			}
+		}
+		
 		$paymentSimulationResponse = $this->request( 'POST', sprintf( '%s/payments/sct/instant/simulation', $this->getApiBaseUri() ), [], $data );
 		
 		return new PaymentSimulated( $paymentSimulationResponse );
@@ -389,6 +400,17 @@ class IntesaSanPaoloClient {
 		
 		if( is_null( $data['siaCode'] ) ) {
 			$data['siaCode'] = '';
+		}
+		
+		/* Sandbox: endToEndId and siaCode must be present and empty; Live: if empty, they must be omitted */
+		if( $this->Live ) {
+			if( empty( $data['endToEndId'] ) ) {
+				unset( $data['endToEndId'] );
+			}
+			
+			if( empty( $data['siaCode'] ) ) {
+				unset( $data['siaCode'] );
+			}
 		}
 		
 		$paymentExecutedResponse = $this->request( 'POST', sprintf( '%s/payments/sct/instant', $this->getApiBaseUri() ), [], $data );
