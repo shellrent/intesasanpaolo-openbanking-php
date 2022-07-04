@@ -59,10 +59,21 @@ abstract class GenericPaymentData extends GenericPayment {
 			$this->PaymentId = $data->{'payment-id'};
 		}
 		
-		$this->setDebtorName( $data->debtorName );
-		$this->setDebtorIban( $data->debtorIBAN );
-		$this->setCreditorName( $data->creditorName );
-		$this->setCreditorIban( $data->creditorIBAN );
+		if( isset( $data->debtorName ) and !empty( $data->debtorName ) ) {
+			$this->setDebtorName( $data->debtorName );
+		}
+		
+		if( isset( $data->debtorIBAN ) and !empty( $data->debtorIBAN ) ) {
+			$this->setDebtorIban( $data->debtorIBAN );
+		}
+		
+		if( isset( $data->creditorName ) and !empty( $data->creditorName ) ) {
+			$this->setCreditorName( $data->creditorName );
+		}
+		
+		if( isset( $data->creditorIBAN ) and !empty( $data->creditorIBAN ) ) {
+			$this->setCreditorIban( $data->creditorIBAN );
+		}
 		
 		if( isset( $data->paymentInformation ) and !empty( $data->paymentInformation ) ) {
 			$this->setPaymentInformation( $data->paymentInformation );
