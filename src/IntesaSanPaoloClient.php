@@ -374,6 +374,46 @@ class IntesaSanPaoloClient {
 	
 	
 	/**
+	 * Creates a new "delayed" Payment (SCT-Execution) (bonifico ordinario)
+	 *
+	 * @param PaymentExecution $payment
+	 *
+	 * @return PaymentExecuted
+	 */
+	public function createDelayedPayment( PaymentExecution $payment ): PaymentExecuted {
+		$data = [
+			'debtorName'			=> $payment->getDebtorName(),
+			'debtorIBAN'			=> $payment->getDebtorIban(),
+			'creditorName'			=> $payment->getCreditorName(),
+			'creditorIBAN'			=> $payment->getCreditorIban(),
+			'amount'				=> $payment->getAmount(),
+			'Currency'				=> $payment->getCurrency(),
+			'paymentInformation'	=> $payment->getPaymentInformation(),
+			'requestedExecutionDate'=> $payment->getRequestedExecutionDate()->format( 'd/m/Y' ),
+			'endToEndId'			=> $payment->getEndToEndId(),
+			'siaCode'				=> $payment->getSiaCode(),
+			'simulationId'			=> $payment->getSimulationId(),
+		];
+		
+		if( $payment->getResubmit() ) {
+			$data['resubmit'] = true;
+			$data['resubmitId'] = $payment->getResubmitId();
+		}
+		
+		/* Sandbox: endToEndId and siaCode must be present and empty; Live: if empty, they must be omitted */
+		if( $this->Live ) {
+			if( empty( $data['endToEndId'] ) ) {
+				unset( $data['endToEndId'] );
+			}
+		}
+		
+		$paymentExecutedResponse = $this->request( 'POST', sprintf( '%s/payments/sct', $this->getApiBaseUri() ), [], $data );
+		
+		return new PaymentExecuted( $paymentExecutedResponse );
+	}
+	
+	
+	/**
 	 * Creates a new Instant Payment (SCT-Instant-Execution)
 	 *
 	 * @param PaymentExecution $payment
