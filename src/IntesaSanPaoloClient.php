@@ -4,6 +4,7 @@ namespace Shellrent\OpenBanking;
 
 use DateTime;
 use DateInterval;
+use Shellrent\OpenBanking\Models\DelayedPaymentRevoke;
 use Shellrent\OpenBanking\Models\PaymentSimulated;
 use Shellrent\OpenBanking\Models\PaymentStatus;
 use stdClass;
@@ -344,6 +345,44 @@ class IntesaSanPaoloClient {
 	 *
 	 * @return PaymentSimulated
 	 */
+	public function simulateDelayedPayment( PaymentExecution $payment ): PaymentSimulated {
+		$data = [
+			'debtorName'			=> $payment->getDebtorName(),
+			'debtorIban'			=> $payment->getDebtorIban(),
+			'creditorName'			=> $payment->getCreditorName(),
+			'creditorIban'			=> $payment->getCreditorIban(),
+			'amount'				=> $payment->getAmount(),
+			'currency'				=> $payment->getCurrency(),
+			'paymentInformation'	=> $payment->getPaymentInformation(),
+			'requestedExecutionDate'=> $payment->getRequestedExecutionDate()->format( 'd/m/Y' ),
+			'endToEndId'			=> empty( $payment->getEndToEndId() ) ? '' : $payment->getEndToEndId(),
+			'categoryPurpose'		=> 'CASH',
+		];
+		
+		/* Sandbox: endToEndId and siaCode must be present and empty; Live: if empty, they must be omitted */
+		if( $this->Live ) {
+			if( empty( $data['endToEndId'] ) ) {
+				unset( $data['endToEndId'] );
+			}
+			
+			if( empty( $data['siaCode'] ) ) {
+				unset( $data['siaCode'] );
+			}
+		}
+		
+		$paymentSimulationResponse = $this->request( 'POST', sprintf( '%s/payments/bonsct/simulation', $this->getApiBaseUri() ), [], $data );
+		
+		return new PaymentSimulated( $paymentSimulationResponse );
+	}
+	
+	
+	/**
+	 * Simulates an Instant Payment (SCT-Instant-Simulation)
+	 *
+	 * @param PaymentExecution $payment
+	 *
+	 * @return PaymentSimulated
+	 */
 	public function simulateInstantPayment( PaymentExecution $payment ): PaymentSimulated {
 		$data = [
 			'debtorName'			=> $payment->getDebtorName(),
@@ -382,23 +421,18 @@ class IntesaSanPaoloClient {
 	 */
 	public function createDelayedPayment( PaymentExecution $payment ): PaymentExecuted {
 		$data = [
+			'simulationId'			=> $payment->getSimulationId(),
 			'debtorName'			=> $payment->getDebtorName(),
-			'debtorIBAN'			=> $payment->getDebtorIban(),
+			'debtorIban'			=> $payment->getDebtorIban(),
 			'creditorName'			=> $payment->getCreditorName(),
-			'creditorIBAN'			=> $payment->getCreditorIban(),
+			'creditorIban'			=> $payment->getCreditorIban(),
 			'amount'				=> $payment->getAmount(),
-			'Currency'				=> $payment->getCurrency(),
+			'currency'				=> $payment->getCurrency(),
 			'paymentInformation'	=> $payment->getPaymentInformation(),
 			'requestedExecutionDate'=> $payment->getRequestedExecutionDate()->format( 'd/m/Y' ),
 			'endToEndId'			=> $payment->getEndToEndId(),
-			'siaCode'				=> $payment->getSiaCode(),
-			'simulationId'			=> $payment->getSimulationId(),
+			'categoryPurpose'		=> 'CASH',
 		];
-		
-		if( $payment->getResubmit() ) {
-			$data['resubmit'] = true;
-			$data['resubmitId'] = $payment->getResubmitId();
-		}
 		
 		/* Sandbox: endToEndId and siaCode must be present and empty; Live: if empty, they must be omitted */
 		if( $this->Live ) {
@@ -407,7 +441,7 @@ class IntesaSanPaoloClient {
 			}
 		}
 		
-		$paymentExecutedResponse = $this->request( 'POST', sprintf( '%s/payments/sct', $this->getApiBaseUri() ), [], $data );
+		$paymentExecutedResponse = $this->request( 'POST', sprintf( '%s/payments/bonsct', $this->getApiBaseUri() ), [], $data );
 		
 		return new PaymentExecuted( $paymentExecutedResponse );
 	}
@@ -460,6 +494,37 @@ class IntesaSanPaoloClient {
 	
 	
 	/**
+	 * Retrieve the SCT payment's information about a specified IBAN and paymentId or customerCRO (BONSCT - Payment Status API)
+	 * @param string $customerCro
+	 * @param string|null $paymentId
+	 * @return PaymentStatus
+	 */
+	public function getDelayedPaymentStatus( string $customerCro = null, string $paymentId = null ): PaymentStatus {
+		$params = [];
+		
+		$paramsOk = false;
+		
+		if( $customerCro ) {
+			$params['customerCRO'] = $customerCro;
+			$paramsOk = true;
+		}
+		
+		if( $paymentId ) {
+			$params['paymentId'] = $paymentId;
+			$paramsOk = true;
+		}
+		
+		if( !$paramsOk ) {
+			throw new Exception( 'A customer CRO or a Payment ID must be specified to retreive payment status' );
+		}
+		
+		$paymentStatusResponse = $this->request( 'GET', sprintf( '%s/payments/bonsct/%s/history', $this->getApiBaseUri(), $this->Iban ), $params );
+		
+		return new PaymentStatus( $paymentStatusResponse );
+	}
+	
+	
+	/**
 	 * Get the status of a payment (SCT Instant - Payment Status API)
 	 * @param string $orderId
 	 * @return PaymentStatus
@@ -474,6 +539,74 @@ class IntesaSanPaoloClient {
 		$paymentStatusResponse = $this->request( 'GET', sprintf( '%s/payments/sct/instant/%s/history/%s', $this->getApiBaseUri(), $this->Iban, $orderId ), $params );
 		
 		return new PaymentStatus( $paymentStatusResponse );
+	}
+	
+	
+	/**
+	 * Retrieve the payments list for a specified IBAN, range of dates and payments direction. (BON SCT - Payments List API)
+	 *
+	 * @param DateTime $fromDate If null, defaults to "1 month ago"
+	 * @param DateTime $toDate
+	 *
+	 * @return PaymentInfos
+	 */
+	public function getDelayedPaymentsList( DateTime $fromDate = null, DateTime $toDate = null ): PaymentInfos {
+		if( is_null( $fromDate ) ) {
+			$fromDate = new DateTime();
+			$fromDate->modify( '-1 month' );
+		}
+		
+		$params = [
+			'fromDate' => $fromDate->format( 'Ymd' ),
+			'offset' => 0,
+			'limit' => 100,
+			'paymentDirection' => 'O',
+		];
+		
+		if( !is_null( $toDate ) ) {
+			$params['toDate'] = $toDate->format( 'Ymd' );
+		}
+		
+		$url = sprintf( '%s/payments/bonsct/%s/list', $this->getApiBaseUri(), $this->Iban );
+		
+		$payments = null;
+		
+		while( $url ) {
+			$paymentsResponse = $this->request( 'GET', $url, $params );
+			
+			if( isset( $paymentsResponse->payload ) and isset( $paymentsResponse->payload->links ) and isset( $paymentsResponse->payload->links->next ) and !empty( $paymentsResponse->payload->links->next ) ) {
+				$uri = new Uri( $paymentsResponse->payload->links->next );
+				parse_str( $uri->getQuery(), $params );
+				
+				if( !isset( $params['paymentDirection'] ) ) {
+					$params['paymentDirection'] = 'O';
+				}
+				
+				$url = $paymentsResponse->payload->links->next;
+				
+				/* URL next page on Sandbox is unreachable - it's a known bug */
+				if( !$this->Live ) {
+					$url = str_replace( 'http://localhost:8081', sprintf( '%s/sandbox', $this->BaseUri ), $url );
+					$url = str_replace( '/IT59R0306901001100000002110/', sprintf( '/%s/', $this->Iban ), $url );
+				}
+				
+			} else {
+				$url = null;
+			}
+			
+			if( empty( $paymentsResponse->payload->paymentsResults ) ) {
+				$url = null;
+			}
+			
+			if( !$payments ) {
+				$payments = new PaymentInfos( $paymentsResponse );
+				
+			} else {
+				$payments->addPayments( $paymentsResponse->payload->paymentsResults );
+			}
+		}
+		
+		return $payments;
 	}
 	
 	
@@ -542,5 +675,34 @@ class IntesaSanPaoloClient {
 		}
 		
 		return $payments;
+	}
+	
+	
+	/**
+	 * Try to Revoke the SCT payment specified by IBAN and paymentId or customerCRO (BON SCT - Revoke API)
+	 *
+	 */
+	public function revokeDelayedPayment( string $customerCro = null, string $paymentId = null ) {
+		$params = [];
+		
+		$paramsOk = false;
+		
+		if( $customerCro ) {
+			$params['customerCRO'] = $customerCro;
+			$paramsOk = true;
+		}
+		
+		if( $paymentId ) {
+			$params['paymentId'] = $paymentId;
+			$paramsOk = true;
+		}
+		
+		if( !$paramsOk ) {
+			throw new Exception( 'A customer CRO or a Payment ID must be specified to retreive payment status' );
+		}
+		
+		$paymentExecutedResponse = $this->request( 'GET', sprintf( '%s/payments/bonsct/%s/revoke', $this->getApiBaseUri(), $this->Iban ), $params );
+		
+		return new DelayedPaymentRevoke( $paymentExecutedResponse );
 	}
 }

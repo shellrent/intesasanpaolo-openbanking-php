@@ -49,7 +49,14 @@ class PaymentExecuted extends GenericPaymentResult {
 		$payload = $data->payload;
 		
 		$this->PaymentStatus = $payload->paymentStatus;
-		$this->CustomerCro = $payload->customerCro;
+		
+		if( isset( $payload->customerCro ) ) {
+			$this->CustomerCro = $payload->customerCro;
+			
+		} elseif( isset( $payload->customerCRO ) ) {
+			$this->CustomerCro = $payload->customerCRO;
+		}
+		
 		
 		if( isset( $payload->commissioni ) ) {
 			$this->Commissions = $payload->commissioni;
@@ -60,7 +67,15 @@ class PaymentExecuted extends GenericPaymentResult {
 		}
 		
 		if( isset( $payload->revokeDate ) ) {
-			$this->RevokeDate = DateTime::createFromFormat( 'd/m/Y', $payload->revokeDate );
+			$format = 'd/m/Y';
+			$date = $payload->revokeDate;
+			
+			if( isset( $payload->revokeTime ) ) {
+				$format = sprintf( '%s H:i:s', $format );
+				$date = sprintf( '%s %s', $date, $payload->revokeTime );
+			}
+			
+			$this->RevokeDate = DateTime::createFromFormat( $format, $date );
 		}
 		
 		if( isset( $payload->revokeTime ) ) {

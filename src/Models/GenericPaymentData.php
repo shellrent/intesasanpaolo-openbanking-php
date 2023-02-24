@@ -79,14 +79,21 @@ abstract class GenericPaymentData extends GenericPayment {
 			$this->setPaymentInformation( $data->paymentInformation );
 		}
 		
-		$this->setAmount( $data->amount );
+		if( isset( $data->amount ) ) {
+			$this->setAmount( $data->amount );
+		}
 		
 		if( isset( $data->currency ) and !empty( $data->currency ) ) {
 			$this->Currency = $data->currency;
 		}
 		
-		$this->UltimateDebtorName = $data->ultimateDebtorName;
-		$this->UltimateCreditorName = $data->ultimateCreditorName;
+		if( isset( $data->ultimateDebtorName ) ) {
+			$this->UltimateDebtorName = $data->ultimateDebtorName;
+		}
+		
+		if( isset( $data->ultimateCreditorName ) ) {
+			$this->UltimateCreditorName = $data->ultimateCreditorName;
+		}
 		
 		if( isset( $data->valueDate ) and !empty( $data->paymentInformation ) ) {
 			$this->ValueDate = DateTime::createFromFormat( 'd/m/Y', $data->valueDate );
