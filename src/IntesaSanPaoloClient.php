@@ -680,9 +680,9 @@ class IntesaSanPaoloClient {
 	
 	/**
 	 * Try to Revoke the SCT payment specified by IBAN and paymentId or customerCRO (BON SCT - Revoke API)
-	 *
+	 * @return DelayedPaymentRevoke
 	 */
-	public function revokeDelayedPayment( string $customerCro = null, string $paymentId = null ) {
+	public function revokeDelayedPayment( string $customerCro = null, string $paymentId = null ): DelayedPaymentRevoke {
 		$params = [];
 		
 		$paramsOk = false;
