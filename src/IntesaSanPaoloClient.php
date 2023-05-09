@@ -84,6 +84,12 @@ class IntesaSanPaoloClient {
 	 */
 	private $MutualAuthenticationPrivateKey;
 	
+	/**
+	 * Forces a request to send a "Content-Type" header: "Content-Type: application/json"
+	 * @var bool
+	 */
+	private $ForceContentJson = false;
+	
 	
 	
 	/**
@@ -172,6 +178,12 @@ class IntesaSanPaoloClient {
 				],
 				RequestOptions::QUERY => $queryParameters,
 			];
+			
+			if( $this->ForceContentJson ) {
+				$this->ForceContentJson = false;
+				
+				$requestParams[RequestOptions::HEADERS]['Content-Type'] = 'application/json';
+			}
 			
 			if( !empty( $jsonBody ) ) {
 				$requestParams[RequestOptions::JSON] = $jsonBody;
@@ -518,6 +530,7 @@ class IntesaSanPaoloClient {
 			throw new Exception( 'A customer CRO or a Payment ID must be specified to retreive payment status' );
 		}
 		
+		$this->ForceContentJson = true;
 		$paymentStatusResponse = $this->request( 'GET', sprintf( '%s/payments/bonsct/%s/history', $this->getApiBaseUri(), $this->Iban ), $params );
 		
 		return new PaymentStatus( $paymentStatusResponse );
@@ -559,7 +572,7 @@ class IntesaSanPaoloClient {
 		$params = [
 			'fromDate' => $fromDate->format( 'Ymd' ),
 			'offset' => 0,
-			'limit' => 100,
+			'limit' => 30,
 			'paymentDirection' => 'O',
 		];
 		
@@ -572,6 +585,7 @@ class IntesaSanPaoloClient {
 		$payments = null;
 		
 		while( $url ) {
+			$this->ForceContentJson = true;
 			$paymentsResponse = $this->request( 'GET', $url, $params );
 			
 			if( isset( $paymentsResponse->payload ) and isset( $paymentsResponse->payload->links ) and isset( $paymentsResponse->payload->links->next ) and !empty( $paymentsResponse->payload->links->next ) ) {
