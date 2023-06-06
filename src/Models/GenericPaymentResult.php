@@ -42,11 +42,21 @@ abstract class GenericPaymentResult extends GenericPaymentData {
 		
 		parent::hydrateData( $payload );
 		
-		$this->Date = new DateTime( $payload->date );
-		$this->CategoryPurpose = $payload->categoryPurpose;
+		if( isset( $payload->date ) ) {
+			$this->Date = new DateTime( $payload->date );
+		}
 		
-		$this->DebtorBic = $payload->debtorBic;
-		$this->CreditorBic = $payload->creditorBic;
+		if( isset( $payload->categoryPurpose ) ) {
+			$this->CategoryPurpose = $payload->categoryPurpose;
+		}
+		
+		if( isset( $payload->debtorBic ) ) {
+			$this->DebtorBic = $payload->debtorBic;
+		}
+		
+		if( isset( $payload->creditorBic ) ) {
+			$this->CreditorBic = $payload->creditorBic;
+		}
 		
 		$this->TransactionStatusDescription = $payload->transactionStatusDescription;
 	}

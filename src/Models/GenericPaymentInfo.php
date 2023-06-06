@@ -19,7 +19,13 @@ abstract class GenericPaymentInfo extends GenericPaymentData {
 	protected function hydrateData( stdClass $data ) {
 		parent::hydrateData( $data );
 		
-		$this->Status = $data->status;
+		if( isset( $data->status ) ) {
+			$this->Status = $data->status;
+		}
+		
+		if( isset( $data->paymentStatus ) ) {
+			$this->Status = $data->paymentStatus;
+		}
 	}
 	
 	

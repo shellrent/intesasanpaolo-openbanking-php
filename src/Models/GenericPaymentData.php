@@ -36,6 +36,11 @@ abstract class GenericPaymentData extends GenericPayment {
 	 */
 	protected $ValueDate;
 	
+	/**
+	 * @var \DateTime
+	 */
+	protected $SettlementDate;
+	
 	
 	
 	/**
@@ -65,6 +70,9 @@ abstract class GenericPaymentData extends GenericPayment {
 		
 		if( isset( $data->debtorIBAN ) and !empty( $data->debtorIBAN ) ) {
 			$this->setDebtorIban( $data->debtorIBAN );
+			
+		} elseif( isset( $data->debtorIban ) and !empty( $data->debtorIban ) ) {
+			$this->setDebtorIban( $data->debtorIban );
 		}
 		
 		if( isset( $data->creditorName ) and !empty( $data->creditorName ) ) {
@@ -73,23 +81,37 @@ abstract class GenericPaymentData extends GenericPayment {
 		
 		if( isset( $data->creditorIBAN ) and !empty( $data->creditorIBAN ) ) {
 			$this->setCreditorIban( $data->creditorIBAN );
+			
+		} elseif( isset( $data->creditorIban ) and !empty( $data->creditorIban ) ) {
+			$this->setCreditorIban( $data->creditorIban );
 		}
 		
 		if( isset( $data->paymentInformation ) and !empty( $data->paymentInformation ) ) {
 			$this->setPaymentInformation( $data->paymentInformation );
 		}
 		
-		$this->setAmount( $data->amount );
+		if( isset( $data->amount ) ) {
+			$this->setAmount( $data->amount );
+		}
 		
 		if( isset( $data->currency ) and !empty( $data->currency ) ) {
 			$this->Currency = $data->currency;
 		}
 		
-		$this->UltimateDebtorName = $data->ultimateDebtorName;
-		$this->UltimateCreditorName = $data->ultimateCreditorName;
+		if( isset( $data->ultimateDebtorName ) ) {
+			$this->UltimateDebtorName = $data->ultimateDebtorName;
+		}
 		
-		if( isset( $data->valueDate ) and !empty( $data->paymentInformation ) ) {
+		if( isset( $data->ultimateCreditorName ) ) {
+			$this->UltimateCreditorName = $data->ultimateCreditorName;
+		}
+		
+		if( isset( $data->valueDate ) and !empty( $data->valueDate ) ) {
 			$this->ValueDate = DateTime::createFromFormat( 'd/m/Y', $data->valueDate );
+		}
+		
+		if( isset( $data->settlementDate ) and !empty( $data->settlementDate ) ) {
+			$this->SettlementDate = DateTime::createFromFormat( 'd/m/Y', $data->settlementDate );
 		}
 		
 		if( isset( $data->resubmitId ) ) {
@@ -152,5 +174,13 @@ abstract class GenericPaymentData extends GenericPayment {
 	 */
 	public function getValueDate(): ?DateTime {
 		return $this->ValueDate;
+	}
+	
+	
+	/**
+	 * @return \DateTime
+	 */
+	public function getSettlementDate(): ?DateTime {
+		return $this->SettlementDate;
 	}
 }

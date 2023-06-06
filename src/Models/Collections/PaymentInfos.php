@@ -6,6 +6,7 @@ use DateTime;
 use stdClass;
 use Shellrent\OpenBanking\Models\GenericModel;
 use Shellrent\OpenBanking\Models\PaymentInfo;
+use Throwable;
 
 class PaymentInfos extends GenericModel implements ModelsCollectionInterface {
 	/**
@@ -45,10 +46,26 @@ class PaymentInfos extends GenericModel implements ModelsCollectionInterface {
 		$this->TotalPayments = (int)$payload->paymentsTotalCount;
 		$this->PageSize = (int)$payload->pageSize;
 		
-		$this->InquiryFromDate = new DateTime( $payload->inquiryFromDate );
-		$this->InquiryToDate = new DateTime( $payload->inquiryToDate );
+		try {
+			$this->InquiryFromDate = new DateTime( $payload->inquiryFromDate );
+			
+		} catch( Throwable $exception ) {
+			$this->InquiryFromDate = DateTime::createFromFormat( 'd/m/Y', $payload->inquiryFromDate );
+		}
 		
-		$this->addPayments( $payload->payments );
+		try {
+			$this->InquiryToDate = new DateTime( $payload->inquiryToDate );
+			
+		} catch( Throwable $exception ) {
+			$this->InquiryToDate = DateTime::createFromFormat( 'd/m/Y', $payload->inquiryToDate );
+		}
+		
+		if( isset( $payload->payments ) ) {
+			$this->addPayments( $payload->payments );
+			
+		} elseif( isset( $payload->paymentsResults ) ) {
+			$this->addPayments( $payload->paymentsResults );
+		}
 	}
 	
 	

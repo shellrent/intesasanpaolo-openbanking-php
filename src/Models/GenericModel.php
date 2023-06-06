@@ -4,6 +4,7 @@ namespace Shellrent\OpenBanking\Models;
 
 use DateTime;
 use stdClass;
+use Throwable;
 
 
 abstract class GenericModel {
@@ -38,7 +39,12 @@ abstract class GenericModel {
 			}
 			
 			if( isset( $payload->executionDate ) ) {
-				$this->ExecutionDate = new DateTime( $payload->executionDate );
+				try {
+					$this->ExecutionDate = new DateTime( $payload->executionDate );
+					
+				} catch( Throwable $exception ) {
+					$this->ExecutionDate = DateTime::createFromFormat( 'd/m/Y', $payload->executionDate );
+				}
 			}
 		}
 		
