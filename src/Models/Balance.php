@@ -16,7 +16,7 @@ class Balance extends GenericModel {
 	private $AvailableBalance;
 	
 	/**
-	 * @var float
+	 * @var float|null
 	 */
 	private $AccountingBalance;
 	
@@ -36,7 +36,7 @@ class Balance extends GenericModel {
 		
 		$this->Currency = is_null( $payload->currency ) ? null : (string)$payload->currency;
 		$this->AvailableBalance = is_null( $payload->availableBalance ) ? null : (float)$payload->availableBalance;
-		$this->AccountingBalance = (float)$payload->accountingBalance;
+		$this->AccountingBalance = is_null( $payload->accountingBalance ) ? null : (float)$payload->accountingBalance;
 		$this->CreditLine = is_null( $payload->creditLine ) ? null : (float)$payload->creditLine;
 	}
 	
