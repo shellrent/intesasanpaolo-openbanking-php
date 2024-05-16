@@ -34,10 +34,10 @@ class Balance extends GenericModel {
 	protected function hydrateData( stdClass $data ) {
 		$payload = $data->payload;
 		
-		$this->Currency = is_null( $payload->currency ) ? null : (string)$payload->currency;
-		$this->AvailableBalance = is_null( $payload->availableBalance ) ? null : (float)$payload->availableBalance;
-		$this->AccountingBalance = is_null( $payload->accountingBalance ) ? null : (float)$payload->accountingBalance;
-		$this->CreditLine = is_null( $payload->creditLine ) ? null : (float)$payload->creditLine;
+		$this->Currency = ( !isset( $payload->currency ) or empty( $payload->currency ) ) ? null : (string)$payload->currency;
+		$this->AvailableBalance = ( !isset( $payload->availableBalance ) or is_null( $payload->availableBalance ) )  ? null : (float)$payload->availableBalance;
+		$this->AccountingBalance = ( !isset( $payload->accountingBalance ) or is_null( $payload->accountingBalance ) ) ? null : (float)$payload->accountingBalance;
+		$this->CreditLine = ( !isset( $payload->creditLine ) or is_null( $payload->creditLine ) ) ? null : (float)$payload->creditLine;
 	}
 	
 	
