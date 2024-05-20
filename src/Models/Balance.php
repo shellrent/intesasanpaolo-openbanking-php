@@ -6,22 +6,22 @@ use stdClass;
 
 class Balance extends GenericModel {
 	/**
-	 * @var string
+	 * @var string|null
 	 */
 	private $Currency;
 	
 	/**
-	 * @var float
+	 * @var float|null
 	 */
 	private $AvailableBalance;
 	
 	/**
-	 * @var float
+	 * @var float|null
 	 */
 	private $AccountingBalance;
 	
 	/**
-	 * @var float
+	 * @var float|null
 	 */
 	private $CreditLine;
 	
@@ -34,10 +34,10 @@ class Balance extends GenericModel {
 	protected function hydrateData( stdClass $data ) {
 		$payload = $data->payload;
 		
-		$this->Currency = (string)$payload->currency;
-		$this->AvailableBalance = (float)$payload->availableBalance;
-		$this->AccountingBalance = (float)$payload->accountingBalance;
-		$this->CreditLine = (float)$payload->creditLine;
+		$this->Currency = ( !isset( $payload->currency ) or empty( $payload->currency ) ) ? null : (string)$payload->currency;
+		$this->AvailableBalance = ( !isset( $payload->availableBalance ) or is_null( $payload->availableBalance ) )  ? null : (float)$payload->availableBalance;
+		$this->AccountingBalance = ( !isset( $payload->accountingBalance ) or is_null( $payload->accountingBalance ) ) ? null : (float)$payload->accountingBalance;
+		$this->CreditLine = ( !isset( $payload->creditLine ) or is_null( $payload->creditLine ) ) ? null : (float)$payload->creditLine;
 	}
 	
 	
