@@ -129,7 +129,7 @@ class IntesaSanPaoloClient {
 	 * @throws Exception
 	 */
 	private function login() {
-		$response = $this->HttpClient->request( 'POST', sprintf( '%s/auth/oauth/v2/token', $this->BaseUri ), [
+		$params = [
 			RequestOptions::HEADERS => [
 				'Host' => 'external-api.intesasanpaolo.com',
 				'Content-Type' => 'application/x-www-form-urlencoded',
@@ -139,7 +139,17 @@ class IntesaSanPaoloClient {
 				'grant_type'	=> 'client_credentials',
 				'scope'			=> 'oob',
 			]),
-		]);
+		];
+		
+		if( $this->MutualAuthenticationCertificate ) {
+			$params[RequestOptions::CERT] = $this->MutualAuthenticationCertificate;
+			
+			if( $this->MutualAuthenticationPrivateKey ) {
+				$params[RequestOptions::SSL_KEY] = $this->MutualAuthenticationPrivateKey;
+			}
+		}
+		
+		$response = $this->HttpClient->request( 'POST', sprintf( '%s/auth/oauth/v2/token', $this->BaseUri ), $params );
 		
 		$result = json_decode( $response->getBody() );
 		
