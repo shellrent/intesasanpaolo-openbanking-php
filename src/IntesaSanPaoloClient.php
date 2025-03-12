@@ -129,7 +129,7 @@ class IntesaSanPaoloClient {
 	 * @throws Exception
 	 */
 	private function login() {
-		$response = $this->HttpClient->request( 'POST', sprintf( '%s/auth/oauth/v2/token', $this->BaseUri ), [
+		$response = $this->request( 'POST', sprintf( '%s/auth/oauth/v2/token', $this->BaseUri ), [
 			RequestOptions::HEADERS => [
 				'Host' => 'external-api.intesasanpaolo.com',
 				'Content-Type' => 'application/x-www-form-urlencoded',
