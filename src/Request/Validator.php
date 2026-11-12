@@ -90,6 +90,20 @@ final class Validator
         return $value;
     }
 
+    /**
+     * Validates an uppercase alphabetic code of fixed length (ISO 4217 currency, ISO 20022 category purpose).
+     */
+    public static function code(string $value, string $field, int $length): string
+    {
+        $value = strtoupper(trim($value));
+
+        if (preg_match(sprintf('/^[A-Z]{%d}$/', $length), $value) !== 1) {
+            throw new InvalidRequestException(sprintf('The %s must be a code of %d letters.', $field, $length));
+        }
+
+        return $value;
+    }
+
     public static function optional(?string $value): ?string
     {
         $value = $value === null ? '' : trim($value);

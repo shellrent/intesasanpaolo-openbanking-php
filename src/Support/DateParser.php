@@ -34,8 +34,8 @@ final class DateParser
     /**
      * Parses a date without time, at midnight in Europe/Rome.
      *
-     * Besides the expected format, an ISO date ("2022-01-02") is always accepted: it cannot be
-     * misread, and the 2.x SDK accepted it through `new DateTime()`.
+     * Besides the expected format, an ISO date ("2022-01-02") or ISO date-time is always accepted:
+     * it cannot be misread, and the 2.x SDK accepted it through `new DateTime()`. A date-time keeps its time.
      *
      * Alternative formats can be given for fields whose format varies; they must be structurally
      * different from each other (e.g. "Ymd" and "d/m/Y"), so that no value can match two of them.
@@ -44,6 +44,11 @@ final class DateParser
      */
     public static function date(string $value, DateFormat $format, DateFormat ...$alternatives): DateTimeImmutable
     {
+        // A full ISO 8601 date-time is unambiguous as well: the 2.x SDK accepted it through `new DateTime()`.
+        if (preg_match(self::ISO_8601_PATTERN, $value) === 1) {
+            return self::dateTime($value);
+        }
+
         $patterns = preg_match(self::ISO_DATE_PATTERN, $value) === 1
             ? [self::ISO_DATE_FORMAT]
             : array_map(static fn (DateFormat $candidate): string => $candidate->value, [$format, ...$alternatives]);

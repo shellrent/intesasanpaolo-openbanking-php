@@ -30,11 +30,11 @@ Nella 2.x questi metodi usano il termine "Delayed".
 
 | Operazione | Endpoint | Metodo 2.x | 3.0 | Note |
 |---|---|---|---|---|
-| Simulazione | `POST /payments/bonsct/simulation` | `simulateDelayedPayment()` | T6 | esito VoP negli header |
-| Esecuzione | `POST /payments/bonsct` | `createDelayedPayment()` | T6 | richiede `simulationId` (5 min) |
-| Stato | `GET /payments/bonsct/{iban}/history` | `getDelayedPaymentStatus()` | T6 | filtri: `customerCRO`, `paymentId`, `endToEndId`, `simulationId` (la 2.x supporta solo i primi due) |
-| Lista | `GET /payments/bonsct/{iban}/list` | `getDelayedPaymentsList()` | T6 | `offset` = identificativo di un pagamento |
-| Revoca | `GET /payments/bonsct/{iban}/revoke` | `revokeDelayedPayment()` | T6 | solo entro i cut-off |
+| Simulazione | `POST /payments/bonsct/simulation` | `simulateDelayedPayment()` | ✅ `sct()->simulate()` | esito VoP negli header |
+| Esecuzione | `POST /payments/bonsct` | `createDelayedPayment()` | ✅ `sct()->execute()` | richiede `simulationId` (5 min) |
+| Stato | `GET /payments/bonsct/{iban}/history` | `getDelayedPaymentStatus()` | ✅ `sct()->status()` | filtri: `customerCRO`, `paymentId`, `endToEndId`, `simulationId` (la 2.x supporta solo i primi due) |
+| Lista | `GET /payments/bonsct/{iban}/list` | `getDelayedPaymentsList()` | ✅ `sct()->payments()` | `offset` = identificativo di un pagamento |
+| Revoca | `GET /payments/bonsct/{iban}/revoke` | `revokeDelayedPayment()` | ✅ `sct()->revoke()` | solo entro i cut-off |
 | Simulazione ISO 20022 | `POST /payments/bonsct/simulation/iso` | — | non pianificata | body XML pain.001 |
 | Esecuzione ISO 20022 | `POST /payments/bonsct/iso` | — | non pianificata | body XML pain.001 |
 

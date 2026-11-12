@@ -14,7 +14,7 @@ SDK PHP **non ufficiale** per le API [SmartHub](https://smarthub.intesasanpaolo.
 |---|---|:---:|:---:|
 | Conti | saldo, movimenti di fine giornata e intraday | ✅ | ✅ |
 | SCT Instant | simulazione (con esito VoP), esecuzione, resubmit, stato, lista | ✅ | ✅ |
-| SCT (bonifico ordinario) | simulazione, esecuzione, stato, lista, revoca | ✅ | in sviluppo |
+| SCT (bonifico ordinario) | simulazione (con esito VoP), esecuzione, stato, lista, revoca | ✅ | ✅ |
 | Strumenti | verifica IBAN (sintattica, esistenza, congruenza CF/P.IVA), raggiungibilità SCT Instant | — | pianificata |
 
 Il dettaglio per endpoint è in [docs/api-coverage.md](docs/api-coverage.md).
@@ -95,14 +95,11 @@ $simulation = $client->sctInstant()->simulate($payment);
 $execution = $client->sctInstant()->execute($payment, $simulation);   // con VoP non pieno: VopConfirmationRequiredException
 ```
 
-I flussi di pagamento completi, con esiti, resubmit e simulazioni salvate, sono in [docs/payment-flows.md](docs/payment-flows.md).
+Il bonifico ordinario funziona allo stesso modo con `SctPayment` e `$client->sct()`, che offre anche lo stato per CRO, ID pagamento, end-to-end ID o simulazione, e la revoca. I flussi completi, con esiti, resubmit e simulazioni salvate, sono in [docs/payment-flows.md](docs/payment-flows.md).
 
 - Le risposte sono oggetti immutabili con proprietà pubbliche.
 - Le date sono `DateTimeImmutable` ([docs/dates-and-formats.md](docs/dates-and-formats.md)).
 - Gli errori sono eccezioni che implementano `Shellrent\OpenBanking\Exception\OpenBankingException` ([docs/architecture.md](docs/architecture.md)).
-
-> [!NOTE]
-> Finché il bonifico SCT ordinario non è riscritto (T6), il client 2.x resta disponibile come `Shellrent\OpenBanking\Legacy\IntesaSanPaoloClient`, solo per quei metodi. Verrà eliminato prima del rilascio della 3.0.
 
 ## Sviluppo
 

@@ -42,6 +42,14 @@ final class DateParserTest extends TestCase
     {
         self::assertSame('2022-01-02', DateParser::date('2022-01-02', DateFormat::Italian)->format('Y-m-d'));
         self::assertSame('2022-01-02', DateParser::date('2022-01-02', DateFormat::Compact)->format('Y-m-d'));
+        self::assertSame('2022-01-02T10:15:00+01:00', DateParser::date('2022-01-02T10:15:00+0100', DateFormat::Italian)->format(DATE_ATOM), 'A full ISO date-time keeps its time');
+    }
+
+    #[Test]
+    public function it_accepts_alternative_formats(): void
+    {
+        self::assertSame('2026-01-02', DateParser::date('02/01/2026', DateFormat::Compact, DateFormat::Italian)->format('Y-m-d'));
+        self::assertSame('2026-01-02', DateParser::date('20260102', DateFormat::Italian, DateFormat::Compact)->format('Y-m-d'));
     }
 
     #[Test]

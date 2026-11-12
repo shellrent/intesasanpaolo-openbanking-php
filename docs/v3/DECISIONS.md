@@ -219,6 +219,30 @@ L'`endToEndId` `NOTPROVIDED` restituito dalla banca, con o senza spazi, diventa 
 ### D-44 · Resubmit come metodo separato — T5
 `resubmit($payment, $simulationId, $resubmitId)` riceve gli identificativi invece degli oggetti, perché tipicamente avviene in un secondo momento, a partire da dati salvati. Invia sempre insieme `resubmit: true` e `resubmitId` (F-03).
 
+### D-45 · Default della richiesta SCT — T6
+- `SctPayment` usa `EUR` e `CASH` come default (il `CASH` era fisso nella 2.x), entrambi configurabili e validati come codici: ISO 4217 a 3 lettere, ISO 20022 a 4 lettere.
+- `requestedExecutionDate` è opzionale: senza data il campo non viene inviato, come prevede la spec. La 2.x lo inviava sempre; l'effetto dell'omissione va verificato in sandbox (T8).
+- `CurrencySet` viene eliminato (F-33).
+
+### D-46 · Quirk SCT mantenuti — T6
+- `Content-Type: application/json` sulle GET di stato e lista, su ogni pagina, ma non sulla revoca, come nella 2.x (Q-04).
+- Lista: stessi parametri della 2.x (`offset=0`, `limit=30`, `paymentDirection=O`), `paymentDirection` aggiunto ai link successivi, stop su pagina vuota (Q-43).
+- `status()` accetta i quattro identificativi della spec, di cui almeno uno obbligatorio; `revoke()` richiede CRO o ID pagamento.
+
+### D-47 · Controlli di esecuzione condivisi — T6
+I controlli prima dell'esecuzione (D-36, D-40) stanno in un'unica classe interna, `Api\PaymentGuard`, usata sia da `SctInstantApi` sia da `SctApi`: le due API applicano esattamente le stesse regole.
+
+### D-48 · Esito della revoca — T6
+`SctRevocation::$revoked` vale `true` per `OK`, `false` per `KO` e `null` per un valore sconosciuto. `isRevoked()` è vero solo con una conferma esplicita. Il valore originale resta in `$rawStatus`.
+
+### D-49 · Date SCT — T6
+- Le date SCT si leggono come `d/m/Y`, con `Ymd` tollerato.
+- `DateParser::date()` accetta sempre anche una data-ora ISO 8601 completa, non ambigua, e ne conserva l'ora. È un'estensione di D-34, perché la 2.x leggeva `executionDate` con `new DateTime()`.
+- `revokeDate` unisce `revokeDate` e `revokeTime`, come nella 2.x.
+
+### D-50 · Codice 2.x eliminato — T6
+Con l'SCT riscritto sono stati eliminati `Legacy\IntesaSanPaoloClient`, `Models/`, `Exceptions/`, `DataSet/` e i test 2.x, insieme alle esclusioni da PHPStan e Pint. Questo chiude D-18 e D-30. Tutto `src/` è ora analizzato al livello max e formattato da Pint. I comportamenti 2.x fissati dai test di riferimento sono coperti dai test 3.0, che citano le voci Q-…; per confrontare un comportamento con la 2.x resta il tag `2.1.1`.
+
 ## Aperte
 
 | ID | Questione | Da decidere in |

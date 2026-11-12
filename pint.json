@@ -4,11 +4,5 @@
         "declare_strict_types": true,
         "strict_comparison": true,
         "strict_param": true
-    },
-    "exclude": [
-        "src/DataSet",
-        "src/Exceptions",
-        "src/Legacy",
-        "src/Models"
-    ]
+    }
 }

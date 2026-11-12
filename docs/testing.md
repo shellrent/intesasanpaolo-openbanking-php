@@ -22,8 +22,7 @@ tests/
 │   └── FrozenClock.php    orologio fermo e spostabile in avanti
 └── Unit/
     ├── TestCase.php       base: config e certificati di prova (file temporanei)
-    ├── Api/  Auth/  Config/  Enum/  Exception/  Http/  Support/   test del codice 3.0
-    └── Legacy/            test del codice 2.x, da eliminare insieme alle classi coperte
+    └── Api/  Auth/  Config/  Enum/  Exception/  Http/  Request/  Response/  Support/
 ```
 
 ## Regole

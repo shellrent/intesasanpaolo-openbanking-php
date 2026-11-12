@@ -2,17 +2,19 @@
 
 Come è organizzato il codice della 3.0 e che percorso fa una richiesta. Le motivazioni delle scelte sono in [v3/DECISIONS.md](v3/DECISIONS.md), finché quel documento esiste.
 
-> Stato: core, API Conti e SCT Instant completi (T3–T5). SCT ordinario e strumenti IBAN arrivano in T6 e T7; intanto il codice 2.x dell'SCT ordinario resta in `src/` (vedi in fondo).
+> Stato: core, Conti, SCT Instant e SCT ordinario completi (T3–T6); il codice 2.x è stato eliminato. Gli strumenti IBAN arrivano in T7.
 
 ## Struttura
 
 ```
 src/
-├── IntesaSanPaoloClient.php   facade: accounts(), poi sctInstant(), sct(), ibanTools() [pubblico]
-├── Api/                       un oggetto per area: AccountsApi, SctInstantApi [pubblico]
+├── IntesaSanPaoloClient.php   facade: accounts(), sctInstant(), sct(), poi ibanTools() [pubblico]
+├── Api/                       un oggetto per area: AccountsApi, SctInstantApi, SctApi [pubblico]
+│   └── PaymentGuard           controlli prima dell'esecuzione (VoP, simulazione) [interno]
 ├── Response/                  DTO readonly di risposta, per area             [pubblico]
 │   ├── Accounts/              Balance, Transaction, TransactionList
 │   ├── SctInstant/            InstantSimulation, InstantExecution, InstantPaymentDetails, InstantPaymentList(Item)
+│   ├── Sct/                   SctSimulation, SctExecution, SctPaymentDetails, SctPaymentList(Item), SctRevocation
 │   ├── Party                  debitore o creditore
 │   └── VopResult              esito della Verification of Payee (dagli header)
 ├── Enum/                      stati come enum tolleranti (FromApiValue)     [pubblico]
@@ -38,8 +40,7 @@ src/
 │   ├── SepaText               helper opzionale per i testi SEPA       [pubblico]
 │   └── Clock, SystemClock     ora corrente (sostituibile nei test)
 ├── Exception/                 eccezioni                               [pubblico]
-├── Request/                   richieste di pagamento validate: InstantPayment (SctPayment in T6) [pubblico]
-└── Legacy/                    client 2.x, solo per i pagamenti fino a T6     [deprecato]
+└── Request/                   richieste di pagamento validate: InstantPayment, SctPayment [pubblico]
 ```
 
 **Pubblico** vuol dire coperto dalla compatibilità semantica: cambia solo in una major. **Interno** (`@internal` nel PHPDoc) vuol dire che può cambiare in qualsiasi versione: non va usato direttamente da chi usa la libreria.
@@ -140,7 +141,3 @@ Il token è una credenziale: lo store non deve essere leggibile da terzi.
 ## Logging
 
 L'SDK non ha un logger integrato (D-22). Per registrare le chiamate si passa un client Guzzle con il middleware di log di Guzzle. `transactionId` è disponibile su risposte ed eccezioni.
-
-## Convivenza con il codice 2.x
-
-Fino alla fine di T6 in `src/` restano anche le classi 2.x dell'SCT ordinario: `Legacy\IntesaSanPaoloClient` (il client 2.x, spostato in T4 e privato dei metodi dei conti e, in T5, di quelli SCT Instant), `Models/`, `Exceptions/` (al plurale) e `DataSet/`. Sono escluse da PHPStan e Pint, e i loro test stanno in `tests/Unit/Legacy/`. Ogni task elimina le classi 2.x che sostituisce: T4 ha eliminato i model 2.x dei conti.

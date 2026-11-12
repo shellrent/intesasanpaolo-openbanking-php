@@ -1,0 +1,21 @@
+{
+    "success": true,
+    "errors": null,
+    "payload": {
+        "paymentId": "PAY-SCT-0001",
+        "endToEndId": "E2E-SCT-0001",
+        "paymentStatus": "ACSP",
+        "amount": 1250,
+        "currency": "EUR",
+        "executionDate": "02/01/2026",
+        "valueDate": "02/01/2026",
+        "settlementDate": "05/01/2026",
+        "paymentInformation": "Fattura 2/2026",
+        "debtorName": "Example Srl",
+        "debtorIban": "IT00X0000000000000000000001",
+        "creditorName": "Fornitore Esempio Srl",
+        "creditorIban": "IT00X0000000000000000000002",
+        "creditorNation": "IT",
+        "creditorAddress": "Via Esempio 2, Milano"
+    }
+}

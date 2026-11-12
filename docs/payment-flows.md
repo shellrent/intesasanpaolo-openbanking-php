@@ -2,7 +2,7 @@
 
 Come si esegue un bonifico con l'SDK, e cosa fare in ogni esito. I comportamenti delle API citati (Q-…) sono in [api-quirks.md](api-quirks.md).
 
-> Stato: SCT Instant completo (T5). La parte SCT ordinario arriva in T6.
+> Stato: SCT Instant (T5) e SCT ordinario (T6) completi.
 
 ## Regole che valgono per ogni bonifico
 
@@ -97,4 +97,56 @@ Con `endToEndId` o `siaCode` vuoti, in sandbox l'SDK li invia come stringhe vuot
 
 ## SCT (bonifico ordinario)
 
-In arrivo con T6.
+Valgono le stesse regole: simulazione, controllo VoP con blocco in `execute()`, nessun retry, simulazione salvabile con `toArray()`/`fromArray()`.
+
+### Simulazione ed esecuzione
+
+```php
+use Shellrent\OpenBanking\Request\SctPayment;
+
+$payment = new SctPayment(
+    creditorName: 'Fornitore Esempio Srl',
+    creditorIban: 'IT…',
+    amount: 1250.00,
+    paymentInformation: 'Fattura 2/2026',
+    debtorName: 'Example Srl',
+    requestedExecutionDate: new DateTimeImmutable('today'),   // opzionale: senza data decide la banca
+    categoryPurpose: 'SUPP',                                 // default CASH, come la 2.x
+    // currency: 'EUR'                                       → default
+);
+
+$simulation = $client->sct()->simulate($payment);
+$simulation->fees;              // commissioni
+$simulation->executionDate;     // date previste di esecuzione, valuta e regolamento
+$simulation->vop;               // esito VoP
+
+$execution = $client->sct()->execute($payment, $simulation);   // VoP non pieno: VopConfirmationRequiredException
+```
+
+### Esiti dell'esecuzione
+
+| `$execution->paymentStatus` | Codice | Significato | Cosa fare |
+|---|---|---|---|
+| `PaymentStatus::InProgress` | `ACSP` | fondi bloccati, esecuzione in corso | seguire con `status()` |
+| `PaymentStatus::Accepted` | `ACTC` | ordine inserito, fondi non ancora bloccati (data futura, oltre il cut-off, giorno non lavorativo) | seguire con `status()`; è revocabile fino a `revokeDate` |
+| `PaymentStatus::ToVerify` | `VRFY` | esito non disponibile | ricontrollare più tardi con `status()` o `payments()` |
+| `PaymentStatus::Rejected` | `RJCT` | rifiutato dalla banca | correggere e ripartire dalla simulazione |
+
+`ACSP` e `ACTC` sono ordini **presi in carico** (`isAccepted()`): non vanno pagati di nuovo. Gli stati finali (`isFinal()`) arrivano da `status()` e `payments()`: `ACSC` eseguito, `CANC` cancellato, `RETU` richiamato, `RJCT` rifiutato.
+
+### Stato, lista, revoca
+
+```php
+// Per CRO o ID pagamento; per simulationId o endToEndId se l'esito di un'esecuzione è sconosciuto
+$details = $client->sct()->status(customerCro: $execution->customerCro);
+$details = $client->sct()->status(simulationId: $simulation->simulationId);
+
+$list = $client->sct()->payments(new DateTimeImmutable('-7 days'));   // tutte le pagine, isComplete()
+
+$revocation = $client->sct()->revoke(customerCro: $execution->customerCro);
+$revocation->isRevoked();       // solo entro il cut-off della banca (Q-40)
+```
+
+### Dopo un errore di rete sull'esecuzione
+
+Dopo una `TransportException` il bonifico potrebbe essere partito. Prima di simulare e riprovare si cerca il pagamento con `status(simulationId: …)` (o `endToEndId`), oppure nella lista.

@@ -39,7 +39,7 @@ Sul branch `3.x` è in corso la riscrittura per la versione 3.0.0. **Prima di in
 
   La formattazione la applica Laravel Pint (`pint.json`), che aggiunge anche `declare_strict_types`, `strict_comparison` e `strict_param`.
 - **Date**: nessuna dipendenza da Carbon; in input `DateTimeInterface`, in output `DateTimeImmutable` (D-07).
-- **Codice 2.x**: lo stile con tab, proprietà PascalCase e getter è in via di sostituzione; non replicarlo nel codice nuovo.
+- **Codice 2.x**: è stato eliminato in T6; per confrontare un comportamento con la 2.x si guarda il tag `2.1.1`.
 
 ## Comandi
 
@@ -53,10 +53,6 @@ composer ci             # tutti i controlli della CI: validate, format:check, an
 ```
 
 La CI (GitHub Actions, `.github/workflows/ci.yml`) esegue i test su PHP 8.3, 8.4 e 8.5, ciascuno con dipendenze minime e massime. L'analisi statica e la formattazione girano su PHP 8.3 con le dipendenze massime. `composer.lock` non è versionato.
-
-### Codice 2.x escluso dagli strumenti
-
-I file 2.x (`src/Legacy`, `src/DataSet`, `src/Exceptions`, `src/Models`) sono esclusi dall'analisi di PHPStan e dalla formattazione di Pint finché non vengono riscritti. Quando una task sostituisce uno di questi file, rimuovilo dalle esclusioni in `phpstan.neon.dist` e `pint.json`. I test della 2.x stanno in `tests/Unit/Legacy/` e si eliminano insieme alla classe che coprono.
 
 ### Ambiente locale: estensione PECL `psr`
 
@@ -77,8 +73,8 @@ Codice 3.0 (dettagli in [docs/architecture.md](docs/architecture.md)):
 | Percorso | Contenuto |
 |---|---|
 | `src/IntesaSanPaoloClient.php` | facade: `accounts()`, poi i pagamenti e gli strumenti IBAN (pubblico) |
-| `src/Api/` | un oggetto per area: `AccountsApi`, `SctInstantApi` (pubblici) |
-| `src/Request/` | richieste di pagamento validate, es. `InstantPayment` (pubbliche); `Validator` (interno) |
+| `src/Api/` | un oggetto per area: `AccountsApi`, `SctInstantApi`, `SctApi` (pubblici); `PaymentGuard` (interno) |
+| `src/Request/` | richieste di pagamento validate: `InstantPayment`, `SctPayment` (pubbliche); `Validator` (interno) |
 | `src/Response/` | DTO readonly di risposta, per area (pubblici) |
 | `src/Enum/` | stati come enum tolleranti con `fromApi()` (pubblici) |
 | `src/Config/` | `ClientConfig`, `Environment`, `MutualTlsCertificate` (pubblico) |
@@ -91,16 +87,6 @@ Codice 3.0 (dettagli in [docs/architecture.md](docs/architecture.md)):
 | `tests/Fixtures/` | risposte JSON fittizie per area, lette con `MockHttp::fixture()` |
 
 Le classi interne sono marcate `@internal`: non fanno parte dell'API pubblica e possono cambiare in qualsiasi versione.
-
-Codice 2.x, in sostituzione fino a T6:
-
-| Percorso | Contenuto |
-|---|---|
-| `src/Legacy/IntesaSanPaoloClient.php` | client 2.x, `@deprecated`, ormai solo per l'SCT ordinario |
-| `src/Models/`, `src/Models/Collections/` | model 2.x dell'SCT ordinario, `PaymentInfos` |
-| `src/Exceptions/` (plurale) | `Exception`, `HttpException` |
-| `src/DataSet/CurrencySet.php` | costanti delle valute |
-| `tests/Unit/Legacy/` | test del codice 2.x, compresi i quirk di trasporto verificati con il `MockHandler` di Guzzle |
 
 ## Spec OpenAPI locali
 

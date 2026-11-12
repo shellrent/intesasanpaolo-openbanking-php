@@ -36,6 +36,7 @@ La 2.x invia `apikey: <clientId>` in ogni chiamata, anche se le spec non lo prev
 
 ### Q-04 `Content-Type: application/json` sulle GET SCT
 Le GET di stato (`/payments/bonsct/{iban}/history`) e lista (`/payments/bonsct/{iban}/list`) dei bonifici SCT vengono inviate con `Content-Type: application/json`. La spec non lo richiede, ma la 2.x lo fa da quando ha introdotto le chiamate SCT (2.0.0): va mantenuto.
+- 3.0: `SctApi` invia l'header sulle GET di stato e lista, su ogni pagina, ma non sulla revoca, come la 2.x.
 - Fonte: `PROD`.
 
 ### Q-05 Struttura della risposta ed errori
@@ -114,14 +115,17 @@ L'esecuzione SCT Instant restituisce `customerCro`; le API SCT usano `customerCR
 
 ### Q-15 Commissioni SCT: `fees` o `commissioni`
 La spec SCT del 2023 e la pagina SmartHub usano `commissioni`, la spec attuale `fees`. Vanno lette entrambe; la 2.x legge solo `commissioni`.
+- 3.0: entrambi i nomi sono letti nella proprietà `fees`.
 - Fonti: `SPEC-OLD`, `SPEC`, `WEB`.
 
 ### Q-16 `settlementDate` (non `settlemenDate`)
 Il nome corretto è `settlementDate`. `PaymentExecuted` della 2.x legge anche `settlemenDate`, un refuso senza fonte nelle spec.
+- 3.0: `settlemenDate` non viene più letto; la data è in `settlementDate`.
 - Fonti: `SPEC`, `WEB`.
 
 ### Q-17 Lista SCT: `executionInquiry`
 Nella lista SCT la data di estrazione si chiama `executionInquiry`, non `executionDate`.
+- 3.0: `executionInquiry` è esposta come `SctPaymentList::$executionDate`.
 - Fonte: `SPEC`.
 
 ### Q-18 Raggiungibilità SCT Instant
@@ -180,10 +184,12 @@ Il valore può quindi contenere una descrizione dopo il codice: il codice è il 
 
 ### Q-28 Stato dell'esecuzione SCT (`paymentStatus`)
 `ACSP`, `RJCT`, `VRFY`, `ACTC`; `ACTC` è stato aggiunto dopo la spec 2023.
+- 3.0: `PaymentStatus`. `ACTC` vale come preso in carico (`isAccepted()`) ma non finale.
 - Fonti: `SPEC`, `SPEC-OLD`.
 
 ### Q-29 Stato e lista SCT (`paymentStatus`)
 `ACSP`, `RJCT`, `CANC`, `ACSC`, `RETU`, `ACTC`.
+- 3.0: `PaymentStatus`; `status()` accetta tutti e quattro gli identificativi documentati.
 - Fonte: `SPEC`.
 
 ### Q-30 Stato e lista SCT Instant (`status`)
@@ -192,6 +198,7 @@ Il valore può quindi contenere una descrizione dopo il codice: il codice è il 
 
 ### Q-31 Revoca SCT (`status`)
 `OK` / `KO`.
+- 3.0: `SctRevocation::$revoked`, che vale true, false oppure null se il valore è sconosciuto.
 - Fonte: `SPEC`.
 
 ### Q-32 Significato dei codici di stato
@@ -249,6 +256,7 @@ Esiti descritti dalla FAQ: MATCH, NO MATCH, CLOSE MATCH, NOT PARTIC, OUT OF SCOP
 - `currency` è obbligatoria; l'SCT è solo in EUR.
 - `categoryPurpose` è opzionale; la 2.x invia sempre `CASH`.
 - `requestedExecutionDate` è opzionale; la 2.x la invia sempre.
+- 3.0: `SctPayment` ha come default `EUR` e `CASH`, entrambi configurabili. Senza data di esecuzione il campo viene omesso e decide la banca (la 2.x mandava sempre la data, e il gestionale passava quella del giorno): da verificare in sandbox.
 - Fonti: `SPEC`, `PROD`.
 
 ### Q-39 Caratteri ammessi
@@ -258,6 +266,7 @@ Nei testi (nomi, causale) sono ammessi solo i caratteri SEPA del set Latin: `a-z
 
 ### Q-40 Revoca SCT
 È possibile solo entro i cut-off della banca, i cui orari non sono documentati. La chiamata è una `GET`.
+- 3.0: `SctApi::revoke()` richiede almeno CRO o ID pagamento.
 - Fonti: `WEB`, `SPEC`.
 
 ## Paginazione
@@ -278,6 +287,7 @@ Oltre i 200 record la risposta contiene `nextPage`, una URL completa con un para
 - `offset` è l'identificativo di un pagamento (stringa).
 - La spec non prevede `limit` né `paymentDirection`, ma la 2.x li invia (`limit=30`, `paymentDirection=O`) e funziona.
 - La 2.x si ferma quando `paymentsResults` è vuoto.
+- 3.0: stessi parametri della 2.x (`offset=0`, `limit=30`, `paymentDirection=O`); `paymentDirection` viene aggiunto ai link che non lo hanno, e la lista si ferma su una pagina vuota.
 - Fonti: `SPEC`, `PROD`.
 
 ### Q-44 Link di paginazione in sandbox

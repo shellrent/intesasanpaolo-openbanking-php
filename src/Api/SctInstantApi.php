@@ -85,11 +85,7 @@ final class SctInstantApi
      */
     public function execute(InstantPayment $payment, InstantSimulation $simulation, bool $acceptVopResult = false): InstantExecution
     {
-        $simulationId = $this->assertExecutable($payment, $simulation);
-
-        if ($simulation->vop->requiresConfirmation() && ! $acceptVopResult) {
-            throw new VopConfirmationRequiredException($simulation->vop);
-        }
+        $simulationId = PaymentGuard::simulationId($simulation, $payment->creditorIban, $payment->amount, $acceptVopResult);
 
         return InstantExecution::fromResponse($this->transport->post(
             'payments/sct/instant',
@@ -215,30 +211,5 @@ final class SctInstantApi
         }
 
         return $body;
-    }
-
-    /**
-     * @return string The simulation ID.
-     */
-    private function assertExecutable(InstantPayment $payment, InstantSimulation $simulation): string
-    {
-        if (! $simulation->isAccepted() || $simulation->simulationId === null) {
-            throw new InvalidRequestException(sprintf(
-                'The simulation was not accepted (validation status: %s): the payment cannot be executed.',
-                $simulation->rawValidationStatus ?? 'none',
-            ));
-        }
-
-        $creditorIban = $simulation->creditor->iban === null ? null : strtoupper((string) preg_replace('/\s+/', '', $simulation->creditor->iban));
-
-        if ($creditorIban !== null && $creditorIban !== $payment->creditorIban) {
-            throw new InvalidRequestException('The simulation belongs to a payment with a different creditor IBAN.');
-        }
-
-        if ($simulation->amount !== null && abs($simulation->amount - $payment->amount) > 0.001) {
-            throw new InvalidRequestException('The simulation belongs to a payment with a different amount.');
-        }
-
-        return $simulation->simulationId;
     }
 }

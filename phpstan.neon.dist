@@ -10,14 +10,4 @@ parameters:
         - src
         - tests
 
-    # Legacy 2.x code, frozen until it is rewritten (T3-T6). Its symbols are
-    # still discovered, it is just not analysed. Remove an entry as soon as the
-    # corresponding code is replaced; "(?)" keeps PHPStan quiet once it is gone.
-    excludePaths:
-        analyse:
-            - src/Legacy (?)
-            - src/DataSet (?)
-            - src/Exceptions (?)
-            - src/Models (?)
-
     tmpDir: build/phpstan

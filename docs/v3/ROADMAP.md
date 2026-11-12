@@ -18,7 +18,7 @@ Piano di lavoro della riscrittura 3.0 dell'SDK. È la **fonte di verità sullo s
 | T3 | Core: configurazione, trasporto, date, eccezioni | ✅ completata |
 | T4 | API Conti | ✅ completata |
 | T5 | API SCT Instant | ✅ completata |
-| T6 | API SCT (bonifico ordinario) | ⏳ da fare |
+| T6 | API SCT (bonifico ordinario) | ✅ completata |
 | T7 | API IBAN e raggiungibilità | ⏳ da fare |
 | T8 | Rilascio 3.0.0 | ⏳ da fare |
 | T9 | Migrazione del gestionale (repo esterno) | ⏳ da fare |
@@ -95,7 +95,7 @@ Una task è completata quando:
 - Finding: F-01, F-03, F-10, F-11 (in parte), F-24, F-25 (in parte), F-32, F-36.
 - Fatto anche: metodi SCT Instant rimossi dal client 2.x (`Legacy\`), che resta solo per l'SCT ordinario; helper pubblico `SepaText`; `docs/payment-flows.md`.
 
-### T6 · API SCT (bonifico ordinario)
+### T6 · API SCT (bonifico ordinario) ✅
 - Simulazione: VoP, `fees` o `commissioni`, `categoryPurpose` configurabile, data di esecuzione opzionale, EUR di default.
 - Esecuzione: `ACTC`, `VRFY`, date `d/m/Y`, data e ora di revoca.
 - Stato con tutti i filtri.
@@ -103,6 +103,7 @@ Una task è completata quando:
 - Revoca.
 - Documentazione: `docs/payment-flows.md`, parte SCT.
 - Finding: F-08, F-09, F-10, F-11, F-13, F-14, F-16, F-24, F-25 (in parte), F-32, F-33, F-36.
+- Fatto anche: eliminato tutto il codice 2.x (`Legacy\`, `Models/`, `Exceptions/`, `DataSet/`) e le esclusioni degli strumenti (D-50); controlli di esecuzione condivisi in `PaymentGuard`.
 
 ### T7 · API IBAN e raggiungibilità
 - Verifica sintattica (Q-19).
@@ -132,3 +133,4 @@ Migrazione alla 3.0, provabile prima del tag con `3.x-dev`, e correzioni lato ge
 | 2026-11-12 | T3 | Core 3.0: `Config/`, `Auth/` (`TokenStore`), `Http/` (`Sender`, `Transport`, `Paginator`, riscrittura dei link della sandbox), `Support/` (`DateParser`, `Payload`), `Exception/`; mTLS obbligatorio, timeout, nessun retry, errori 4xx/5xx/rete mappati, transaction ID esposto; 97 test (anche con Guzzle 7 + estensione `psr`); documentazione: architettura, date, test, bozza di `UPGRADE-3.0.md`; nuovo finding F-36 |
 | 2026-11-12 | T4 | Facade `IntesaSanPaoloClient` con `accounts()`: `balance()`, `transactions()`, `todayTransactions()`; DTO `Balance`, `Transaction`, `TransactionList` (`isComplete()`, transaction ID per pagina); enum `TransactionStatus` (trait `FromApiValue`); date ISO sempre accettate; `date` mantenuta tra le pagine di fine giornata; client 2.x in `Legacy\`; fixture in `tests/Fixtures/`; 115 test; README con esempi, `UPGRADE-3.0.md` per i conti |
 | 2026-11-12 | T5 | `sctInstant()`: `simulate()`, `execute()` con blocco VoP, `resubmit()`, `status()`, `payments()`; richiesta `InstantPayment` validata; DTO con `Party` e `VopResult`; enum `ValidationStatus`, `PaymentStatus`, `InstantStatus`, `VopMatchResult`; simulazioni salvabili; JSON deterministico; `SepaText`; 176 test; `docs/payment-flows.md`; decisioni D-36…D-44 |
+| 2026-11-12 | T6 | `sct()`: `simulate()`, `execute()` con blocco VoP, `status()` con 4 identificativi, `payments()`, `revoke()`; `SctPayment` (EUR, CASH, data opzionale); DTO con `fees`/`commissioni`, date `d/m/Y` corrette, revoca con data e ora; `PaymentGuard` condiviso; codice 2.x eliminato, PHPStan max su tutto `src/`; 188 test; finding aperti: solo F-35 (T7) |

@@ -75,9 +75,8 @@ $client = new IntesaSanPaoloClient($config);                        // client Gu
 $client = new IntesaSanPaoloClient($config, $guzzle, $tokenStore);  // client Guzzle e TokenStore propri
 ```
 
-- Le API si raggiungono per area: `$client->accounts()`, poi (T5–T7) `sctInstant()`, `sct()`, `ibanTools()`.
+- Le API si raggiungono per area: `$client->accounts()`, `sctInstant()`, `sct()`, poi (T7) `ibanTools()`.
 - Le risposte sono oggetti immutabili con **proprietà pubbliche** al posto dei getter: `$balance->getAvailableBalance()` diventa `$balance->availableBalance`.
-- Finché i pagamenti non sono riscritti, il client 2.x resta disponibile come `Shellrent\OpenBanking\Legacy\IntesaSanPaoloClient`, senza i metodi dei conti. Verrà eliminato prima del rilascio 3.0.0.
 
 ## Conti
 
@@ -157,6 +156,47 @@ Nella 2.x i campi testuali assenti diventavano stringhe vuote; nella 3.0 sono `n
 | `PaymentStatus::getStatus()` (stringa) | `InstantPaymentDetails::$status` (`InstantStatus`: `Completed`, `Canceled`, `Rejected`, `Returned`) e `$rawStatus` |
 | `PaymentInfos::getPayments()` | `InstantPaymentList::$payments` (`InstantPaymentListItem`), `$totalCount`, `isComplete()` |
 
-## SCT ordinario e strumenti IBAN
+## SCT (bonifico ordinario)
 
-Da completare in T6–T7.
+Nella 2.x i metodi avevano il suffisso "Delayed"; nella 3.0 l'area si chiama `sct()`, come nella terminologia ISP.
+
+| 2.x | 3.0 |
+|---|---|
+| `new PaymentExecution()` + `setCurrency()` + `setRequestedExecutionDate()` | `new SctPayment(creditorName, creditorIban, amount, paymentInformation, debtorName, …)`: valuta EUR e categoryPurpose CASH di default, data di esecuzione opzionale |
+| `simulateDelayedPayment($execution)` → `PaymentSimulated` | `sct()->simulate($payment)` → `SctSimulation` |
+| `createDelayedPayment($execution)` con `setSimulationId()` | `sct()->execute($payment, $simulation, acceptVopResult: false)` → `SctExecution` |
+| `getDelayedPaymentStatus($cro, $paymentId)` → `PaymentStatus` | `sct()->status(customerCro:, paymentId:, endToEndId:, simulationId:)` → `SctPaymentDetails` |
+| `getDelayedPaymentsList($from, $to)` → `PaymentInfos` | `sct()->payments($from, $to)` → `SctPaymentList` |
+| `revokeDelayedPayment($cro, $paymentId)` → `DelayedPaymentRevoke` | `sct()->revoke($cro, $paymentId)` → `SctRevocation` |
+
+### Comportamenti nuovi
+
+- **Stesse regole dell'SCT Instant**: blocco VoP in `execute()`, controllo che la simulazione appartenga al pagamento, validazione della richiesta, simulazione salvabile.
+- **`categoryPurpose` configurabile**: nella 2.x era sempre `CASH`, che resta il default.
+- **Data di esecuzione opzionale**: senza data il campo non viene inviato. La 2.x la richiedeva sempre e andava in `TypeError` se mancava. Per mantenere il comportamento del gestionale si passa la data di oggi.
+- **Date `d/m/Y` corrette**: nella 2.x `getExecutionDate()` scambiava giorno e mese per i giorni da 1 a 12.
+- **Stato per `endToEndId` e `simulationId`**: utile per ricostruire l'esito dopo un errore di rete.
+
+### Model → DTO
+
+| 2.x | 3.0 |
+|---|---|
+| `PaymentSimulated::getValidationStatus()` | `SctSimulation::$validationStatus` (`ValidationStatus`) e `$rawValidationStatus`; `isAccepted()`; `$vop` |
+| `PaymentExecuted::getCommissions()` (solo `commissioni`) | `SctExecution::$fees` / `SctSimulation::$fees` (`fees` oppure `commissioni`) |
+| `PaymentExecuted::getSettlemenDate()` (refuso, sempre vuoto) | `$settlementDate` |
+| `PaymentExecuted::getRevokeDate()`, `getRevokeTime()` | `$revokeDate` (data e ora), `$revokeTime` |
+| `PaymentExecuted::getPaymentStatus()` (stringa) | `SctExecution::$paymentStatus` (`PaymentStatus`: `InProgress`, `Accepted`, `ToVerify`, `Rejected`) e `$rawPaymentStatus` |
+| `PaymentExecuted::getCustomerCro()` | `SctExecution::$customerCro` |
+| `PaymentInfos::getPayments()` (senza CRO) | `SctPaymentList::$payments` (`SctPaymentListItem` con `customerCro`, `endToEndId`, `simulationId`, `categoryPurpose`, date) |
+| `DelayedPaymentRevoke::getStatus()` (`OK`/`KO`) | `SctRevocation::isRevoked()`, `$revoked`, `$rawStatus` |
+
+## Classi 2.x rimosse
+
+Tutte le classi della 2.x sono state eliminate:
+- `Shellrent\OpenBanking\Models\*` e `Models\Collections\*` → DTO in `Response\*` e richieste in `Request\*`;
+- `Shellrent\OpenBanking\Exceptions\*` → `Shellrent\OpenBanking\Exception\*`;
+- `Shellrent\OpenBanking\DataSet\CurrencySet` → non serve più: l'SCT è in EUR, e la valuta di `SctPayment` è un codice ISO 4217.
+
+## Strumenti IBAN
+
+Da completare in T7.

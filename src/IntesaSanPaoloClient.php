@@ -7,6 +7,7 @@ namespace Shellrent\OpenBanking;
 use GuzzleHttp\Client;
 use GuzzleHttp\ClientInterface;
 use Shellrent\OpenBanking\Api\AccountsApi;
+use Shellrent\OpenBanking\Api\SctApi;
 use Shellrent\OpenBanking\Api\SctInstantApi;
 use Shellrent\OpenBanking\Auth\InMemoryTokenStore;
 use Shellrent\OpenBanking\Auth\TokenProvider;
@@ -35,6 +36,8 @@ final class IntesaSanPaoloClient
     private ?AccountsApi $accounts = null;
 
     private ?SctInstantApi $sctInstant = null;
+
+    private ?SctApi $sct = null;
 
     /**
      * @param  ClientInterface|null  $httpClient  Guzzle client to use, e.g. with logging middleware; certificate
@@ -71,5 +74,13 @@ final class IntesaSanPaoloClient
     public function sctInstant(): SctInstantApi
     {
         return $this->sctInstant ??= new SctInstantApi($this->config, $this->transport, $this->paginator);
+    }
+
+    /**
+     * SCT payments (bonifico ordinario): simulation, execution, status, list and revoke.
+     */
+    public function sct(): SctApi
+    {
+        return $this->sct ??= new SctApi($this->config, $this->transport, $this->paginator);
     }
 }
