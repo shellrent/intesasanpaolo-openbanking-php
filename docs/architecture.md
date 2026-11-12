@@ -2,16 +2,19 @@
 
 Come è organizzato il codice della 3.0 e che percorso fa una richiesta. Le motivazioni delle scelte sono in [v3/DECISIONS.md](v3/DECISIONS.md), finché quel documento esiste.
 
-> Stato: core e API Conti completi (T3–T4). Le API di pagamento e degli strumenti IBAN arrivano da T5 a T7; intanto il codice 2.x dei pagamenti resta in `src/` (vedi in fondo).
+> Stato: core, API Conti e SCT Instant completi (T3–T5). SCT ordinario e strumenti IBAN arrivano in T6 e T7; intanto il codice 2.x dell'SCT ordinario resta in `src/` (vedi in fondo).
 
 ## Struttura
 
 ```
 src/
 ├── IntesaSanPaoloClient.php   facade: accounts(), poi sctInstant(), sct(), ibanTools() [pubblico]
-├── Api/                       un oggetto per area: AccountsApi                [pubblico]
+├── Api/                       un oggetto per area: AccountsApi, SctInstantApi [pubblico]
 ├── Response/                  DTO readonly di risposta, per area             [pubblico]
-│   └── Accounts/              Balance, Transaction, TransactionList
+│   ├── Accounts/              Balance, Transaction, TransactionList
+│   ├── SctInstant/            InstantSimulation, InstantExecution, InstantPaymentDetails, InstantPaymentList(Item)
+│   ├── Party                  debitore o creditore
+│   └── VopResult              esito della Verification of Payee (dagli header)
 ├── Enum/                      stati come enum tolleranti (FromApiValue)     [pubblico]
 ├── Config/                    configurazione                          [pubblico]
 │   ├── ClientConfig           credenziali, IBAN, ambiente, certificato, timeout
@@ -31,9 +34,11 @@ src/
 ├── Support/                   strumenti                               [interno]
 │   ├── DateParser, DateFormat date con formato esplicito
 │   ├── Payload                lettura tipizzata e tollerante del JSON
+│   ├── Json, Url, EndToEndId  JSON deterministico, link, normalizzazione end-to-end ID
+│   ├── SepaText               helper opzionale per i testi SEPA       [pubblico]
 │   └── Clock, SystemClock     ora corrente (sostituibile nei test)
 ├── Exception/                 eccezioni                               [pubblico]
-├── Request/                   richieste di pagamento (da T5)
+├── Request/                   richieste di pagamento validate: InstantPayment (SctPayment in T6) [pubblico]
 └── Legacy/                    client 2.x, solo per i pagamenti fino a T6     [deprecato]
 ```
 
@@ -71,6 +76,10 @@ API                                        Payload → DTO di risposta
 - Gli stati sono enum costruiti con `fromApi()` (trait `Enum\FromApiValue`): la conversione ignora maiuscole e spazi, considera solo la prima parola e conosce gli alias. Un valore sconosciuto dà `null`, e il DTO conserva sempre anche il valore originale (`rawStatus`).
 - Le API paginate raccolgono tutte le pagine prima di restituire il risultato. Le liste espongono i totali dichiarati dalla banca, un metodo `isComplete()` e il transaction ID di ogni pagina.
 
+## Richieste
+
+Le richieste di pagamento (`Request/`) sono classi `final readonly` validate e normalizzate alla creazione: IBAN in maiuscolo e senza spazi, importo arrotondato a 2 decimali, `endToEndId` vuoto o `NOTPROVIDED` trasformato in `null`. Un valore non valido genera un'`InvalidRequestException` prima di qualsiasi chiamata. Il corpo JSON lo costruisce l'API (es. `SctInstantApi`), che applica le differenze tra Live e sandbox. La codifica JSON è deterministica (`Support\Json`), indipendente da `serialize_precision`.
+
 ## Eccezioni
 
 Tutte implementano `Shellrent\OpenBanking\Exception\OpenBankingException`.
@@ -81,6 +90,8 @@ Tutte implementano `Shellrent\OpenBanking\Exception\OpenBankingException`.
 | `TransportException` | la richiesta non si è completata: rete, timeout, TLS | `method`, `uri`; **per i pagamenti l'esito è sconosciuto** |
 | `ApiException` | la banca ha rifiutato la richiesta (HTTP ≥ 400 o `success: false`) | `statusCode`, `errors` (`ApiError[]`), `transactionId`, `responseBody` |
 | `AuthenticationException` | login rifiutato o HTTP 401 (estende `ApiException`) | come sopra |
+| `InvalidRequestException` | dati della richiesta non validi (non inviata), simulazione non accettata o di un altro pagamento | messaggio |
+| `VopConfirmationRequiredException` | esecuzione bloccata: l'esito VoP non è un match pieno e non è stato accettato | `vop` (`VopResult`) |
 | `UnexpectedResponseException` | risposta non interpretabile, campo obbligatorio mancante, tipo inatteso, paginazione anomala | `transactionId` |
 
 `transactionId` è il valore dell'header `X-ISP-Transaction-ID`, da indicare al supporto ISP.
@@ -132,4 +143,4 @@ L'SDK non ha un logger integrato (D-22). Per registrare le chiamate si passa un 
 
 ## Convivenza con il codice 2.x
 
-Fino alla fine di T6 in `src/` restano anche le classi 2.x dei pagamenti: `Legacy\IntesaSanPaoloClient` (il client 2.x, spostato in T4 e privato dei metodi dei conti), `Models/`, `Exceptions/` (al plurale) e `DataSet/`. Sono escluse da PHPStan e Pint, e i loro test stanno in `tests/Unit/Legacy/`. Ogni task elimina le classi 2.x che sostituisce: T4 ha eliminato i model 2.x dei conti.
+Fino alla fine di T6 in `src/` restano anche le classi 2.x dell'SCT ordinario: `Legacy\IntesaSanPaoloClient` (il client 2.x, spostato in T4 e privato dei metodi dei conti e, in T5, di quelli SCT Instant), `Models/`, `Exceptions/` (al plurale) e `DataSet/`. Sono escluse da PHPStan e Pint, e i loro test stanno in `tests/Unit/Legacy/`. Ogni task elimina le classi 2.x che sostituisce: T4 ha eliminato i model 2.x dei conti.

@@ -77,13 +77,14 @@ Codice 3.0 (dettagli in [docs/architecture.md](docs/architecture.md)):
 | Percorso | Contenuto |
 |---|---|
 | `src/IntesaSanPaoloClient.php` | facade: `accounts()`, poi i pagamenti e gli strumenti IBAN (pubblico) |
-| `src/Api/` | un oggetto per area, es. `AccountsApi` (pubblico) |
+| `src/Api/` | un oggetto per area: `AccountsApi`, `SctInstantApi` (pubblici) |
+| `src/Request/` | richieste di pagamento validate, es. `InstantPayment` (pubbliche); `Validator` (interno) |
 | `src/Response/` | DTO readonly di risposta, per area (pubblici) |
 | `src/Enum/` | stati come enum tolleranti con `fromApi()` (pubblici) |
 | `src/Config/` | `ClientConfig`, `Environment`, `MutualTlsCertificate` (pubblico) |
 | `src/Auth/` | `AccessToken`, `TokenStore`, `InMemoryTokenStore` (pubblici); `TokenProvider` (interno) |
 | `src/Http/` | `Sender`, `Transport`, `ApiResponse`, `Paginator`, `SandboxLinkRewriter` (interni) |
-| `src/Support/` | `DateParser`, `DateFormat`, `Payload`, `Clock` (interni) |
+| `src/Support/` | `DateParser`, `DateFormat`, `Payload`, `Json`, `Url`, `Clock` (interni); `SepaText` (pubblico) |
 | `src/Exception/` | eccezioni con l'interfaccia comune `OpenBankingException` (pubbliche) |
 | `tests/Support/` | `MockHttp`, `FrozenClock` |
 | `tests/Unit/` | test del codice 3.0, con la base `TestCase` |
@@ -95,8 +96,8 @@ Codice 2.x, in sostituzione fino a T6:
 
 | Percorso | Contenuto |
 |---|---|
-| `src/Legacy/IntesaSanPaoloClient.php` | client 2.x, `@deprecated`, ormai solo per i pagamenti |
-| `src/Models/`, `src/Models/Collections/` | model 2.x dei pagamenti, `PaymentInfos` |
+| `src/Legacy/IntesaSanPaoloClient.php` | client 2.x, `@deprecated`, ormai solo per l'SCT ordinario |
+| `src/Models/`, `src/Models/Collections/` | model 2.x dell'SCT ordinario, `PaymentInfos` |
 | `src/Exceptions/` (plurale) | `Exception`, `HttpException` |
 | `src/DataSet/CurrencySet.php` | costanti delle valute |
 | `tests/Unit/Legacy/` | test del codice 2.x, compresi i quirk di trasporto verificati con il `MockHandler` di Guzzle |

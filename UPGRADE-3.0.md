@@ -119,6 +119,44 @@ I getter diventano le proprietà `currency`, `availableBalance`, `accountingBala
 
 Nella 2.x i campi testuali assenti diventavano stringhe vuote; nella 3.0 sono `null`.
 
-## Pagamenti, strumenti IBAN
+## SCT Instant
 
-Da completare in T5–T7.
+| 2.x | 3.0 |
+|---|---|
+| `new PaymentExecution()` + setter | `new InstantPayment(creditorName, creditorIban, amount, paymentInformation, debtorName, …)`, immutabile e validata |
+| `simulateInstantPayment($execution)` → `PaymentSimulated` | `sctInstant()->simulate($payment)` → `InstantSimulation` |
+| `createInstantPayment($execution)` con `setSimulationId()` | `sctInstant()->execute($payment, $simulation, acceptVopResult: false)` → `InstantExecution` |
+| `createInstantPayment()` con `setResubmit(true)` + `setResubmitId()` | `sctInstant()->resubmit($payment, $simulationId, $resubmitId)` |
+| `getPaymentStatus($orderId, $paymentId)` → `PaymentStatus` | `sctInstant()->status($orderId, $paymentId)` → `InstantPaymentDetails` |
+| `getPaymentsList($from, $to)` → `PaymentInfos` | `sctInstant()->payments($from, $to)` → `InstantPaymentList` |
+
+### Comportamenti nuovi
+
+- **Blocco VoP**: `execute()` richiede l'oggetto simulazione e, se l'esito VoP non è un match pieno (compreso un esito mancante), lancia `VopConfirmationRequiredException` finché non si passa `acceptVopResult: true`. Per eseguire in un altro processo si salva la simulazione con `toArray()` e la si ricarica con `InstantSimulation::fromArray()`.
+- **Controlli sulla simulazione**: `execute()` rifiuta una simulazione non accettata, o fatta per un altro creditore o un altro importo (`InvalidRequestException`).
+- **Validazione della richiesta**:
+  - campi obbligatori;
+  - nomi al massimo 70 caratteri, causale 140, `endToEndId` 35;
+  - IBAN validi;
+  - importo positivo con al massimo 2 decimali.
+
+  I caratteri dei testi non sono controllati, come nella 2.x; c'è l'helper opzionale `SepaText::sanitize()`.
+- **IBAN del debitore**: è opzionale, e il default è quello della configurazione.
+- **`endToEndId`**: `""` e `NOTPROVIDED` valgono come assenti, sia in richiesta sia in risposta.
+- **Resubmit**: invia sempre `resubmit: true` insieme a `resubmitId`. Nella 2.x `setResubmitId()` senza `setResubmit(true)` non aveva effetto.
+
+### Model → DTO
+
+| 2.x | 3.0 |
+|---|---|
+| `PaymentSimulated::getValidationStatus()` (stringa: `ACSC`, `ACCP`, `ACSC acquired`, …) | `InstantSimulation::$validationStatus` (`ValidationStatus::Accepted`/`Rejected`) e `$rawValidationStatus`; `isAccepted()` |
+| — | `InstantSimulation::$vop` (`VopResult`: `result`, `matchedName`, `description`) |
+| `PaymentExecuted::getPaymentStatus()` (stringa) | `InstantExecution::$paymentStatus` (`PaymentStatus`: `Executed`, `Pending`, `ToVerify`, `Rejected`, …) e `$rawPaymentStatus`; `canBeResubmitted()` |
+| `getOrderId()`, `getPaymentId()`, `getCustomerCro()`, `getResubmitId()`, `getEndToEndId()` | `orderId`, `paymentId`, `customerCro`, `resubmitId`, `endToEndId` |
+| `getDebtorName()`, `getDebtorIban()`, `getCreditorBic()`, `getUltimateCreditorName()`, … | `debtor` e `creditor` (`Party`: `name`, `iban`, `bic`, `ultimateName`, `nation`, `address`) |
+| `PaymentStatus::getStatus()` (stringa) | `InstantPaymentDetails::$status` (`InstantStatus`: `Completed`, `Canceled`, `Rejected`, `Returned`) e `$rawStatus` |
+| `PaymentInfos::getPayments()` | `InstantPaymentList::$payments` (`InstantPaymentListItem`), `$totalCount`, `isComplete()` |
+
+## SCT ordinario e strumenti IBAN
+
+Da completare in T6–T7.

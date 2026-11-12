@@ -175,6 +175,50 @@ Le risposte singole espongono `transactionId`, le liste paginate `transactionIds
 ### D-35 · Movimenti di fine giornata: `date` mantenuta tra le pagine — T4
 Il link `nextPage` è documentato con il solo `offsetid`, ma `date` è obbligatorio. La 3.0 aggiunge `date` al link se manca e non lo duplica se c'è già (Q-41). Va verificato con una giornata reale di più di 200 movimenti.
 
+### D-36 · Blocco VoP in `execute()` — T5
+`execute()` riceve l'oggetto simulazione ed esegue in automatico solo con esito VoP `Match`. In tutti gli altri casi lancia `VopConfirmationRequiredException`, finché il chiamante non passa `acceptVopResult: true` dopo aver valutato l'esito: close match, no match, banca non aderente, verifica impossibile, ma anche esito assente o sconosciuto.
+- Per i flussi divisi tra più processi la simulazione si salva e si ricarica (`toArray()`/`fromArray()`), e il blocco resta attivo.
+- `resubmit()` non ripete il controllo, perché prosegue un'esecuzione già accettata.
+- Vale anche per l'SCT ordinario (T6).
+- Alternativa scartata: lasciare il controllo all'applicazione.
+- Decisione del maintainer.
+
+### D-37 · Due classi di richiesta — T5
+`Request\InstantPayment` (T5) e `Request\SctPayment` (T6) sono immutabili e validate alla creazione, con regole comuni in `Request\Validator`. Ognuna ha solo i campi del suo bonifico. L'IBAN del debitore è opzionale e il default è quello della configurazione; il nome del debitore è obbligatorio, perché la configurazione non lo contiene.
+- Decisione del maintainer.
+
+### D-38 · Importi float validati e JSON deterministico — T5
+- Gli importi restano `float`: sono positivi, finiti e hanno al massimo 2 decimali. Il confronto avviene in centesimi con tolleranza 1e-6, quindi `0.1 + 0.2` diventa `0.3` e `10.567` viene rifiutato.
+- Tutti i body JSON passano da `Support\Json`, che imposta temporaneamente `serialize_precision = -1` e usa gli stessi flag dell'opzione `json` di Guzzle usata dalla 2.x. I byte inviati sono identici a quelli della 2.x, salvo il rumore dei float.
+- Decisione del maintainer. Chiude, per SCT Instant, la parte "codifica" di F-36.
+
+### D-39 · Testi: solo lunghezze, più l'helper `SepaText` — T5
+L'SDK controlla i campi obbligatori e le lunghezze SEPA: nomi 70 caratteri, causale 140, `endToEndId` 35. Le lunghezze si contano in caratteri UTF-8, non in byte. I caratteri si inviano così come sono, come nella 2.x, che funziona in produzione con lettere accentate.
+- `Support\SepaText` (pubblico) offre `isValid()` e `sanitize()`. `sanitize()` traslittera le lettere accentate, converte `&` in `+` e gli apostrofi tipografici in `'`, e rimuove gli altri caratteri non ammessi.
+- La documentazione avverte che modificare il nome del creditore può cambiare l'esito VoP.
+- Decisione del maintainer.
+
+### D-40 · `execute()` controlla la simulazione — T5
+Prima di eseguire, l'SDK verifica che la simulazione sia accettata e che appartenga al pagamento: stesso IBAN del creditore e stesso importo, quando la risposta li riporta. Così l'esito VoP di una simulazione non può essere usato per un pagamento diverso.
+
+### D-41 · `NOTPROVIDED` vale come assenza — T5
+L'`endToEndId` `NOTPROVIDED` restituito dalla banca, con o senza spazi, diventa `null` nelle risposte e viene ignorato nelle richieste (Q-35), come già faceva il gestionale.
+
+### D-42 · Enum degli stati di pagamento — T5
+- `PaymentStatus` usa i codici ISO 20022 ed è condiviso con l'SCT: `ACSC`, `ACSP`, `ACTC`, `PNDG`/`PDNG`, `RJCT`, `VRFY`, `CANC`, `RETU`. `isAccepted()` vale per `ACSC`, `ACSP` e `ACTC`, cioè ordini da non ripagare. `isFinal()` vale per gli stati che non cambiano più.
+- `ValidationStatus`: `ACCP` più l'alias `ACSC`.
+- `InstantStatus`: gli stati testuali, con l'alias `Cancelled`.
+- `VopMatchResult` riconosce sia i codici (`MTCH`, `CMTC`, `NMTC`, `NOAP`) sia le etichette della FAQ. Il valore esatto dell'header resta da verificare in sandbox o in produzione (T8).
+
+### D-43 · Lista SCT Instant — T5
+- Senza data di inizio vale il mese precedente, come nella 2.x.
+- Le pagine sono da 100 pagamenti.
+- `paymentDirection=O` viene aggiunto ai link che non lo hanno.
+- La lista si ferma su una pagina vuota anche se c'è un link successivo, come nella 2.x.
+
+### D-44 · Resubmit come metodo separato — T5
+`resubmit($payment, $simulationId, $resubmitId)` riceve gli identificativi invece degli oggetti, perché tipicamente avviene in un secondo momento, a partire da dati salvati. Invia sempre insieme `resubmit: true` e `resubmitId` (F-03).
+
 ## Aperte
 
 | ID | Questione | Da decidere in |

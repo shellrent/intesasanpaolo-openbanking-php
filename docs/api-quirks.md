@@ -166,6 +166,7 @@ Nelle liste dei pagamenti è presente solo in caso di remittance, altrimenti è 
 - Il gestionale gestisce anche `ACSC acquired`.
 
 Il valore può quindi contenere una descrizione dopo il codice: il codice è il primo token.
+- 3.0: `ValidationStatus::fromApi()` usa il primo token e tratta `ACSC` come `Accepted` (D-11).
 - Fonti: `SPEC`, `SPEC-OLD`, `CONSUMER`.
 
 ### Q-26 Esito della simulazione SCT (`validationStatus`)
@@ -174,6 +175,7 @@ Il valore può quindi contenere una descrizione dopo il codice: il codice è il 
 
 ### Q-27 Stato dell'esecuzione SCT Instant (`paymentStatus`)
 `ACSC`, `PNDG`, `RJCT`, `VRFY`; `VRFY` è stato aggiunto dopo la spec 2021. La FAQ scrive `PDNG` invece di `PNDG`: vanno accettati entrambi.
+- 3.0: `PaymentStatus::Pending` accetta anche `PDNG`.
 - Fonti: `SPEC`, `SPEC-OLD`, `FAQ`.
 
 ### Q-28 Stato dell'esecuzione SCT (`paymentStatus`)
@@ -218,14 +220,17 @@ Vale 5 minuti, ha al massimo 49 caratteri ed è obbligatorio per l'esecuzione. P
 Riguarda `endToEndId` e `siaCode` per SCT Instant, e il solo `endToEndId` per SCT.
 - In sandbox i campi devono essere presenti, anche vuoti.
 - In Live, se vuoti, vanno omessi.
+- 3.0: lo stesso comportamento vale per simulazione ed esecuzione. Nell'esecuzione in sandbox la 2.x inviava `null` per un `endToEndId` mancante.
 - Fonte: `PROD` (commit `2bcbaea`, versione 1.1.2).
 
 ### Q-35 `endToEndId` non fornito
 Quando non viene fornito un `endToEndId`, la banca restituisce `NOTPROVIDED` (oppure `NOT PROVIDED` negli esempi). Il gestionale lo tratta come valore assente.
+- 3.0: `NOTPROVIDED`, con o senza spazi, diventa `null` sia nelle risposte sia nelle richieste.
 - Fonti: `WEB`, `CONSUMER`.
 
 ### Q-36 Resubmit (SCT Instant)
 Se l'esecuzione resta in `PNDG`, la risposta contiene un `resubmitId`; per riprovare si invia `resubmit: true` insieme al `resubmitId`. La 2.x invia questi campi solo se si è chiamato `setResubmit(true)`.
+- 3.0: `SctInstantApi::resubmit()` invia sempre `resubmit: true` insieme a `resubmitId` (F-03).
 - Fonte: `SPEC`.
 
 ### Q-37 Verification of Payee (VoP)
@@ -237,6 +242,7 @@ Le simulazioni (SCT e SCT Instant, sia JSON sia ISO) restituiscono l'esito VoP i
 Esiti descritti dalla FAQ: MATCH, NO MATCH, CLOSE MATCH, NOT PARTIC, OUT OF SCOPE, NO APP, CHECK NOT POSSIBLE. I codici esatti negli header vanno verificati su una risposta reale.
 
 **Procedere con l'esecuzione equivale ad accettare l'esito VoP.** Per le persone giuridiche con un codice identificativo (es. TXID), se la verifica non è possibile si ripete la simulazione con la sola denominazione. La 2.x scarta gli header, quindi l'esito VoP non è disponibile.
+- 3.0: l'esito è in `VopResult` sulle simulazioni. `execute()` richiede `acceptVopResult: true` se l'esito non è un match pieno, anche quando manca (D-36).
 - Fonti: `SPEC`, `WEB`, `FAQ`.
 
 ### Q-38 Campi del bonifico SCT
@@ -247,6 +253,7 @@ Esiti descritti dalla FAQ: MATCH, NO MATCH, CLOSE MATCH, NOT PARTIC, OUT OF SCOP
 
 ### Q-39 Caratteri ammessi
 Nei testi (nomi, causale) sono ammessi solo i caratteri SEPA del set Latin: `a-z A-Z 0-9 / - ? : ( ) . , ' +` e lo spazio.
+- 3.0: nessun controllo sui caratteri, come nella 2.x; c'è l'helper opzionale `SepaText::sanitize()` (D-39).
 - Fonte: `WEB`.
 
 ### Q-40 Revoca SCT
@@ -264,6 +271,7 @@ Oltre i 200 record la risposta contiene `nextPage`, una URL completa con un para
 - Parametri `offset` e `limit`: il default di `limit` è 50, la 2.x usa 100.
 - `paymentDirection=O` è obbligatorio.
 - Il link alla pagina successiva è in `links.next`.
+- 3.0: `paymentDirection=O` viene aggiunto ai link che non lo hanno, e la lista si ferma su una pagina vuota anche se c'è un link successivo.
 - Fonti: `SPEC`, `PROD`.
 
 ### Q-43 Lista SCT

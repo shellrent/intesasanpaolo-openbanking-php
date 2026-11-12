@@ -135,9 +135,13 @@ final readonly class Payload
 
     /**
      * Reads a date without time; "0" counts as no value (docs/api-quirks.md, Q-23).
+     *
+     * @param  DateFormat|non-empty-list<DateFormat>  $formats  Expected format, or alternative formats (see DateParser::date()).
      */
-    public function date(DateFormat $format, string ...$keys): ?DateTimeImmutable
+    public function date(DateFormat|array $formats, string ...$keys): ?DateTimeImmutable
     {
+        $formats = $formats instanceof DateFormat ? [$formats] : $formats;
+
         $found = $this->first($keys);
 
         if ($found === null) {
@@ -159,7 +163,7 @@ final readonly class Payload
         }
 
         try {
-            return DateParser::date($value, $format);
+            return DateParser::date($value, ...$formats);
         } catch (InvalidArgumentException $exception) {
             throw new UnexpectedResponseException(
                 sprintf('Unexpected value for %s: %s', $this->pathOf($key), $exception->getMessage()),

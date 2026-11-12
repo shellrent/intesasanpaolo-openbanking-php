@@ -20,7 +20,7 @@ use Shellrent\OpenBanking\Models\PaymentExecuted;
 
 
 /**
- * Client of the 2.x SDK, kept only for the payment APIs until they are rewritten (T5-T6).
+ * Client of the 2.x SDK, kept only for the SCT ("delayed") payment APIs until they are rewritten (T6).
  *
  * @deprecated Use Shellrent\OpenBanking\IntesaSanPaoloClient. This class is removed before the 3.0.0 release.
  */
@@ -312,42 +312,6 @@ class IntesaSanPaoloClient {
 	
 	
 	/**
-	 * Simulates an Instant Payment (SCT-Instant-Simulation)
-	 *
-	 * @param PaymentExecution $payment
-	 *
-	 * @return PaymentSimulated
-	 */
-	public function simulateInstantPayment( PaymentExecution $payment ): PaymentSimulated {
-		$data = [
-			'debtorName'			=> $payment->getDebtorName(),
-			'debtorIBAN'			=> $payment->getDebtorIban(),
-			'creditorName'			=> $payment->getCreditorName(),
-			'creditorIBAN'			=> $payment->getCreditorIban(),
-			'amount'				=> $payment->getAmount(),
-			'paymentInformation'	=> $payment->getPaymentInformation(),
-			'endToEndId'			=> empty( $payment->getEndToEndId() ) ? '' : $payment->getEndToEndId(),
-			'siaCode'				=> empty( $payment->getSiaCode() ) ? '' : $payment->getSiaCode(),
-		];
-		
-		/* Sandbox: endToEndId and siaCode must be present and empty; Live: if empty, they must be omitted */
-		if( $this->Live ) {
-			if( empty( $data['endToEndId'] ) ) {
-				unset( $data['endToEndId'] );
-			}
-			
-			if( empty( $data['siaCode'] ) ) {
-				unset( $data['siaCode'] );
-			}
-		}
-		
-		$paymentSimulationResponse = $this->request( 'POST', sprintf( '%s/payments/sct/instant/simulation', $this->getApiBaseUri() ), [], $data );
-		
-		return new PaymentSimulated( $paymentSimulationResponse );
-	}
-	
-	
-	/**
 	 * Creates a new "delayed" Payment (SCT-Execution) (bonifico ordinario)
 	 *
 	 * @param PaymentExecution $payment
@@ -383,52 +347,6 @@ class IntesaSanPaoloClient {
 	
 	
 	/**
-	 * Creates a new Instant Payment (SCT-Instant-Execution)
-	 *
-	 * @param PaymentExecution $payment
-	 *
-	 * @return PaymentExecuted
-	 */
-	public function createInstantPayment( PaymentExecution $payment ): PaymentExecuted {
-		$data = [
-			'debtorName'			=> $payment->getDebtorName(),
-			'debtorIBAN'			=> $payment->getDebtorIban(),
-			'creditorName'			=> $payment->getCreditorName(),
-			'creditorIBAN'			=> $payment->getCreditorIban(),
-			'amount'				=> $payment->getAmount(),
-			'paymentInformation'	=> $payment->getPaymentInformation(),
-			'endToEndId'			=> $payment->getEndToEndId(),
-			'siaCode'				=> $payment->getSiaCode(),
-			'simulationId'			=> $payment->getSimulationId(),
-		];
-		
-		if( $payment->getResubmit() ) {
-			$data['resubmit'] = true;
-			$data['resubmitId'] = $payment->getResubmitId();
-		}
-		
-		if( is_null( $data['siaCode'] ) ) {
-			$data['siaCode'] = '';
-		}
-		
-		/* Sandbox: endToEndId and siaCode must be present and empty; Live: if empty, they must be omitted */
-		if( $this->Live ) {
-			if( empty( $data['endToEndId'] ) ) {
-				unset( $data['endToEndId'] );
-			}
-			
-			if( empty( $data['siaCode'] ) ) {
-				unset( $data['siaCode'] );
-			}
-		}
-		
-		$paymentExecutedResponse = $this->request( 'POST', sprintf( '%s/payments/sct/instant', $this->getApiBaseUri() ), [], $data );
-		
-		return new PaymentExecuted( $paymentExecutedResponse );
-	}
-	
-	
-	/**
 	 * Retrieve the SCT payment's information about a specified IBAN and paymentId or customerCRO (BONSCT - Payment Status API)
 	 * @param string $customerCro
 	 * @param string|null $paymentId
@@ -455,24 +373,6 @@ class IntesaSanPaoloClient {
 		
 		$this->ForceContentJson = true;
 		$paymentStatusResponse = $this->request( 'GET', sprintf( '%s/payments/bonsct/%s/history', $this->getApiBaseUri(), $this->Iban ), $params );
-		
-		return new PaymentStatus( $paymentStatusResponse );
-	}
-	
-	
-	/**
-	 * Get the status of a payment (SCT Instant - Payment Status API)
-	 * @param string $orderId
-	 * @return PaymentStatus
-	 */
-	public function getPaymentStatus( string $orderId, ?string $paymentId = null ): PaymentStatus {
-		$params = [];
-		
-		if( $paymentId ) {
-			$params['paymentId'] = $paymentId;
-		}
-		
-		$paymentStatusResponse = $this->request( 'GET', sprintf( '%s/payments/sct/instant/%s/history/%s', $this->getApiBaseUri(), $this->Iban, $orderId ), $params );
 		
 		return new PaymentStatus( $paymentStatusResponse );
 	}
@@ -540,74 +440,6 @@ class IntesaSanPaoloClient {
 				
 			} else {
 				$payments->addPayments( $paymentsResponse->payload->paymentsResults );
-			}
-		}
-		
-		return $payments;
-	}
-	
-	
-	/**
-	 * Get a list of the payments (SCT Instant - Payments List API)
-	 *
-	 * @param DateTime $fromDate If null, defaults to "1 month ago"
-	 * @param DateTime $toDate
-	 *
-	 * @return PaymentInfos
-	 */
-	public function getPaymentsList( ?DateTime $fromDate = null, ?DateTime $toDate = null ): PaymentInfos {
-		if( is_null( $fromDate ) ) {
-			$fromDate = new DateTime();
-			$fromDate->modify( '-1 month' );
-		}
-		
-		$params = [
-			'fromDate' => $fromDate->format( 'Ymd' ),
-			'offset' => 0,
-			'limit' => 100,
-			'paymentDirection' => 'O',
-		];
-		
-		if( !is_null( $toDate ) ) {
-			$params['toDate'] = $toDate->format( 'Ymd' );
-		}
-		
-		$url = sprintf( '%s/payments/sct/instant/%s/history', $this->getApiBaseUri(), $this->Iban );
-		
-		$payments = null;
-		
-		while( $url ) {
-			$paymentsResponse = $this->request( 'GET', $url, $params );
-			
-			if( isset( $paymentsResponse->payload ) and isset( $paymentsResponse->payload->links ) and isset( $paymentsResponse->payload->links->next ) and !empty( $paymentsResponse->payload->links->next ) ) {
-				$uri = new Uri( $paymentsResponse->payload->links->next );
-				parse_str( $uri->getQuery(), $params );
-				
-				if( !isset( $params['paymentDirection'] ) ) {
-					$params['paymentDirection'] = 'O';
-				}
-				
-				$url = $paymentsResponse->payload->links->next;
-				
-				/* URL next page on Sandbox is unreachable - it's a known bug */
-				if( !$this->Live ) {
-					$url = str_replace( 'http://localhost:8081', sprintf( '%s/sandbox', $this->BaseUri ), $url );
-					$url = str_replace( '/IT59R0306901001100000002110/', sprintf( '/%s/', $this->Iban ), $url );
-				}
-				
-			} else {
-				$url = null;
-			}
-			
-			if( empty( $paymentsResponse->payload->payments ) ) {
-				$url = null;
-			}
-			
-			if( !$payments ) {
-				$payments = new PaymentInfos( $paymentsResponse );
-				
-			} else {
-				$payments->addPayments( $paymentsResponse->payload->payments );
 			}
 		}
 		

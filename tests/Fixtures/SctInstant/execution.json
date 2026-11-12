@@ -1,0 +1,24 @@
+{
+    "success": true,
+    "errors": null,
+    "payload": {
+        "orderId": "ORD-0001",
+        "paymentId": "PAY-0001",
+        "endToEndId": "E2E-0001",
+        "resubmitId": null,
+        "customerCro": "CRO-0001",
+        "transactionStatusDescription": "ACSC-Prtry:",
+        "paymentStatus": "ACSC",
+        "amount": 150.25,
+        "currency": "EUR",
+        "date": "2026-01-15T10:01:00Z",
+        "categoryPurpose": "CASH",
+        "paymentInformation": "Fattura 1/2026",
+        "debtorName": "Example Srl",
+        "debtorIBAN": "IT00X0000000000000000000001",
+        "debtorBic": "BCITITMM",
+        "creditorName": "Mario Rossi",
+        "creditorIBAN": "IT00X0000000000000000000002",
+        "creditorBic": "BCITITMM"
+    }
+}

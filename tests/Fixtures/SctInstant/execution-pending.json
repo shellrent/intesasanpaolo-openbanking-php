@@ -1,0 +1,15 @@
+{
+    "success": true,
+    "errors": null,
+    "payload": {
+        "orderId": "ORD-0002",
+        "paymentId": "PAY-0002",
+        "resubmitId": "RES-0002",
+        "customerCro": "CRO-0002",
+        "transactionStatusDescription": "PNDG",
+        "paymentStatus": "PNDG",
+        "amount": 150.25,
+        "currency": "EUR",
+        "date": "2026-01-15T10:01:00Z"
+    }
+}

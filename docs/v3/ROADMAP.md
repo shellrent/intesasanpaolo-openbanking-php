@@ -17,7 +17,7 @@ Piano di lavoro della riscrittura 3.0 dell'SDK. È la **fonte di verità sullo s
 | T2 | Tooling e dipendenze | ✅ completata |
 | T3 | Core: configurazione, trasporto, date, eccezioni | ✅ completata |
 | T4 | API Conti | ✅ completata |
-| T5 | API SCT Instant | ⏳ da fare |
+| T5 | API SCT Instant | ✅ completata |
 | T6 | API SCT (bonifico ordinario) | ⏳ da fare |
 | T7 | API IBAN e raggiungibilità | ⏳ da fare |
 | T8 | Rilascio 3.0.0 | ⏳ da fare |
@@ -84,7 +84,7 @@ Una task è completata quando:
 - Finding: F-12, F-15, F-18, F-23.
 - Fatto anche: facade `IntesaSanPaoloClient` con `accounts()`; client 2.x spostato in `Legacy\` senza i metodi dei conti, con i relativi model e test 2.x eliminati (D-30).
 
-### T5 · API SCT Instant
+### T5 · API SCT Instant ✅
 - Simulazione con esito VoP (Q-37).
 - Esecuzione con resubmit automatico quando c'è un `resubmitId`.
 - Stato e lista.
@@ -93,6 +93,7 @@ Una task è completata quando:
 - Quirk `endToEndId`/`siaCode` tra Live e sandbox (Q-34).
 - Documentazione: `docs/payment-flows.md`, parte SCT Instant.
 - Finding: F-01, F-03, F-10, F-11 (in parte), F-24, F-25 (in parte), F-32, F-36.
+- Fatto anche: metodi SCT Instant rimossi dal client 2.x (`Legacy\`), che resta solo per l'SCT ordinario; helper pubblico `SepaText`; `docs/payment-flows.md`.
 
 ### T6 · API SCT (bonifico ordinario)
 - Simulazione: VoP, `fees` o `commissioni`, `categoryPurpose` configurabile, data di esecuzione opzionale, EUR di default.
@@ -130,3 +131,4 @@ Migrazione alla 3.0, provabile prima del tag con `3.x-dev`, e correzioni lato ge
 | 2026-11-12 | T2 | PHP ^8.3, Guzzle `^7.15.2 \|\| ^8.0.1` senza adapter; PHPUnit 12.5, PHPStan max, Pint; CI GitHub Actions (8.3/8.4/8.5 × dipendenze minime e massime); test 2.x riscritti e verdi; nullable espliciti; `composer.lock` rimosso; trovata l'incompatibilità tra Guzzle 8 e l'estensione PECL `psr` (D-20) |
 | 2026-11-12 | T3 | Core 3.0: `Config/`, `Auth/` (`TokenStore`), `Http/` (`Sender`, `Transport`, `Paginator`, riscrittura dei link della sandbox), `Support/` (`DateParser`, `Payload`), `Exception/`; mTLS obbligatorio, timeout, nessun retry, errori 4xx/5xx/rete mappati, transaction ID esposto; 97 test (anche con Guzzle 7 + estensione `psr`); documentazione: architettura, date, test, bozza di `UPGRADE-3.0.md`; nuovo finding F-36 |
 | 2026-11-12 | T4 | Facade `IntesaSanPaoloClient` con `accounts()`: `balance()`, `transactions()`, `todayTransactions()`; DTO `Balance`, `Transaction`, `TransactionList` (`isComplete()`, transaction ID per pagina); enum `TransactionStatus` (trait `FromApiValue`); date ISO sempre accettate; `date` mantenuta tra le pagine di fine giornata; client 2.x in `Legacy\`; fixture in `tests/Fixtures/`; 115 test; README con esempi, `UPGRADE-3.0.md` per i conti |
+| 2026-11-12 | T5 | `sctInstant()`: `simulate()`, `execute()` con blocco VoP, `resubmit()`, `status()`, `payments()`; richiesta `InstantPayment` validata; DTO con `Party` e `VopResult`; enum `ValidationStatus`, `PaymentStatus`, `InstantStatus`, `VopMatchResult`; simulazioni salvabili; JSON deterministico; `SepaText`; 176 test; `docs/payment-flows.md`; decisioni D-36…D-44 |

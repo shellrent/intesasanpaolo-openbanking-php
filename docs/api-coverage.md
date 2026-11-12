@@ -16,10 +16,10 @@ La colonna "3.0" indica il metodo della 3.0 (✅ disponibile) oppure la task che
 
 | Operazione | Endpoint | Metodo 2.x | 3.0 | Note |
 |---|---|---|---|---|
-| Simulazione | `POST /payments/sct/instant/simulation` | `simulateInstantPayment()` | T5 | esito VoP negli header |
-| Esecuzione | `POST /payments/sct/instant` | `createInstantPayment()` | T5 | richiede `simulationId` (5 min), resubmit per `PNDG` |
-| Stato | `GET /payments/sct/instant/{IBAN}/history/{orderId}` | `getPaymentStatus()` | T5 | |
-| Lista | `GET /payments/sct/instant/{IBAN}/history` | `getPaymentsList()` | T5 | paginazione `links.next` |
+| Simulazione | `POST /payments/sct/instant/simulation` | `simulateInstantPayment()` | ✅ `sctInstant()->simulate()` | esito VoP negli header |
+| Esecuzione | `POST /payments/sct/instant` | `createInstantPayment()` | ✅ `sctInstant()->execute()`, `resubmit()` | richiede la simulazione (5 min), resubmit per `PNDG` |
+| Stato | `GET /payments/sct/instant/{IBAN}/history/{orderId}` | `getPaymentStatus()` | ✅ `sctInstant()->status()` | |
+| Lista | `GET /payments/sct/instant/{IBAN}/history` | `getPaymentsList()` | ✅ `sctInstant()->payments()` | paginazione `links.next` |
 | Raggiungibilità IBAN | `GET /payments/sct/instant/reachability` | — | T7 | |
 | Simulazione ISO 20022 | `POST /payments/sct/instant/simulation/iso` | — | non pianificata | body XML pain.001 |
 | Esecuzione ISO 20022 | `POST /payments/sct/instant/iso` | — | non pianificata | body XML pain.001 |

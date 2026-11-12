@@ -12,6 +12,7 @@ use Shellrent\OpenBanking\Exception\ApiException;
 use Shellrent\OpenBanking\Exception\AuthenticationException;
 use Shellrent\OpenBanking\Exception\TransportException;
 use Shellrent\OpenBanking\Exception\UnexpectedResponseException;
+use Shellrent\OpenBanking\Support\Json;
 use Shellrent\OpenBanking\Support\Payload;
 use stdClass;
 
@@ -75,6 +76,10 @@ final class Transport
      */
     private function request(string $method, string $pathOrUrl, array $query, ?array $json, array $headers): ApiResponse
     {
+        if ($json !== null) {
+            $headers['Content-Type'] = 'application/json';
+        }
+
         $response = $this->sender->send(
             $method,
             $this->resolve($pathOrUrl),
@@ -84,7 +89,7 @@ final class Transport
                 'apikey' => $this->config->clientId,
             ],
             query: $query,
-            json: $json,
+            body: $json === null ? null : Json::encode($json),
         );
 
         return $this->read($response);

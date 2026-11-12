@@ -17,6 +17,7 @@ use Shellrent\OpenBanking\Response\Accounts\Balance;
 use Shellrent\OpenBanking\Response\Accounts\TransactionList;
 use Shellrent\OpenBanking\Support\DateFormat;
 use Shellrent\OpenBanking\Support\DateParser;
+use Shellrent\OpenBanking\Support\Url;
 
 /**
  * Account information: balance and transactions of the configured IBAN.
@@ -68,7 +69,7 @@ final class AccountsApi
         return $this->collect(
             $this->path('transactions'),
             ['date' => $day],
-            static fn (ApiResponse $page): ?string => self::withQueryValue($page->requirePayload()->string('nextPage'), 'date', $day),
+            static fn (ApiResponse $page): ?string => Url::withQueryValue($page->requirePayload()->string('nextPage'), 'date', $day),
         );
     }
 
@@ -111,26 +112,5 @@ final class AccountsApi
     private function path(string $resource): string
     {
         return sprintf('accounts/%s/%s', rawurlencode($this->config->iban), $resource);
-    }
-
-    /**
-     * Adds a query parameter to a pagination link when the link does not carry it.
-     *
-     * The end-of-day "nextPage" link is documented with the "offsetid" parameter only, while
-     * "date" is required: keep it on every page (docs/api-quirks.md, Q-41).
-     */
-    private static function withQueryValue(?string $link, string $name, string $value): ?string
-    {
-        if ($link === null) {
-            return null;
-        }
-
-        parse_str((string) parse_url($link, PHP_URL_QUERY), $query);
-
-        if (array_key_exists($name, $query)) {
-            return $link;
-        }
-
-        return $link.(str_contains($link, '?') ? '&' : '?').$name.'='.rawurlencode($value);
     }
 }

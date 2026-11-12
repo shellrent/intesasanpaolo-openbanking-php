@@ -34,7 +34,8 @@ final class Sender
     /**
      * @param  array<string, string>  $headers
      * @param  array<string, scalar>  $query  Replaces the query string of the URI when not empty.
-     * @param  mixed  $json  Body sent as JSON, when not null.
+     * @param  mixed  $json  Body sent as JSON by Guzzle, when not null.
+     * @param  string|null  $body  Raw body, when not null (the caller sets the Content-Type).
      * @param  array<string, string>|null  $formParams  Body sent as "application/x-www-form-urlencoded", when not null.
      *
      * @throws TransportException When the request does not complete.
@@ -48,6 +49,7 @@ final class Sender
         array $query = [],
         mixed $json = null,
         ?array $formParams = null,
+        ?string $body = null,
     ): ResponseInterface {
         $options = [
             RequestOptions::HTTP_ERRORS => false,
@@ -67,6 +69,10 @@ final class Sender
 
         if ($formParams !== null) {
             $options[RequestOptions::FORM_PARAMS] = $formParams;
+        }
+
+        if ($body !== null) {
+            $options[RequestOptions::BODY] = $body;
         }
 
         try {

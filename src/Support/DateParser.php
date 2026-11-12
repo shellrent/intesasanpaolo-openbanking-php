@@ -37,20 +37,27 @@ final class DateParser
      * Besides the expected format, an ISO date ("2022-01-02") is always accepted: it cannot be
      * misread, and the 2.x SDK accepted it through `new DateTime()`.
      *
-     * @throws InvalidArgumentException When the value does not match the format or is not a real date (e.g. 31/02/2022).
+     * Alternative formats can be given for fields whose format varies; they must be structurally
+     * different from each other (e.g. "Ymd" and "d/m/Y"), so that no value can match two of them.
+     *
+     * @throws InvalidArgumentException When the value does not match the formats or is not a real date (e.g. 31/02/2022).
      */
-    public static function date(string $value, DateFormat $format): DateTimeImmutable
+    public static function date(string $value, DateFormat $format, DateFormat ...$alternatives): DateTimeImmutable
     {
-        $pattern = preg_match(self::ISO_DATE_PATTERN, $value) === 1 ? self::ISO_DATE_FORMAT : $format->value;
+        $patterns = preg_match(self::ISO_DATE_PATTERN, $value) === 1
+            ? [self::ISO_DATE_FORMAT]
+            : array_map(static fn (DateFormat $candidate): string => $candidate->value, [$format, ...$alternatives]);
 
-        $date = DateTimeImmutable::createFromFormat('!'.$pattern, $value, self::timezone());
-        $errors = DateTimeImmutable::getLastErrors();
+        foreach ($patterns as $pattern) {
+            $date = DateTimeImmutable::createFromFormat('!'.$pattern, $value, self::timezone());
+            $errors = DateTimeImmutable::getLastErrors();
 
-        if ($date === false || ($errors !== false && ($errors['warning_count'] > 0 || $errors['error_count'] > 0))) {
-            throw new InvalidArgumentException(sprintf('"%s" is not a valid date in the "%s" format.', $value, $format->value));
+            if ($date !== false && ($errors === false || ($errors['warning_count'] === 0 && $errors['error_count'] === 0))) {
+                return $date;
+            }
         }
 
-        return $date;
+        throw new InvalidArgumentException(sprintf('"%s" is not a valid date in the "%s" format.', $value, implode('" or "', $patterns)));
     }
 
     /**

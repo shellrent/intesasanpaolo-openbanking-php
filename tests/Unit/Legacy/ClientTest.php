@@ -11,14 +11,12 @@ use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use ReflectionProperty;
 use Shellrent\OpenBanking\Exceptions\HttpException;
 use Shellrent\OpenBanking\Legacy\IntesaSanPaoloClient;
-use Shellrent\OpenBanking\Models\PaymentExecution;
 
 /**
  * Exercises the 2.x client through a real Guzzle client backed by a MockHandler.
@@ -54,12 +52,12 @@ final class ClientTest extends LegacyTestCase
         $client = $this->client(true, $this->tokenResponse(), $this->json([
             'success' => true,
             'errors' => null,
-            'payload' => ['orderId' => 'ORD-0001', 'status' => 'Completed'],
+            'payload' => ['paymentId' => 'PAY-0001', 'paymentStatus' => 'ACSC'],
         ]));
 
-        $status = $client->getPaymentStatus('ORD-0001');
+        $status = $client->getDelayedPaymentStatus(null, 'PAY-0001');
 
-        self::assertSame('Completed', $status->getStatus());
+        self::assertSame('ACSC', $status->getStatus());
         self::assertCount(2, $this->history);
 
         $token = $this->recorded(0);
@@ -72,7 +70,7 @@ final class ClientTest extends LegacyTestCase
         $call = $this->recorded(1);
         self::assertSame('GET', $call['request']->getMethod());
         self::assertSame(
-            'https://external-api.intesasanpaolo.com/twa/live/v1/payments/sct/instant/'.self::IBAN.'/history/ORD-0001',
+            'https://external-api.intesasanpaolo.com/twa/live/v1/payments/bonsct/'.self::IBAN.'/history?paymentId=PAY-0001',
             (string) $call['request']->getUri(),
         );
         self::assertSame('Bearer token-123', $call['request']->getHeaderLine('Authorization'));
@@ -94,7 +92,7 @@ final class ClientTest extends LegacyTestCase
         ], 400));
 
         try {
-            $client->getPaymentStatus('ORD-0001');
+            $client->getDelayedPaymentStatus('CRO-0001');
             self::fail('HttpException was not thrown');
         } catch (HttpException $exception) {
             self::assertSame('INPUT_EXCEPTION E001: Invalid IBAN', $exception->getMessage());
@@ -122,59 +120,6 @@ final class ClientTest extends LegacyTestCase
             (string) $this->recorded(1)['request']->getUri(),
         );
         self::assertSame('application/json', $this->recorded(1)['request']->getHeaderLine('Content-Type'));
-    }
-
-    /**
-     * Q-34: empty endToEndId and siaCode are sent as empty strings in sandbox and omitted in Live.
-     *
-     * @param  array<string, string>  $expectedOptionalFields
-     */
-    #[Test]
-    #[DataProvider('environments')]
-    public function it_handles_empty_optional_ids_depending_on_the_environment(bool $live, string $environment, array $expectedOptionalFields): void
-    {
-        $client = $this->client($live, $this->tokenResponse(), $this->json([
-            'success' => true,
-            'errors' => null,
-            'payload' => [
-                'transactionStatusDescription' => 'ACSC',
-                'validationStatus' => 'ACSC',
-                'simulationId' => 'SIM-0001',
-                'amount' => 10,
-                'currency' => 'EUR',
-            ],
-        ]));
-
-        $simulation = $client->simulateInstantPayment(
-            (new PaymentExecution)
-                ->setDebtorName('Example Srl')
-                ->setDebtorIban(self::IBAN)
-                ->setCreditorName('Mario Rossi')
-                ->setCreditorIban('IT00X0000000000000000000002')
-                ->setAmount(10)
-                ->setPaymentInformation('Test payment'),
-        );
-
-        self::assertSame('SIM-0001', $simulation->getSimulationId());
-
-        $request = $this->recorded(1)['request'];
-        self::assertSame(
-            'https://external-api.intesasanpaolo.com/twa/'.$environment.'/v1/payments/sct/instant/simulation',
-            (string) $request->getUri(),
-        );
-
-        $body = json_decode((string) $request->getBody(), true, 512, JSON_THROW_ON_ERROR);
-        self::assertIsArray($body);
-        self::assertSame($expectedOptionalFields, array_intersect_key($body, ['endToEndId' => true, 'siaCode' => true]));
-    }
-
-    /**
-     * @return iterable<string, array{bool, string, array<string, string>}>
-     */
-    public static function environments(): iterable
-    {
-        yield 'sandbox sends empty strings' => [false, 'sandbox', ['endToEndId' => '', 'siaCode' => '']];
-        yield 'live omits the fields' => [true, 'live', []];
     }
 
     private function client(bool $live, Response ...$responses): IntesaSanPaoloClient

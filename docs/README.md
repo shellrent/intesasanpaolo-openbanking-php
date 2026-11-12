@@ -16,6 +16,7 @@ Documentazione tecnica dell'SDK. Per installazione e uso parti dal [README](../R
 |---|---|
 | [architecture.md](architecture.md) | struttura del codice, percorso di una richiesta, eccezioni, token, API pubblica e interna |
 | [dates-and-formats.md](dates-and-formats.md) | come l'SDK legge e scrive le date, fusi orari, uso con Carbon |
+| [payment-flows.md](payment-flows.md) | simulazione, VoP, esecuzione, resubmit, stati, simulazioni salvate (SCT Instant; SCT in T6) |
 | [testing.md](testing.md) | comandi, struttura dei test, `MockHttp`, regole sulle fixture |
 | [../UPGRADE-3.0.md](../UPGRADE-3.0.md) | aggiornamento dalla 2.x alla 3.0 (bozza) |
 
@@ -23,7 +24,6 @@ Documentazione tecnica dell'SDK. Per installazione e uso parti dal [README](../R
 
 | Documento | Task |
 |---|---|
-| `payment-flows.md` – simulazione, esecuzione, VoP, resubmit, stati, revoca | T5–T6 |
 | `adding-an-endpoint.md` – come aggiungere una nuova API | T7 |
 
 ## Lavoro in corso (temporaneo)

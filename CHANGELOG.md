@@ -10,6 +10,16 @@ Versione 3.0.0 in sviluppo sul branch `3.x`. Contiene modifiche incompatibili co
 
 ### Aggiunto
 - Nuova facade `IntesaSanPaoloClient` con le API per area.
+- API SCT Instant `sctInstant()`:
+  - `simulate()`, con l'**esito della Verification of Payee** (`VopResult`);
+  - `execute()`, che **esegue in automatico solo con un match VoP pieno** (altrimenti `VopConfirmationRequiredException` finché non si passa `acceptVopResult: true`) e controlla che la simulazione appartenga al pagamento;
+  - `resubmit()` per i pagamenti sospesi;
+  - `status()` e `payments()`.
+- Richiesta `InstantPayment`, validata alla creazione (lunghezze SEPA, IBAN, importo con al massimo 2 decimali).
+- Simulazioni salvabili e ricaricabili (`toArray()`/`fromArray()`).
+- Enum `ValidationStatus`, `PaymentStatus` (con `isAccepted()`/`isFinal()`), `InstantStatus` e `VopMatchResult`.
+- Helper `SepaText` per pulire i testi dai caratteri non ammessi dalla banca.
+- `docs/payment-flows.md`.
 - API Conti `accounts()`:
   - `balance()`, con data opzionale;
   - `transactions($date)` e `todayTransactions()`, con tutte le pagine raccolte.
@@ -39,9 +49,11 @@ Versione 3.0.0 in sviluppo sul branch `3.x`. Contiene modifiche incompatibili co
 - Strumenti di sviluppo: PHPStan (livello max), Laravel Pint, script `composer ci`.
 
 ### Modificato
-- **Il client 2.x è ora `Shellrent\OpenBanking\Legacy\IntesaSanPaoloClient`**, deprecato e limitato ai pagamenti; sarà eliminato prima del rilascio 3.0.0. Eliminati i model 2.x dei conti (`Models\Balance`, `Models\Transaction`, `Models\Collections\Transactions`).
+- **Il client 2.x è ora `Shellrent\OpenBanking\Legacy\IntesaSanPaoloClient`**, deprecato e limitato al bonifico SCT ordinario (i metodi dei conti e SCT Instant sono stati rimossi); sarà eliminato prima del rilascio 3.0.0. Eliminati i model 2.x dei conti (`Models\Balance`, `Models\Transaction`, `Models\Collections\Transactions`).
 - Movimenti: una data di valuta assente, vuota o `"0"` vale `null` (la 2.x usava la data corrente); un movimento senza importo è un errore (la 2.x usava 0).
 - Movimenti di fine giornata: il parametro `date` viene mantenuto anche sulle pagine successive.
+- Corpo JSON delle richieste generato in modo deterministico: gli importi non risentono di `serialize_precision` né del rumore dei float.
+- Resubmit SCT Instant: `resubmit` e `resubmitId` vengono sempre inviati insieme (nella 2.x `resubmitId` veniva ignorato senza `setResubmit(true)`).
 - **Requisito minimo PHP 8.3.**
 - **Guzzle è ora una dipendenza diretta, `^7.15.2 || ^8.0.1`** (minimi scelti per escludere le versioni con advisory di sicurezza). Rimosso `php-http/guzzle7-adapter`, che non veniva usato.
 - Parametri nullable resi espliciti: nessuna deprecation su PHP 8.4 e 8.5.

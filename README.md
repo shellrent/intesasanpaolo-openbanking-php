@@ -13,7 +13,7 @@ SDK PHP **non ufficiale** per le API [SmartHub](https://smarthub.intesasanpaolo.
 | Area | API | 2.x | 3.0 |
 |---|---|:---:|:---:|
 | Conti | saldo, movimenti di fine giornata e intraday | ✅ | ✅ |
-| SCT Instant | simulazione, esecuzione, stato, lista | ✅ | in sviluppo |
+| SCT Instant | simulazione (con esito VoP), esecuzione, resubmit, stato, lista | ✅ | ✅ |
 | SCT (bonifico ordinario) | simulazione, esecuzione, stato, lista, revoca | ✅ | in sviluppo |
 | Strumenti | verifica IBAN (sintattica, esistenza, congruenza CF/P.IVA), raggiungibilità SCT Instant | — | pianificata |
 
@@ -45,7 +45,7 @@ composer require shellrent/intesasanpaolo-openbanking-php
 
 ## Verification of Payee (VoP)
 
-Dal 2025 la simulazione di un bonifico (SCT e SCT Instant) restituisce anche l'esito della verifica del beneficiario, cioè la corrispondenza tra IBAN e nome. **Eseguire il bonifico equivale ad accettare quell'esito**, quindi controllalo prima di procedere. La 3.0 lo rende disponibile direttamente nel risultato della simulazione.
+Dal 2025 la simulazione di un bonifico (SCT e SCT Instant) restituisce anche l'esito della verifica del beneficiario, cioè la corrispondenza tra IBAN e nome. **Eseguire il bonifico equivale ad accettare quell'esito.** La 3.0 lo espone nel risultato della simulazione (`$simulation->vop`) e **esegue in automatico solo con un match pieno**; negli altri casi serve una conferma esplicita (`acceptVopResult: true`).
 
 ## Utilizzo
 
@@ -54,6 +54,7 @@ use Shellrent\OpenBanking\Config\ClientConfig;
 use Shellrent\OpenBanking\Config\Environment;
 use Shellrent\OpenBanking\Config\MutualTlsCertificate;
 use Shellrent\OpenBanking\IntesaSanPaoloClient;
+use Shellrent\OpenBanking\Request\InstantPayment;
 
 $client = new IntesaSanPaoloClient(new ClientConfig(
     clientId: '…',
@@ -80,14 +81,28 @@ foreach ($list->accounted as $transaction) {
 
 // Movimenti di oggi, contabilizzati e non ancora contabilizzati
 $today = $client->accounts()->todayTransactions();
+
+// Bonifico istantaneo: simulazione, controllo VoP, esecuzione
+$payment = new InstantPayment(
+    creditorName: 'Mario Rossi',
+    creditorIban: 'IT…',
+    amount: 150.25,
+    paymentInformation: 'Fattura 1/2026',
+    debtorName: 'Example Srl',
+);
+
+$simulation = $client->sctInstant()->simulate($payment);
+$execution = $client->sctInstant()->execute($payment, $simulation);   // con VoP non pieno: VopConfirmationRequiredException
 ```
+
+I flussi di pagamento completi, con esiti, resubmit e simulazioni salvate, sono in [docs/payment-flows.md](docs/payment-flows.md).
 
 - Le risposte sono oggetti immutabili con proprietà pubbliche.
 - Le date sono `DateTimeImmutable` ([docs/dates-and-formats.md](docs/dates-and-formats.md)).
 - Gli errori sono eccezioni che implementano `Shellrent\OpenBanking\Exception\OpenBankingException` ([docs/architecture.md](docs/architecture.md)).
 
 > [!NOTE]
-> Finché i pagamenti non sono riscritti (T5–T6), il client 2.x resta disponibile come `Shellrent\OpenBanking\Legacy\IntesaSanPaoloClient`, solo per i pagamenti. Verrà eliminato prima del rilascio della 3.0.
+> Finché il bonifico SCT ordinario non è riscritto (T6), il client 2.x resta disponibile come `Shellrent\OpenBanking\Legacy\IntesaSanPaoloClient`, solo per quei metodi. Verrà eliminato prima del rilascio della 3.0.
 
 ## Sviluppo
 
