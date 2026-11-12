@@ -1,0 +1,21 @@
+# Line ending LF per tutti i file di testo
+* text=auto eol=lf
+
+*.jpg binary
+*.png binary
+
+# File esclusi dal pacchetto installato con Composer (dist)
+/.github            export-ignore
+/docs               export-ignore
+/env                export-ignore
+/tests              export-ignore
+/.editorconfig      export-ignore
+/.gitattributes     export-ignore
+/.gitignore         export-ignore
+/AGENTS.md          export-ignore
+/CLAUDE.md          export-ignore
+/CONTRIBUTING.md    export-ignore
+/phpunit.xml        export-ignore
+/phpunit.xml.dist   export-ignore
+/phpstan.neon.dist  export-ignore
+/pint.json          export-ignore
