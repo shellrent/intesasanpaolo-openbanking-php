@@ -1,7 +1,5 @@
 # Aggiornamento dalla 2.x alla 3.0
 
-> **Bozza:** la 3.0 è in sviluppo sul branch `3.x`. Questa guida si completa man mano che le API vengono riscritte (roadmap in `docs/v3/ROADMAP.md`).
-
 La 3.0 è una riscrittura e non è compatibile con la 2.x: la configurazione, le eccezioni e i model di risposta cambiano.
 
 ## Requisiti
@@ -44,6 +42,7 @@ $config = new ClientConfig(
 Altre differenze:
 - i file del certificato vengono controllati alla creazione della configurazione;
 - un file PKCS#12 deve avere estensione `.p12`;
+- il `.p12` scaricato da SmartHub usa una cifratura che OpenSSL 3 non legge, e va convertito una volta: i comandi sono nel README, sezione "Certificato";
 - l'IBAN viene normalizzato (maiuscole, senza spazi) e validato nel formato.
 
 ## Eccezioni
@@ -53,7 +52,7 @@ Altre differenze:
 | `Shellrent\OpenBanking\Exceptions\Exception` | `Shellrent\OpenBanking\Exception\OpenBankingException` (interfaccia comune) |
 | `Shellrent\OpenBanking\Exceptions\HttpException` (solo 4xx) | `ApiException` (4xx, 5xx, `success: false`) e `AuthenticationException` (login, 401) |
 | eccezioni Guzzle grezze per 5xx e rete | `TransportException`: **per i pagamenti l'esito è sconosciuto** |
-| model vuoti o warning PHP su risposte anomale | `UnexpectedResponseException` |
+| model vuoti o warning PHP su risposte anomale | `UnexpectedResponseException`: anche in questo caso, **per i pagamenti l'esito è sconosciuto** |
 
 Il namespace cambia da `Exceptions` (plurale) a `Exception` (singolare). Le eccezioni API espongono `statusCode`, `errors` (lista di `ApiError`) e `transactionId`, cioè il valore dell'header `X-ISP-Transaction-ID` da indicare al supporto ISP.
 
@@ -75,7 +74,7 @@ $client = new IntesaSanPaoloClient($config);                        // client Gu
 $client = new IntesaSanPaoloClient($config, $guzzle, $tokenStore);  // client Guzzle e TokenStore propri
 ```
 
-- Le API si raggiungono per area: `$client->accounts()`, `sctInstant()`, `sct()`, poi (T7) `ibanTools()`.
+- Le API si raggiungono per area: `$client->accounts()`, `sctInstant()`, `sct()`, `ibanTools()`.
 - Le risposte sono oggetti immutabili con **proprietà pubbliche** al posto dei getter: `$balance->getAvailableBalance()` diventa `$balance->availableBalance`.
 
 ## Conti
@@ -188,7 +187,7 @@ Nella 2.x i metodi avevano il suffisso "Delayed"; nella 3.0 l'area si chiama `sc
 | `PaymentExecuted::getPaymentStatus()` (stringa) | `SctExecution::$paymentStatus` (`PaymentStatus`: `InProgress`, `Accepted`, `ToVerify`, `Rejected`) e `$rawPaymentStatus` |
 | `PaymentExecuted::getCustomerCro()` | `SctExecution::$customerCro` |
 | `PaymentInfos::getPayments()` (senza CRO) | `SctPaymentList::$payments` (`SctPaymentListItem` con `customerCro`, `endToEndId`, `simulationId`, `categoryPurpose`, date) |
-| `DelayedPaymentRevoke::getStatus()` (`OK`/`KO`) | `SctRevocation::isRevoked()`, `$revoked`, `$rawStatus` |
+| `DelayedPaymentRevoke::getStatus()` (`OK`/`KO`) | `SctRevocation::isRevoked()`, `$revoked`, `$rawStatus`; una revoca rifiutata è un esito (`revoked: false`), anche quando la banca risponde `success: false` |
 
 ## Classi 2.x rimosse
 
@@ -211,4 +210,5 @@ Nella 2.x non c'erano. Nella 3.0:
 Note:
 - **IBAN non valido**: `formalCheck()` lo invia comunque, e il risultato è `isValid()` falso, non un'eccezione.
 - **Input malformati**: `verify()` e `reachability()` rifiutano prima della chiamata IBAN, codici fiscali e partite IVA malformati.
-- **Esistenza**: che si verifichi con `chargeabilityMulti` e il solo IBAN è una deduzione dalla documentazione (D-51), da confermare con le verifiche reali.
+- **Esito negativo**: è un risultato (`isAllowed()` falso), non un'eccezione, anche quando la banca risponde `success: false`.
+- **Esistenza**: che si verifichi con `chargeabilityMulti` e il solo IBAN è una deduzione dalla documentazione (D-51, in `docs/decisions.md`). La sandbox richiede codice fiscale o partita IVA; in Live va confermato.

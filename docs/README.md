@@ -17,14 +17,7 @@ Documentazione tecnica dell'SDK. Per installazione e uso parti dal [README](../R
 | [architecture.md](architecture.md) | struttura del codice, percorso di una richiesta, eccezioni, token, API pubblica e interna |
 | [dates-and-formats.md](dates-and-formats.md) | come l'SDK legge e scrive le date, fusi orari, uso con Carbon |
 | [payment-flows.md](payment-flows.md) | simulazione, VoP, esecuzione, resubmit, stati, revoca, simulazioni salvate (SCT Instant e SCT) |
-| [testing.md](testing.md) | comandi, struttura dei test, `MockHttp`, regole sulle fixture |
+| [testing.md](testing.md) | comandi, struttura dei test, `MockHttp`, regole sulle fixture, test di integrazione con sandbox e Live |
 | [adding-an-endpoint.md](adding-an-endpoint.md) | ricetta per integrare una nuova API, con l'esempio delle verifiche IBAN |
-| [../UPGRADE-3.0.md](../UPGRADE-3.0.md) | aggiornamento dalla 2.x alla 3.0 (bozza) |
-
-## Lavoro in corso (temporaneo)
-
-| Documento | Contenuto |
-|---|---|
-| [v3/ROADMAP.md](v3/ROADMAP.md) | task, stato e registro di avanzamento della 3.0 |
-| [v3/FINDINGS.md](v3/FINDINGS.md) | problemi emersi dalla revisione della 2.x e task che li risolvono |
-| [v3/DECISIONS.md](v3/DECISIONS.md) | decisioni prese e questioni aperte |
+| [decisions.md](decisions.md) | decisioni di progettazione (D-01 e seguenti) e task della riscrittura 3.0 |
+| [../UPGRADE-3.0.md](../UPGRADE-3.0.md) | aggiornamento dalla 2.x alla 3.0 |

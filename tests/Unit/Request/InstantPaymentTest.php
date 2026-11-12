@@ -32,7 +32,7 @@ final class InstantPaymentTest extends TestCase
 
         self::assertSame('Mario Rossi', $payment->creditorName);
         self::assertSame('IT00X0000000000000000000002', $payment->creditorIban);
-        self::assertSame(0.3, $payment->amount, 'Float noise is removed (F-36)');
+        self::assertSame(0.3, $payment->amount, 'Float noise is removed (D-38)');
         self::assertSame('Fattura 1/2026', $payment->paymentInformation);
         self::assertSame('IT00X0000000000000000000001', $payment->debtorIban);
         self::assertNull($payment->endToEndId, '"NOTPROVIDED" means no end-to-end ID (Q-35)');

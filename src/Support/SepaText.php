@@ -7,7 +7,7 @@ namespace Shellrent\OpenBanking\Support;
 /**
  * Optional helper for the texts of SEPA payments (names, payment information).
  *
- * The SDK sends texts as they are, like the 2.x SDK did (docs/v3/DECISIONS.md, D-39): use this
+ * The SDK sends texts as they are, like the 2.x SDK did (docs/decisions.md, D-39): use this
  * helper when you want to stay within the characters accepted by Intesa Sanpaolo
  * (docs/api-quirks.md, Q-39): a-z A-Z 0-9 / - ? : ( ) . , ' + and space.
  *

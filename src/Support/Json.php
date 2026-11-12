@@ -7,7 +7,7 @@ namespace Shellrent\OpenBanking\Support;
 use JsonException;
 
 /**
- * Deterministic JSON encoding of request bodies (docs/v3/FINDINGS.md, F-36).
+ * Deterministic JSON encoding of request bodies (docs/decisions.md, D-38).
  *
  * json_encode() writes floats according to the "serialize_precision" ini setting: with a
  * non-default value an amount of 0.3 could be sent as 0.29999999999999999. The encoding

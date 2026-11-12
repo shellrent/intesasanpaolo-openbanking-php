@@ -10,11 +10,9 @@ SDK PHP **non ufficiale** per le API SmartHub / Open Banking di Intesa Sanpaolo 
 - Il consumer principale è il gestionale interno di Shellrent (repository privato), che lo usa in produzione per eseguire bonifici reali. Ogni cambiamento di comportamento può spostare denaro.
 - Documentazione ufficiale ISP: https://smarthub.intesasanpaolo.com/it/homepage/documenti-sviluppo.html
 
-## Stato attuale: riscrittura 3.0 in corso
+## Versioni
 
-Sul branch `3.x` è in corso la riscrittura per la versione 3.0.0. **Prima di iniziare qualsiasi lavoro leggi [`docs/v3/ROADMAP.md`](docs/v3/ROADMAP.md)**, che riporta le task, il loro stato e il registro di avanzamento. Le motivazioni delle scelte sono in [`docs/v3/DECISIONS.md`](docs/v3/DECISIONS.md), i problemi da risolvere in [`docs/v3/FINDINGS.md`](docs/v3/FINDINGS.md).
-
-`docs/v3/` è temporanea e viene eliminata al rilascio della 3.0 (task T8).
+La versione corrente è la 3.0, una riscrittura completa della 2.x. **Prima di cambiare un comportamento o la struttura leggi [`docs/decisions.md`](docs/decisions.md)**: riporta le decisioni di progettazione (D-01 e seguenti), con le motivazioni, e le task della riscrittura (T0–T9) che le voci citano.
 
 ## Regole fondamentali
 
@@ -104,14 +102,13 @@ ln -s ../openbanking-openapi specs
 
 L'indice completo è in [docs/README.md](docs/README.md).
 
-## Come lavorare su una task della 3.0
+## Come lavorare
 
-1. Leggi `docs/v3/ROADMAP.md` e i finding collegati alla task in `docs/v3/FINDINGS.md`.
-2. Lavora su una sola task alla volta, sul branch `3.x`, e solo dopo l'approvazione del maintainer.
-3. A fine task rispetta la "definizione di completata" della roadmap:
-   - test verdi;
-   - documentazione e `CHANGELOG.md` aggiornati;
-   - stato dei finding aggiornato;
-   - nuove decisioni registrate;
-   - voce nel registro di avanzamento.
-4. Commit in inglese secondo Conventional Commits (es. `feat(sct): add revoke endpoint`), poi push di `3.x`. Nessun tag fino al rilascio.
+1. Una modifica alla volta, e solo dopo l'approvazione del maintainer.
+2. Lavora su un branch dedicato e apri una PR verso `main`, che richiede un'approvazione.
+3. Una modifica è completa quando:
+   - `composer ci` è verde; per le API toccate, se il maintainer lo chiede, anche `composer test:integration`;
+   - documentazione e `CHANGELOG.md` (sezione Unreleased) sono aggiornati;
+   - i nuovi comportamenti delle API sono in `docs/api-quirks.md`, con la fonte;
+   - le nuove decisioni sono in `docs/decisions.md`, con il primo identificativo libero.
+4. Commit in inglese secondo Conventional Commits (es. `feat(sct): add revoke endpoint`). Tag e rilasci li decide il maintainer.

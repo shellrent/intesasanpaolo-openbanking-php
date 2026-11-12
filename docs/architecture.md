@@ -1,8 +1,8 @@
 # Architettura
 
-Come è organizzato il codice della 3.0 e che percorso fa una richiesta. Le motivazioni delle scelte sono in [v3/DECISIONS.md](v3/DECISIONS.md), finché quel documento esiste.
+Come è organizzato il codice della 3.0 e che percorso fa una richiesta. Le motivazioni delle scelte sono in [decisions.md](decisions.md).
 
-> Stato: tutte le API pianificate per la 3.0 sono implementate (T3–T7) e il codice 2.x è stato eliminato. Per aggiungere un'API: [adding-an-endpoint.md](adding-an-endpoint.md).
+Per aggiungere un'API: [adding-an-endpoint.md](adding-an-endpoint.md).
 
 ## Struttura
 

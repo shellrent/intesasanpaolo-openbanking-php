@@ -10,7 +10,7 @@ use Shellrent\OpenBanking\Response\Sct\SctSimulation;
 use Shellrent\OpenBanking\Response\SctInstant\InstantSimulation;
 
 /**
- * Checks shared by every payment execution (docs/v3/DECISIONS.md, D-36 and D-40).
+ * Checks shared by every payment execution (docs/decisions.md, D-36 and D-40).
  *
  * @internal
  */

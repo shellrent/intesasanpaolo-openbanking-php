@@ -1,10 +1,12 @@
-# Decisioni – versione 3.0
+# Decisioni di progettazione
 
-Registro delle decisioni prese durante la riscrittura. Ogni voce indica data, decisione, motivazione ed eventuali alternative scartate.
+Registro delle decisioni prese con la riscrittura 3.0 e dopo. Ogni voce indica la decisione, la motivazione ed eventuali alternative scartate. Il codice e la documentazione le citano con il loro identificativo (es. D-36).
 
-> Documento temporaneo: viene eliminato al rilascio della 3.0 (T8). Le decisioni ancora rilevanti confluiscono in `docs/architecture.md`, `UPGRADE-3.0.md` e `CHANGELOG.md`.
+- Le voci non si rinumerano e non si cancellano: una decisione superata si aggiorna indicando quella che la sostituisce.
+- Il suffisso "— T*n*" indica la task della riscrittura in cui la decisione è stata presa (vedi [Task della riscrittura 3.0](#task-della-riscrittura-30)).
+- Le decisioni prese dal maintainer sono indicate come tali.
 
-## Decise
+## Decisioni
 
 ### D-01 · Major 3.0.0 su branch dedicato — 2026-11-12
 Tutte le correzioni e i miglioramenti confluiscono in una nuova major 3.0.0, sviluppata sul branch `3.x`. Su Packagist il branch diventa `3.x-dev`, così il gestionale può provare la 3.0 prima del rilascio.
@@ -46,13 +48,13 @@ Guzzle diventa una dipendenza diretta e si rimuove `php-http/guzzle7-adapter`, c
 ### D-07 · Date senza Carbon
 - Input: `DateTimeInterface` (quindi anche Carbon).
 - Output: `DateTimeImmutable`.
-- Ogni campo si legge con il suo formato esplicito ([api-quirks.md](../api-quirks.md), Q-10).
+- Ogni campo si legge con il suo formato esplicito ([api-quirks.md](api-quirks.md), Q-10).
 - Le date senza orario si interpretano a mezzanotte in `Europe/Rome`.
 
 Motivazione: richiedere Carbon imporrebbe una versione a chi usa la libreria (il gestionale è su Carbon 2, l'attuale è la 3) e non risolverebbe il problema, perché `Carbon::parse()` sbaglia giorno e mese esattamente come `DateTime`. Chi usa Carbon converte con `CarbonImmutable::instance()` o `new Carbon($date)`; la seconda strada è verificata con Carbon 2.73.
 
 ### D-08 · Spec ISP e dati reali fuori dal repo
-Le spec scaricate dall'area riservata restano un riferimento locale ([specs-reference.md](../specs-reference.md)). Nel repo non entrano mai dati reali: IBAN, CRO, nominativi, credenziali, certificati o risposte di produzione non anonimizzate.
+Le spec scaricate dall'area riservata restano un riferimento locale ([specs-reference.md](specs-reference.md)). Nel repo non entrano mai dati reali: IBAN, CRO, nominativi, credenziali, certificati o risposte di produzione non anonimizzate.
 
 ### D-09 · Ristrutturazione insieme ai fix
 I bugfix si fanno riscrivendo un'area alla volta nella nuova struttura (T3–T6), non prima sul codice 2.x: altrimenti molte correzioni andrebbero fatte due volte. Le incompatibilità con la 2.x si documentano in `UPGRADE-3.0.md`.
@@ -83,7 +85,7 @@ Gli stati sono enum, ma il valore originale (`raw`) è sempre conservato.
 - Si accettano gli alias noti (`PDNG` per `PNDG`, `Cancelled` per `Canceled`).
 - Un valore sconosciuto non lancia eccezioni: l'enum vale `null` e resta disponibile il `raw`.
 
-Motivazione: le API restituiscono varianti non documentate ([api-quirks.md](../api-quirks.md), Q-25 e seguenti).
+Motivazione: le API restituiscono varianti non documentate ([api-quirks.md](api-quirks.md), Q-25 e seguenti).
 
 ### D-12 · Fuori ambito per la 3.0
 Restano fuori: endpoint ISO 20022 (pain.001), localizzazione ATM e filiali, incassi MAV. Si possono riconsiderare in seguito.
@@ -92,16 +94,16 @@ Restano fuori: endpoint ISO 20022 (pain.001), localizzazione ATM e filiali, inca
 Un rilascio 2.2.0 con le sole correzioni urgenti (VoP, resubmit, date) è stato proposto ma non richiesto: non è pianificato.
 
 ### D-14 · Area di lavoro temporanea
-`docs/v3/` (roadmap, finding, decisioni) è temporanea e si elimina in T8. Ciò che resta valido si sposta prima in `CHANGELOG.md`, `UPGRADE-3.0.md` o nella documentazione permanente.
+Durante la riscrittura roadmap, finding e decisioni stavano nell'area temporanea `docs/v3/`, eliminata in T8 (D-60).
 
 ### D-15 · Finding lato consumer fuori da questo repo
 Il repo è pubblico: i problemi trovati nel gestionale interno (task T9) non si tracciano qui, ma nel repository del gestionale.
 
 ### D-16 · `composer.lock` non versionato — T2
-Per una libreria il lock non ha effetto su chi la installa e darebbe una falsa garanzia. La CI prova invece sia le dipendenze minime sia le massime consentite. Chiude O-01.
+Per una libreria il lock non ha effetto su chi la installa e darebbe una falsa garanzia. La CI prova invece sia le dipendenze minime sia le massime consentite.
 
 ### D-17 · Formatter: Laravel Pint — T2
-Si usa Laravel Pint con il preset `laravel`, coerente con D-04, più le regole `declare_strict_types`, `strict_comparison` e `strict_param` (`pint.json`). Pint richiede PHP 8.3, in linea con D-05. Chiude O-02.
+Si usa Laravel Pint con il preset `laravel`, coerente con D-04, più le regole `declare_strict_types`, `strict_comparison` e `strict_param` (`pint.json`). Pint richiede PHP 8.3, in linea con D-05.
 
 ### D-18 · Codice 2.x escluso dagli strumenti — T2
 I file 2.x sono esclusi dall'analisi di PHPStan e da Pint finché non vengono riscritti: riformattarli o "correggerli" per gli strumenti rischierebbe di cambiarne il comportamento (per esempio con `strict_types`), proprio mentre fanno da riferimento per la riscrittura. L'unica modifica fatta è stata rendere espliciti i nullable impliciti, che non cambia il comportamento. Il comportamento 2.x, compresi i quirk di trasporto, è fissato dai test in `tests/Unit/Legacy/`. Ogni esclusione si rimuove quando il file viene sostituito.
@@ -119,16 +121,16 @@ Decisione: il vincolo resta aperto anche a Guzzle 7 (D-06), il problema è docum
 ### D-21 · Cache del token: interfaccia propria `TokenStore` — T3
 Il token si condivide tra istanze con un'interfaccia `Auth\TokenStore` di tre metodi (`get`, `put`, `forget`). La predefinita è `InMemoryTokenStore`; `AccessToken::toArray()` e `fromArray()` servono a chi la implementa su una cache esterna.
 - Alternative scartate: PSR-16, che porta una dipendenza esposta agli stessi conflitti dell'estensione PECL `psr` (D-20); nessuna cache, che lascerebbe un login per ogni istanza.
-- Decisione del maintainer. Chiude O-03.
+- Decisione del maintainer.
 
 ### D-22 · Nessun logger integrato — T3
 L'SDK non registra log. Espone `transactionId` (header `X-ISP-Transaction-ID`) su risposte ed eccezioni e accetta un client Guzzle dell'applicazione, a cui si può aggiungere il middleware di log di Guzzle. Non ci sono dipendenze e non c'è rischio di registrare dati sensibili.
 - Alternativa scartata: logger PSR-3 opzionale.
-- Decisione del maintainer. Chiude O-04.
+- Decisione del maintainer.
 
 ### D-23 · Certificato mTLS obbligatorio — T3
 `ClientConfig` richiede un `MutualTlsCertificate` e la base URL è sempre `/twa/{ambiente}/v1`: tutte le spec attuali la usano, mentre il percorso senza `/twa/` viene dalle spec del 2020. I file del certificato vengono controllati alla creazione della configurazione. Un PKCS#12 deve avere estensione `.p12`, che Guzzle usa per indicare a cURL il tipo di certificato.
-- Decisione del maintainer. Chiude O-05.
+- Decisione del maintainer.
 
 ### D-24 · Timeout, nessun retry, gestione del 401 — T3
 - Timeout predefiniti: 10 s per la connessione e 60 s per la richiesta, entrambi configurabili. Valori nulli o infiniti non sono ammessi, perché un daemon di pagamenti non deve bloccarsi.
@@ -148,7 +150,7 @@ Sono pubblici `Config/`, `Exception/` e, in `Auth/`, `AccessToken`, `TokenStore`
 Per i parametri di sola data l'SDK usa la data di calendario dell'oggetto ricevuto, senza convertirlo in `Europe/Rome`. Convertire potrebbe spostare il giorno in modo inatteso, per esempio le 23:30 UTC del 31/01 diventerebbero il 1° febbraio. In uscita le date senza orario sono a mezzanotte in `Europe/Rome` (D-07).
 
 ### D-28 · Tolleranza nella lettura delle risposte — T3
-- Un campo mancante, `null` o stringa vuota non ha valore. Con più nomi alternativi vince il primo che ha un valore.
+- Un campo mancante, `null`, stringa vuota o stringa `"null"` (D-57) non ha valore. Con più nomi alternativi vince il primo che ha un valore.
 - Un valore del tipo sbagliato è un errore (`UnexpectedResponseException`, con il percorso del campo) e non viene convertito "a forza".
 - `"payload": []` vale come payload assente, perché alcuni backend serializzano così un oggetto vuoto. Un array non vuoto resta un errore.
 
@@ -173,7 +175,7 @@ Le risposte singole espongono `transactionId`, le liste paginate `transactionIds
 `DateParser::date()` accetta sempre anche `Y-m-d`, oltre al formato atteso: non è ambiguo, e la 2.x lo accettava tramite `new DateTime()`. Accettarlo evita una regressione se l'API usa questo formato in campi senza esempi nella spec, come `accountingDate` e `valueDate`. La protezione sulle date `d/m/Y` resta invariata.
 
 ### D-35 · Movimenti di fine giornata: `date` mantenuta tra le pagine — T4
-Il link `nextPage` è documentato con il solo `offsetid`, ma `date` è obbligatorio. La 3.0 aggiunge `date` al link se manca e non lo duplica se c'è già (Q-41). Va verificato con una giornata reale di più di 200 movimenti.
+Il link `nextPage` è documentato con il solo `offsetid`, ma `date` è obbligatorio. La 3.0 aggiunge `date` al link se manca e non lo duplica se c'è già (Q-41). La sandbox invia già il link con `date`; in Live resta da verificare una giornata con più di 200 movimenti.
 
 ### D-36 · Blocco VoP in `execute()` — T5
 `execute()` riceve l'oggetto simulazione ed esegue in automatico solo con esito VoP `Match`. In tutti gli altri casi lancia `VopConfirmationRequiredException`, finché il chiamante non passa `acceptVopResult: true` dopo aver valutato l'esito: close match, no match, banca non aderente, verifica impossibile, ma anche esito assente o sconosciuto.
@@ -190,7 +192,7 @@ Il link `nextPage` è documentato con il solo `offsetid`, ma `date` è obbligato
 ### D-38 · Importi float validati e JSON deterministico — T5
 - Gli importi restano `float`: sono positivi, finiti e hanno al massimo 2 decimali. Il confronto avviene in centesimi con tolleranza 1e-6, quindi `0.1 + 0.2` diventa `0.3` e `10.567` viene rifiutato.
 - Tutti i body JSON passano da `Support\Json`, che imposta temporaneamente `serialize_precision = -1` e usa gli stessi flag dell'opzione `json` di Guzzle usata dalla 2.x. I byte inviati sono identici a quelli della 2.x, salvo il rumore dei float.
-- Decisione del maintainer. Chiude, per SCT Instant, la parte "codifica" di F-36.
+- Decisione del maintainer. Risolve la codifica non deterministica degli importi della 2.x (`0.1 + 0.2` inviato come `0.30000000000000004`).
 
 ### D-39 · Testi: solo lunghezze, più l'helper `SepaText` — T5
 L'SDK controlla i campi obbligatori e le lunghezze SEPA: nomi 70 caratteri, causale 140, `endToEndId` 35. Le lunghezze si contano in caratteri UTF-8, non in byte. I caratteri si inviano così come sono, come nella 2.x, che funziona in produzione con lettere accentate.
@@ -208,7 +210,7 @@ L'`endToEndId` `NOTPROVIDED` restituito dalla banca, con o senza spazi, diventa 
 - `PaymentStatus` usa i codici ISO 20022 ed è condiviso con l'SCT: `ACSC`, `ACSP`, `ACTC`, `PNDG`/`PDNG`, `RJCT`, `VRFY`, `CANC`, `RETU`. `isAccepted()` vale per `ACSC`, `ACSP` e `ACTC`, cioè ordini da non ripagare. `isFinal()` vale per gli stati che non cambiano più.
 - `ValidationStatus`: `ACCP` più l'alias `ACSC`.
 - `InstantStatus`: gli stati testuali, con l'alias `Cancelled`.
-- `VopMatchResult` riconosce sia i codici (`MTCH`, `CMTC`, `NMTC`, `NOAP`) sia le etichette della FAQ. Il valore esatto dell'header resta da verificare in sandbox o in produzione (T8).
+- `VopMatchResult` riconosce sia i codici (`MTCH`, `CMTC`, `NMTC`, `NOAP`) sia le etichette della FAQ. In sandbox l'header usa le etichette (`MATCH`, `CLOSE MATCH`, `CHECK NOT POSSIBLE`, Q-37); i valori di Live restano da verificare.
 
 ### D-43 · Lista SCT Instant — T5
 - Senza data di inizio vale il mese precedente, come nella 2.x.
@@ -217,12 +219,12 @@ L'`endToEndId` `NOTPROVIDED` restituito dalla banca, con o senza spazi, diventa 
 - La lista si ferma su una pagina vuota anche se c'è un link successivo, come nella 2.x.
 
 ### D-44 · Resubmit come metodo separato — T5
-`resubmit($payment, $simulationId, $resubmitId)` riceve gli identificativi invece degli oggetti, perché tipicamente avviene in un secondo momento, a partire da dati salvati. Invia sempre insieme `resubmit: true` e `resubmitId` (F-03).
+`resubmit($payment, $simulationId, $resubmitId)` riceve gli identificativi invece degli oggetti, perché tipicamente avviene in un secondo momento, a partire da dati salvati. Invia sempre insieme `resubmit: true` e `resubmitId`, mentre la 2.x ignorava `resubmitId` senza `setResubmit(true)` (Q-36).
 
 ### D-45 · Default della richiesta SCT — T6
 - `SctPayment` usa `EUR` e `CASH` come default (il `CASH` era fisso nella 2.x), entrambi configurabili e validati come codici: ISO 4217 a 3 lettere, ISO 20022 a 4 lettere.
-- `requestedExecutionDate` è opzionale: senza data il campo non viene inviato, come prevede la spec. La 2.x lo inviava sempre; l'effetto dell'omissione va verificato in sandbox (T8).
-- `CurrencySet` viene eliminato (F-33).
+- `requestedExecutionDate` è opzionale: senza data il campo non viene inviato, come prevede la spec. La 2.x lo inviava sempre. In sandbox l'effetto dell'omissione non è verificabile (Q-38): resta da verificare con una simulazione in Live.
+- `CurrencySet` viene eliminato: era incompleto e superfluo, perché l'SCT è solo in EUR.
 
 ### D-46 · Quirk SCT mantenuti — T6
 - `Content-Type: application/json` sulle GET di stato e lista, su ogni pagina, ma non sulla revoca, come nella 2.x (Q-04).
@@ -233,7 +235,7 @@ L'`endToEndId` `NOTPROVIDED` restituito dalla banca, con o senza spazi, diventa 
 I controlli prima dell'esecuzione (D-36, D-40) stanno in un'unica classe interna, `Api\PaymentGuard`, usata sia da `SctInstantApi` sia da `SctApi`: le due API applicano esattamente le stesse regole.
 
 ### D-48 · Esito della revoca — T6
-`SctRevocation::$revoked` vale `true` per `OK`, `false` per `KO` e `null` per un valore sconosciuto. `isRevoked()` è vero solo con una conferma esplicita. Il valore originale resta in `$rawStatus`.
+`SctRevocation::$revoked` vale `true` per `OK`, `false` per `KO` (anche `KO - Generic error`, D-58) e `null` per un valore sconosciuto. `isRevoked()` è vero solo con una conferma esplicita. Il valore originale resta in `$rawStatus`.
 
 ### D-49 · Date SCT — T6
 - Le date SCT si leggono come `d/m/Y`, con `Ymd` tollerato.
@@ -244,8 +246,8 @@ I controlli prima dell'esecuzione (D-36, D-40) stanno in un'unica classe interna
 Con l'SCT riscritto sono stati eliminati `Legacy\IntesaSanPaoloClient`, `Models/`, `Exceptions/`, `DataSet/` e i test 2.x, insieme alle esclusioni da PHPStan e Pint. Questo chiude D-18 e D-30. Tutto `src/` è ora analizzato al livello max e formattato da Pint. I comportamenti 2.x fissati dai test di riferimento sono coperti dai test 3.0, che citano le voci Q-…; per confrontare un comportamento con la 2.x resta il tag `2.1.1`.
 
 ### D-51 · "Verifica esistenza IBAN" tramite `chargeabilityMulti` — T7
-La spec scaricata per "Verifica esistenza IBAN" è una copia del formal-check, e il portale non dà altre indicazioni. L'esistenza si verifica quindi con `chargeabilityMulti` passando il solo IBAN (`ibanTools()->verify($iban)`): la sua descrizione dice "Check IBAN existence in addition to verification of IBAN holder", e codice fiscale e partita IVA sono opzionali. Va confermata con le verifiche reali di T8.
-- Decisione del maintainer. Chiude O-06.
+La spec scaricata per "Verifica esistenza IBAN" è una copia del formal-check, e il portale non dà altre indicazioni. L'esistenza si verifica quindi con `chargeabilityMulti` passando il solo IBAN (`ibanTools()->verify($iban)`): la sua descrizione dice "Check IBAN existence in addition to verification of IBAN holder", e codice fiscale e partita IVA sono opzionali. In sandbox la chiamata senza codice fiscale né partita IVA è rifiutata (`WI05`, Q-51): va confermata in Live (D-55).
+- Decisione del maintainer.
 
 ### D-52 · Raggiungibilità Instant in `sctInstant()` — T7
 La verifica di raggiungibilità SCT Instant è `sctInstant()->reachability()` e non sta negli strumenti IBAN: risponde alla domanda "posso pagare questo IBAN in istantaneo?" e precede la simulazione Instant. Gli strumenti IBAN (`ibanTools()`) non dipendono dal conto configurato.
@@ -256,7 +258,7 @@ La verifica di raggiungibilità SCT Instant è `sctInstant()->reachability()` e 
 ### D-54 · Codice fiscale e partita IVA — T7
 `verify()` normalizza codice fiscale e partita IVA (spazi rimossi, maiuscole) e richiede solo 8–16 caratteri alfanumerici, senza controllo di checksum: le banche CBI Globe possono avere formati diversi, e la verifica vera la fa l'API.
 
-### D-55 · Verifiche reali in Live, solo lettura — proposta per T8
+### D-55 · Verifiche reali in Live, solo lettura — T8
 Su indicazione del maintainer, in T8 si verificano i comportamenti ancora presunti con chiamate reali alle API di **sola lettura**:
 - in Live, con le credenziali di produzione: saldo, movimenti, liste e stati dei pagamenti, strumenti IBAN, raggiungibilità;
 - in sandbox: simulazioni ed esecuzioni.
@@ -272,6 +274,56 @@ Punti da verificare:
 - tipi reali dei campi del formal-check (Q-19);
 - formato di `links` nelle liste.
 
-## Aperte
+Esito delle verifiche del 12/11/2026, con la 3.0 (dettagli in [api-quirks.md](api-quirks.md), fonti `LIVE` e `SANDBOX`):
+- Live, sola lettura: saldo, movimenti di oggi e di fine giornata, liste SCT e SCT Instant, stato SCT per CRO, ID pagamento ed end-to-end ID, raggiungibilità di IBAN italiani ed esteri. Tutto funziona.
+- Sandbox: casi di test di saldo, movimenti, esecuzioni, stati, liste, revoca, strumenti IBAN e raggiungibilità.
+- Valori dell'header VoP: etichette della FAQ in sandbox; Live da verificare con una simulazione, che richiede un'approvazione a parte.
+- SCT senza `requestedExecutionDate`: non verificabile in sandbox, che ha solo il caso con la data.
+- `nextPage` dei movimenti: in sandbox arriva già completo di `date`; in Live non c'era una giornata con più di 200 movimenti.
+- `localhost:8081`: non si riesce a ottenere un link di questo tipo dalla sandbox (Q-44).
+- Formal-check: in sandbox i campi sono stringhe (Q-19).
+- `links`: assente in Live con una sola pagina, `null` in sandbox (Q-42, Q-43).
+- Strumenti IBAN in Live: da verificare quando le API saranno abilitate sull'app OAuth di produzione.
+- Nuovi quirk e correzioni: certificato PKCS#12 (Q-48), millisecondi (Q-49), stringa `"null"` (Q-50, D-57), esiti negativi con `success: false` (D-58), sandbox a casi di test fissi (Q-51).
 
-Nessuna questione aperta.
+### D-56 · `endToEndId` di al massimo 35 caratteri — T8
+Quasi tutti i casi di test di simulazione ed esecuzione della sandbox usano come `endToEndId` un UUID di 36 caratteri. L'SDK mantiene comunque il limite SEPA di 35 caratteri (ISO 20022 `Max35Text`): un valore più lungo verrebbe rifiutato o troncato più avanti nel circuito interbancario. Quei casi di test sono stati verificati una volta con uno script esterno al repo, che usa le classi interne, e restano fuori dalla suite di integrazione.
+- Alternativa scartata: alzare il limite a 36 solo per poter eseguire i casi di test.
+- Proposta dell'agent, in attesa di conferma del maintainer.
+
+### D-57 · La stringa `"null"` come valore assente — T8
+`Payload` e la lettura degli header trattano la stringa `"null"` come `null` e la stringa vuota (Q-50). La sandbox la usa nell'esecuzione `VRFY` e nell'header `vopMatchResult` delle simulazioni rifiutate. Senza questa regola l'esecuzione lanciava un'`UnexpectedResponseException` sulla data dopo che il bonifico era già partito. Un valore reale `"null"` (per esempio un nome) non è plausibile.
+
+Di conseguenza `execute()` documenta che anche dopo un'`UnexpectedResponseException`, o un'`ApiException` con stato 5xx, l'esito è sconosciuto, come dopo una `TransportException` (D-24).
+
+### D-58 · Esiti negativi inviati con `success: false` — T8
+`chargeabilityMulti` e la revoca SCT comunicano alcuni esiti negativi con HTTP 200, `success: false`, nessun errore e l'esito nel `payload` (Q-20, Q-31). La spec li elenca tra i casi di test con risposta 200. Per questi due endpoint, e solo per loro, il `Transport` restituisce il payload invece di lanciare un'`ApiException` (`acceptNegativeOutcome`): `verify()` restituisce `isAllowed()` falso e `revoke()` restituisce `revoked: false`. Con degli `errors`, o senza payload, resta un'`ApiException`.
+- Per i pagamenti `success: false` resta sempre un errore.
+
+### D-59 · Suite di integrazione opzionale — T8
+I test contro le API reali stanno in `tests/Integration/`, nella suite PHPUnit `integration`: non fanno parte della suite predefinita né della CI (`composer test:integration`, [testing.md](testing.md)).
+- Impostazioni da variabili d'ambiente o dal file `env/integration.env`, escluso da git. Senza configurazione i test vengono saltati.
+- Sandbox: casi di test della spec con i loro dati fittizi.
+- Live: solo lettura, attivata da `ISP_LIVE_READ_ONLY=yes`. Il client dei test blocca prima dell'invio ogni richiesta che non sia una `GET`, tranne quella del token. Le asserzioni non confrontano dati reali con valori attesi.
+- La regola 6 di `AGENTS.md` ammette Live solo per questa suite, su richiesta esplicita del maintainer.
+
+### D-60 · Documentazione della riscrittura — T8
+Al rilascio l'area temporanea `docs/v3/` è stata eliminata:
+- le decisioni restano in questo file, con gli stessi identificativi;
+- i finding della revisione della 2.x, tutti risolti, sono descritti in `CHANGELOG.md` e `UPGRADE-3.0.md`;
+- la roadmap è riassunta qui sotto; il dettaglio resta nella cronologia git.
+
+## Task della riscrittura 3.0
+
+| Task | Contenuto |
+|---|---|
+| T0 | branch `master` rinominato in `main`, creazione di `3.x` |
+| T1 | documentazione per agent e documentazione tecnica, file di progetto |
+| T2 | tooling: PHP 8.3+, Guzzle 7/8, PHPUnit 12, PHPStan max, Pint, CI |
+| T3 | core: configurazione, autenticazione, trasporto, date, eccezioni |
+| T4 | facade e API Conti |
+| T5 | API SCT Instant, con blocco VoP |
+| T6 | API SCT, controlli di esecuzione condivisi, eliminazione del codice 2.x |
+| T7 | strumenti IBAN e raggiungibilità SCT Instant |
+| T8 | verifiche reali in sandbox e Live, suite di integrazione, rilascio 3.0.0 |
+| T9 | migrazione del gestionale, nel repository del gestionale (D-15) |

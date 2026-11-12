@@ -5,15 +5,16 @@ Grazie per l'interesse. Prima di iniziare leggi [AGENTS.md](AGENTS.md): contiene
 ## Flusso di lavoro
 
 1. Apri una issue per discutere modifiche importanti o nuove API prima di scrivere codice.
-2. Crea un branch dal branch di destinazione: `main` per la 2.x; `3.x` per la 3.0 finché la riscrittura è in corso.
-3. Apri una pull request verso lo stesso branch. Le PR verso `main` richiedono un'approvazione.
+2. Crea un branch da `main`.
+3. Apri una pull request verso `main`, che richiede un'approvazione.
 
 ## Requisiti di una pull request
 
 - `composer ci` passa: validazione di `composer.json`, formattazione (`composer format` la corregge), analisi statica e test. La CI ripete i test su PHP 8.3, 8.4 e 8.5, con dipendenze minime e massime.
-- Il codice nuovo ha i suoi test. Per le API si usano fixture deterministiche, senza chiamate reali.
+- Il codice nuovo ha i suoi test. Per le API si usano fixture deterministiche, senza chiamate reali; i test di integrazione contro le API reali sono opzionali e si lanciano a parte ([docs/testing.md](docs/testing.md)).
 - La documentazione in `docs/` e il `CHANGELOG.md` (sezione *Unreleased*) sono aggiornati.
 - Un comportamento delle API diverso dalla spec è documentato in [docs/api-quirks.md](docs/api-quirks.md), con la sua fonte.
+- Una nuova scelta di progettazione è registrata in [docs/decisions.md](docs/decisions.md).
 
 ## Regole
 

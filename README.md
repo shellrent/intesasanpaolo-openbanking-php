@@ -5,8 +5,8 @@
 
 SDK PHP **non ufficiale** per le API [SmartHub](https://smarthub.intesasanpaolo.com/it/homepage/documenti-sviluppo.html) di Intesa Sanpaolo, dedicate a conti correnti e pagamenti delle aziende.
 
-> [!WARNING]
-> **Branch `3.x`: riscrittura in corso.** Questo branch contiene la futura versione 3.0.0 e le sue API non sono ancora stabili. Per la versione stabile usa la 2.x (`composer require shellrent/intesasanpaolo-openbanking-php:^2.1`, branch `main`). Avanzamento dei lavori: [docs/v3/ROADMAP.md](docs/v3/ROADMAP.md).
+> [!IMPORTANT]
+> **La 3.0 è una riscrittura e non è compatibile con la 2.x.** Per aggiornare segui [UPGRADE-3.0.md](UPGRADE-3.0.md). La 2.x resta installabile con `composer require shellrent/intesasanpaolo-openbanking-php:^2.1`.
 
 ## Funzionalità
 

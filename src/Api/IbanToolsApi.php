@@ -53,7 +53,7 @@ final class IbanToolsApi
      * Checks that an IBAN exists and, with a fiscal code or VAT number, that it belongs to that holder.
      *
      * Works for Intesa Sanpaolo accounts and for the banks joining the CBI Globe "Check IBAN" service.
-     * With the IBAN alone it is the existence check ("Verifica esistenza IBAN", docs/v3/DECISIONS.md, D-51).
+     * With the IBAN alone it is the existence check ("Verifica esistenza IBAN", docs/decisions.md, D-51).
      *
      * @param  string|null  $fiscalCode  Codice fiscale of the expected holder.
      * @param  string|null  $vatNumber  Partita IVA of the expected holder.

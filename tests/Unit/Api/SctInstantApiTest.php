@@ -102,7 +102,7 @@ final class SctInstantApiTest extends TestCase
     }
 
     /**
-     * F-36: an amount computed with floats is sent with two decimals.
+     * D-38: an amount computed with floats is sent with two decimals.
      */
     #[Test]
     public function it_sends_amounts_without_float_noise(): void
@@ -249,7 +249,7 @@ final class SctInstantApiTest extends TestCase
     }
 
     /**
-     * Q-36 and F-03: a pending payment is resubmitted with "resubmit" and "resubmitId".
+     * Q-36: a pending payment is resubmitted with "resubmit" and "resubmitId".
      */
     #[Test]
     public function it_resubmits_a_pending_payment(): void

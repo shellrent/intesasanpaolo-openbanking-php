@@ -70,7 +70,7 @@ final class SctApiTest extends TestCase
         self::assertSame(1250.0, $simulation->amount);
         self::assertSame(0.9, $simulation->fees, 'Q-15: "fees" in the current spec');
         self::assertSame('INTESA SANPAOLO SPA', $simulation->creditorAgent);
-        self::assertSame('2026-01-02', $simulation->executionDate?->format('Y-m-d'), 'F-02: "02/01/2026" is January 2nd');
+        self::assertSame('2026-01-02', $simulation->executionDate?->format('Y-m-d'), 'Q-09: "02/01/2026" is January 2nd');
         self::assertSame('2026-01-02', $simulation->valueDate?->format('Y-m-d'));
         self::assertSame('2026-01-05', $simulation->settlementDate?->format('Y-m-d'));
         self::assertSame(self::CREDITOR_IBAN, $simulation->creditor->iban);

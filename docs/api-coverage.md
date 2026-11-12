@@ -2,7 +2,7 @@
 
 Stato di implementazione delle API SmartHub nella libreria. I file di spec di riferimento per ogni API sono in [specs-reference.md](specs-reference.md), i comportamenti particolari in [api-quirks.md](api-quirks.md).
 
-La colonna "3.0" indica il metodo della 3.0 (✅ disponibile) oppure la task che lo implementerà.
+La colonna "3.0" indica il metodo della 3.0 (✅ disponibile), oppure che l'API non è pianificata.
 
 ## Conti
 

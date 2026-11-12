@@ -106,7 +106,7 @@ Gli esempi della spec usano anche `23:59:60` (secondo intercalare), che PHP conv
 Nelle risposte reali gli `executionDate` hanno l'offset senza i due punti (`+0000` in Live, `+0100` in sandbox). In sandbox `payments[].valueDate` della lista SCT Instant è in formato `Ymd` invece che `d/m/Y`: la 3.0 accetta entrambi (fonti: `LIVE`, `SANDBOX`).
 
 ### Q-11 Fuso orario
-Le date senza orario sono date contabili italiane: si interpretano a mezzanotte nel fuso `Europe/Rome`. Le date ISO 8601 mantengono l'offset indicato. Vedi la decisione D-07 in `docs/v3/DECISIONS.md`.
+Le date senza orario sono date contabili italiane: si interpretano a mezzanotte nel fuso `Europe/Rome`. Le date ISO 8601 mantengono l'offset indicato. Vedi la decisione D-07 in [decisions.md](decisions.md).
 
 ## Nomi dei campi
 
@@ -264,7 +264,7 @@ Quando non viene fornito un `endToEndId`, la banca restituisce `NOTPROVIDED` (op
 
 ### Q-36 Resubmit (SCT Instant)
 Se l'esecuzione resta in `PNDG`, la risposta contiene un `resubmitId`; per riprovare si invia `resubmit: true` insieme al `resubmitId`. La 2.x invia questi campi solo se si è chiamato `setResubmit(true)`.
-- 3.0: `SctInstantApi::resubmit()` invia sempre `resubmit: true` insieme a `resubmitId` (F-03).
+- 3.0: `SctInstantApi::resubmit()` invia sempre `resubmit: true` insieme a `resubmitId`.
 - Fonte: `SPEC`.
 
 ### Q-37 Verification of Payee (VoP)

@@ -15,7 +15,7 @@ use Shellrent\OpenBanking\Tests\Unit\TestCase;
 final class JsonTest extends TestCase
 {
     /**
-     * F-36: amounts are encoded exactly whatever the "serialize_precision" setting.
+     * D-38: amounts are encoded exactly whatever the "serialize_precision" setting.
      */
     #[Test]
     public function it_encodes_floats_independently_of_serialize_precision(): void

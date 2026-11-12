@@ -6,7 +6,7 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it-IT/1.1.0/) e i
 
 ## [Unreleased]
 
-Versione 3.0.0 in sviluppo sul branch `3.x`. Contiene modifiche incompatibili con la 2.x, documentate in `UPGRADE-3.0.md` (bozza).
+Versione 3.0.0 in preparazione sul branch `3.x`. Contiene modifiche incompatibili con la 2.x, documentate in `UPGRADE-3.0.md`.
 
 ### Aggiunto
 - Nuova facade `IntesaSanPaoloClient` con le API per area.
@@ -54,7 +54,7 @@ Versione 3.0.0 in sviluppo sul branch `3.x`. Contiene modifiche incompatibili co
   - paginazione con protezione da cicli e limite di pagine;
   - correzione dei link di paginazione della sandbox;
   - lettura delle date con formati espliciti.
-- Documentazione: `docs/architecture.md`, `docs/dates-and-formats.md`, `docs/testing.md`, `docs/adding-an-endpoint.md`, `UPGRADE-3.0.md` (bozza).
+- Documentazione: `docs/architecture.md`, `docs/dates-and-formats.md`, `docs/testing.md`, `docs/adding-an-endpoint.md`, `docs/decisions.md`, `UPGRADE-3.0.md`.
 - Documentazione per agent AI e sviluppatori: `AGENTS.md`, `CLAUDE.md`.
 - Documentazione tecnica in `docs/`: copertura delle API, quirk e comportamenti reali delle API, riferimento alle spec.
 - `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `.editorconfig`, `.gitattributes`.

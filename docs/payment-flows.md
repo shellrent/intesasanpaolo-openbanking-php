@@ -2,8 +2,6 @@
 
 Come si esegue un bonifico con l'SDK, e cosa fare in ogni esito. I comportamenti delle API citati (Q-…) sono in [api-quirks.md](api-quirks.md).
 
-> Stato: SCT Instant (T5) e SCT ordinario (T6) completi.
-
 ## Regole che valgono per ogni bonifico
 
 1. **Prima si simula, poi si esegue.** La simulazione verifica fattibilità e beneficiario e restituisce un `simulationId` valido **5 minuti** (Q-33). L'esecuzione richiede la simulazione.

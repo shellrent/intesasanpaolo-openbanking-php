@@ -8,7 +8,7 @@ use Shellrent\OpenBanking\Exception\InvalidRequestException;
 use Shellrent\OpenBanking\Support\EndToEndId;
 
 /**
- * Checks and normalizes the fields of the payment requests (docs/v3/DECISIONS.md, D-38 and D-39).
+ * Checks and normalizes the fields of the payment requests (docs/decisions.md, D-38 and D-39).
  *
  * Only required fields and SEPA maximum lengths are checked: characters are sent as they are,
  * like the 2.x SDK did (see SepaText for an optional clean-up).
