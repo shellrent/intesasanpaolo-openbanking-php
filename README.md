@@ -1,32 +1,68 @@
-# Intesa Sanpaolo Open Banking Client Api
+# Intesa Sanpaolo Open Banking – PHP SDK
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/shellrent/intesasanpaolo-openbanking-php.svg?style=flat-square)](https://packagist.org/packages/shellrent/intesasanpaolo-openbanking-php)
+[![License](https://img.shields.io/packagist/l/shellrent/intesasanpaolo-openbanking-php.svg?style=flat-square)](LICENSE.md)
 
-Client API non ufficiale scritto in PHP per l'utilizzo delle API di Open Banking offerte da Banca Intesa Sanpaolo: <a href="https://openbanking.intesasanpaolo.com/#/">https://openbanking.intesasanpaolo.com</a>
+SDK PHP **non ufficiale** per le API [SmartHub](https://smarthub.intesasanpaolo.com/it/homepage/documenti-sviluppo.html) di Intesa Sanpaolo, dedicate a conti correnti e pagamenti delle aziende.
+
+> [!WARNING]
+> **Branch `3.x`: riscrittura in corso.** Questo branch contiene la futura versione 3.0.0 e le sue API non sono ancora stabili. Per la versione stabile usa la 2.x (`composer require shellrent/intesasanpaolo-openbanking-php:^2.1`, branch `main`). Avanzamento dei lavori: [docs/v3/ROADMAP.md](docs/v3/ROADMAP.md).
+
+## Funzionalità
+
+| Area | API | 2.x | 3.0 |
+|---|---|:---:|:---:|
+| Conti | saldo, movimenti di fine giornata e intraday | ✅ | in sviluppo |
+| SCT Instant | simulazione, esecuzione, stato, lista | ✅ | in sviluppo |
+| SCT (bonifico ordinario) | simulazione, esecuzione, stato, lista, revoca | ✅ | in sviluppo |
+| Strumenti | verifica IBAN (sintattica, esistenza, congruenza CF/P.IVA), raggiungibilità SCT Instant | — | pianificata |
+
+Il dettaglio per endpoint è in [docs/api-coverage.md](docs/api-coverage.md).
+
+## Requisiti
+
+- PHP 8.3 o superiore (la 2.x richiede PHP 8.0), con estensione `json`.
+- Un'app registrata su SmartHub con le API necessarie attive, e le relative credenziali (client ID e client secret).
+- Il certificato di mutua autenticazione (mTLS), che si scarica dalla sezione *Certificates Management* dell'area riservata SmartHub.
 
 ## Installazione
-
-Il pacchetto viene installato attraverso composer, e richiede PHP >= 7.3
 
 ```bash
 composer require shellrent/intesasanpaolo-openbanking-php
 ```
 
-## Test
+## Ambienti e autenticazione
 
-E' possibile lanciare la suite di test del pacchetto con:
+- **Sandbox e Live**: le API sono identiche, ma la sandbox restituisce dati fittizi. Si sviluppa e si prova in sandbox, poi si passa a Live.
+- **OAuth2**: l'SDK ottiene e rinnova da sé il token (flusso *client credentials*).
+- **Mutua autenticazione**: le API richiedono un certificato client, in formato PEM con chiave privata oppure PKCS#12.
+  - Lo stesso certificato vale per Live e sandbox.
+  - Dura un anno, e se ne possono avere al massimo due attivi: genera e installa il nuovo prima che scada il vecchio.
 
-``` bash
+## Verification of Payee (VoP)
+
+Dal 2025 la simulazione di un bonifico (SCT e SCT Instant) restituisce anche l'esito della verifica del beneficiario, cioè la corrispondenza tra IBAN e nome. **Eseguire il bonifico equivale ad accettare quell'esito**, quindi controllalo prima di procedere. La 3.0 lo rende disponibile direttamente nel risultato della simulazione.
+
+## Utilizzo
+
+Gli esempi d'uso della 3.0 verranno aggiunti man mano che le API vengono riscritte. Per la 2.x fa fede il codice dei metodi pubblici di `IntesaSanPaoloClient`.
+
+## Sviluppo
+
+```bash
+composer install
 composer test
 ```
 
-## Contribuire
+Le regole del progetto (convenzioni, quirk delle API, uso delle spec) sono in [AGENTS.md](AGENTS.md) e nella cartella [docs](docs/README.md). Per contribuire leggi [CONTRIBUTING.md](CONTRIBUTING.md).
 
-Invia una Pull Request per suggerire migliorie o nuove funzionalità.
+## Sicurezza
 
-### Sicurezza
+Per segnalare una vulnerabilità **non aprire una issue pubblica**: segui le indicazioni di [SECURITY.md](SECURITY.md).
 
-Se trovi un problema di sicurezza con il pacchetto, scrivi una mail a sviluppo@shellrent.com invece di usare le Issues di Github.
+## Note legali
+
+Questo progetto non è affiliato a Intesa Sanpaolo né approvato da Intesa Sanpaolo. I nomi e i marchi citati appartengono ai rispettivi proprietari.
 
 ## Sponsor
 
@@ -43,8 +79,8 @@ Se trovi un problema di sicurezza con il pacchetto, scrivi una mail a sviluppo@s
 - [Tobia Zanarella](https://github.com/shellrent)
 - [Armando Caprio](https://github.com/shellrent)
 - [Shellrent Srl](https://www.shellrent.com)
-- [All Contributors](../../contributors)
+- [Tutti i contributori](../../contributors)
 
 ## Licenza
 
-The MIT License (MIT). [License File](LICENSE.md) 
+MIT. Vedi [LICENSE.md](LICENSE.md).

@@ -1,10 +1,26 @@
-/nbproject/*
-/.idea/*
-/vendor
+# Dipendenze
+/vendor/
 /composer.phar
 
+# Cache e report di test e strumenti
+/.phpunit.cache/
+.phpunit.result.cache
+/build/
+/coverage/
+
+# IDE e sistema operativo
+/.idea/
+/.vscode/
+/nbproject/
+.DS_Store
+
+# Credenziali e certificati locali (mai nel repo)
 /env/*
 !/env/.env.example
+*.pem
+*.key
+*.p12
+*.pfx
 
-.phpunit.result.cache
-
+# Spec ISP locali (mai nel repo, vedi docs/specs-reference.md)
+/specs

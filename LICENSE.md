@@ -1,6 +1,6 @@
 The MIT License (MIT)
 
-Copyright (c) Shellrent Srl <info@shellrent.com>
+Copyright (c) 2020-present Shellrent Srl <info@shellrent.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
