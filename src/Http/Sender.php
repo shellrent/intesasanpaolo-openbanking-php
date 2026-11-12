@@ -9,6 +9,7 @@ use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\RequestOptions;
 use Psr\Http\Client\NetworkExceptionInterface;
 use Psr\Http\Message\ResponseInterface;
+use SensitiveParameter;
 use Shellrent\OpenBanking\Config\ClientConfig;
 use Shellrent\OpenBanking\Exception\TransportException;
 use Throwable;
@@ -22,6 +23,7 @@ use Throwable;
  *   status themselves, which behaves the same on Guzzle 7 and 8.
  * - Transfer failures become TransportException. Nothing is retried automatically: retrying a
  *   payment could execute it twice.
+ * - Redirects are never followed, and the parameters that carry credentials are hidden from stack traces.
  *
  * @internal
  */
@@ -46,14 +48,16 @@ final class Sender
     public function send(
         string $method,
         string $uri,
-        array $headers = [],
+        #[SensitiveParameter] array $headers = [],
         array $query = [],
-        mixed $json = null,
-        ?array $formParams = null,
-        ?string $body = null,
+        #[SensitiveParameter] mixed $json = null,
+        #[SensitiveParameter] ?array $formParams = null,
+        #[SensitiveParameter] ?string $body = null,
     ): ResponseInterface {
         $options = [
             RequestOptions::HTTP_ERRORS => false,
+            // Never follow a redirect: the certificate and the "apikey" header would go along.
+            RequestOptions::ALLOW_REDIRECTS => false,
             RequestOptions::CONNECT_TIMEOUT => $this->config->connectTimeout,
             RequestOptions::TIMEOUT => $this->config->timeout,
             RequestOptions::HEADERS => $headers,

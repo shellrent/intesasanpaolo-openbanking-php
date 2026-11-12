@@ -69,7 +69,7 @@ final class AccountsApi
         return $this->collect(
             $this->path('transactions'),
             ['date' => $day],
-            static fn (ApiResponse $page): ?string => Url::withQueryValue($page->requirePayload()->string('nextPage'), 'date', $day),
+            static fn (ApiResponse $page): ?string => Url::withQueryValue($page->requirePayload()->link('nextPage'), 'date', $day),
         );
     }
 
@@ -86,7 +86,7 @@ final class AccountsApi
         return $this->collect(
             $this->path('transactions/today'),
             [],
-            static fn (ApiResponse $page): ?string => $page->requirePayload()->string('nextPage'),
+            static fn (ApiResponse $page): ?string => $page->requirePayload()->link('nextPage'),
         );
     }
 

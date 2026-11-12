@@ -198,6 +198,40 @@ final class TransportTest extends TestCase
     }
 
     #[Test]
+    public function it_treats_success_false_as_a_string_as_a_failure(): void
+    {
+        $http = new MockHttp(MockHttp::token(), MockHttp::json(['success' => 'false', 'errors' => [['description' => 'Rejected']], 'payload' => ['isReachable' => true]]));
+
+        $this->expectException(ApiException::class);
+        $this->expectExceptionMessage('Rejected');
+
+        $this->transport($http)->get('anything');
+    }
+
+    #[Test]
+    public function it_does_not_send_credentials_outside_the_api_host(): void
+    {
+        $http = new MockHttp(MockHttp::token());
+
+        try {
+            $this->transport($http)->get('http://localhost:8081/twa/live/v1/payments/x');
+            self::fail('UnexpectedResponseException was not thrown');
+        } catch (UnexpectedResponseException $exception) {
+            self::assertStringContainsString('outside the Intesa Sanpaolo API', $exception->getMessage());
+        }
+
+        self::assertSame(0, $http->count(), 'Not even the token was requested');
+    }
+
+    #[Test]
+    public function it_keeps_large_integers_exact(): void
+    {
+        $http = new MockHttp(MockHttp::token(), new Response(200, [], '{"success": true, "payload": {"orderId": 123456789012345678901234}}'));
+
+        self::assertSame('123456789012345678901234', $this->transport($http)->get('anything')->requirePayload()->string('orderId'));
+    }
+
+    #[Test]
     public function it_reports_non_json_error_responses(): void
     {
         $http = new MockHttp(MockHttp::token(), new Response(502, ['Content-Type' => 'text/html'], '<html>Bad Gateway</html>'));
@@ -240,9 +274,12 @@ final class TransportTest extends TestCase
     {
         $http = new MockHttp(MockHttp::token(), new Response(200, [], 'not json'));
 
-        $this->expectException(UnexpectedResponseException::class);
-
-        $this->transport($http)->get('anything');
+        try {
+            $this->transport($http)->get('anything');
+            self::fail('UnexpectedResponseException was not thrown');
+        } catch (UnexpectedResponseException $exception) {
+            self::assertSame('not json', $exception->responseBody);
+        }
     }
 
     #[Test]

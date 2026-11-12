@@ -313,6 +313,27 @@ Al rilascio l'area temporanea `docs/v3/` è stata eliminata:
 - i finding della revisione della 2.x, tutti risolti, sono descritti in `CHANGELOG.md` e `UPGRADE-3.0.md`;
 - la roadmap è riassunta qui sotto; il dettaglio resta nella cronologia git.
 
+### D-61 · Lettura tollerante delle risposte di esecuzione — T8
+Le risposte di `execute()` e `resubmit()` (`InstantExecution`, `SctExecution`) si leggono con `Payload::lenient()`: un campo di tipo o formato inatteso vale `null` invece di lanciare un'`UnexpectedResponseException`. A quel punto la banca ha già agito, e un campo secondario non deve far perdere l'esito, l'`orderId` o il `resubmitId`. È successo davvero con la data `"null"` della sandbox (Q-50). I campi obbligatori mancanti restano un errore; le altre risposte restano lette in modo rigoroso (D-28).
+- `UnexpectedResponseException` riporta anche l'inizio del corpo (`responseBody`) quando la risposta non è un JSON valido.
+- Emerso dalla revisione finale del codice.
+
+### D-62 · Il nome del creditore deve corrispondere alla simulazione — T8
+L'esito VoP vale per il nome simulato. `PaymentGuard` confronta quindi anche il nome del creditore della richiesta con quello riportato dalla simulazione, oltre a IBAN e importo (D-40). Se sono diversi, `execute()` lancia un'`InvalidRequestException` e non invia nulla. Il confronto ignora maiuscole, spazi multipli e caratteri non SEPA, traslitterati con `SepaText::sanitize()`, così una normalizzazione della banca non blocca un pagamento corretto.
+- In sandbox la simulazione riporta il nome inviato anche nel close match, mentre il nome suggerito sta solo nell'header (Q-37). Per pagare con il nome suggerito si simula di nuovo.
+- Emerso dalla revisione finale del codice. Comportamento più restrittivo: da confermare dal maintainer.
+
+### D-63 · Trasporto più difensivo — T8
+Correzioni emerse dalla revisione finale del codice:
+- un URL assoluto (cioè un link di paginazione) deve iniziare con l'host delle API ISP, altrimenti `UnexpectedResponseException` senza alcuna richiesta: credenziali e certificato non escono mai verso altri host;
+- i redirect non vengono seguiti;
+- i parametri di `Sender::send()` con le credenziali sono `#[SensitiveParameter]`;
+- `success` vale come fallimento anche come stringa `"false"` o numero `0`; un `success` assente non è un fallimento;
+- con `success: false`, un esito positivo nel payload (revoca `OK`, IBAN `allowed`) è contraddittorio e vale `null`, mai positivo (D-58);
+- gli interi oltre `PHP_INT_MAX` restano stringhe esatte (`JSON_BIGINT_AS_STRING`);
+- i testi delle richieste devono essere UTF-8 valido, altrimenti `InvalidRequestException` (prima il conteggio dei caratteri falliva in silenzio);
+- i link di paginazione si accettano sia come URL sia come `{"next": …}` (Q-43).
+
 ## Task della riscrittura 3.0
 
 | Task | Contenuto |

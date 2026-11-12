@@ -52,11 +52,13 @@ final readonly class IbanVerification
     public static function fromResponse(ApiResponse $response): self
     {
         $payload = $response->requirePayload();
+        // The spec documents "allowed"; the backend model and the SmartHub page use "isAllowed",
+        // even as the string "true" (docs/api-quirks.md, Q-20).
+        $allowed = $payload->bool('allowed', 'isAllowed', 'IsAllowed');
 
         return new self(
-            // The spec documents "allowed"; the backend model and the SmartHub page use "isAllowed",
-            // even as the string "true" (docs/api-quirks.md, Q-20).
-            allowed: $payload->bool('allowed', 'isAllowed', 'IsAllowed'),
+            // A positive outcome inside an unsuccessful response is contradictory: never report it as allowed (D-58).
+            allowed: $response->unsuccessful && $allowed === true ? null : $allowed,
             additionalInfo: $payload->string('additionalInfo', 'AdditionalInformation'),
             ibanType: $payload->string('ibanType'),
             transactionId: $response->transactionId,

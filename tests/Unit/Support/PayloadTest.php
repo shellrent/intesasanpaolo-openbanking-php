@@ -46,6 +46,40 @@ final class PayloadTest extends TestCase
     }
 
     #[Test]
+    public function it_drops_values_of_the_wrong_type_in_lenient_mode(): void
+    {
+        $payload = self::payload([
+            'id' => 'ID-1', 'name' => ['x'], 'amount' => '1,5', 'date' => 'yesterday', 'nested' => 'x', 'items' => 'x', 'list' => [1, ['a' => 'b']],
+        ])->lenient();
+
+        self::assertSame('ID-1', $payload->string('id'));
+        self::assertNull($payload->string('name'));
+        self::assertNull($payload->float('amount'));
+        self::assertNull($payload->dateTime('date'));
+        self::assertNull($payload->object('nested'));
+        self::assertSame([], $payload->list('items'));
+        self::assertCount(1, $payload->list('list'));
+
+        $this->expectException(UnexpectedResponseException::class);
+
+        $payload->requireString('missing');
+    }
+
+    /**
+     * Q-41 to Q-43: links as a URL or as {"next": URL}.
+     */
+    #[Test]
+    public function it_reads_links_in_both_formats(): void
+    {
+        $payload = self::payload(['plain' => 'https://x.test/2', 'object' => ['next' => 'https://x.test/3'], 'empty' => ['next' => null], 'none' => null]);
+
+        self::assertSame('https://x.test/2', $payload->link('plain'));
+        self::assertSame('https://x.test/3', $payload->link('object'));
+        self::assertNull($payload->link('empty'));
+        self::assertNull($payload->link('none'));
+    }
+
+    #[Test]
     public function it_converts_numbers_to_strings_and_numeric_strings_to_numbers(): void
     {
         $payload = self::payload(['paymentId' => 12345, 'amount' => '1250.50', 'fees' => 0, 'count' => '3', 'total' => 4.0]);

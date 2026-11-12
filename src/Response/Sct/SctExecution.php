@@ -46,7 +46,9 @@ final readonly class SctExecution
      */
     public static function fromResponse(ApiResponse $response): self
     {
-        $payload = $response->requirePayload();
+        // The bank has already acted on the request: a field it sends in an unexpected format is
+        // dropped instead of hiding the outcome and the identifiers (docs/decisions.md, D-61).
+        $payload = $response->requirePayload()->lenient();
         $rawStatus = $payload->string('paymentStatus');
 
         return new self(

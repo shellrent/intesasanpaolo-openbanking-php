@@ -16,12 +16,15 @@ final readonly class ApiResponse
 {
     /**
      * @param  array<array<string>>  $headers  Response headers, as returned by PSR-7 getHeaders().
+     * @param  bool  $unsuccessful  The envelope said "success: false" and the caller accepted the payload
+     *                              as a negative outcome (Transport::get(), acceptNegativeOutcome).
      */
     public function __construct(
         public int $statusCode,
         public ?Payload $payload,
         public array $headers,
         public ?string $transactionId,
+        public bool $unsuccessful = false,
     ) {}
 
     /**

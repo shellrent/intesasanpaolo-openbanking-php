@@ -164,6 +164,68 @@ final class SctInstantApiTest extends TestCase
     }
 
     /**
+     * D-61: after the bank has acted, a field in an unexpected format must not hide the outcome and the identifiers.
+     */
+    #[Test]
+    public function it_reads_an_execution_with_fields_in_unexpected_formats(): void
+    {
+        $http = new MockHttp(MockHttp::token(), $this->simulationResponse('MTCH'), MockHttp::envelope([
+            'orderId' => 'ORD-0003',
+            'resubmitId' => 'RES-0003',
+            'paymentStatus' => 'PNDG',
+            'amount' => '150,25',
+            'date' => '2026-01-15 10:01:00',
+            'creditorBic' => ['BCITITMM'],
+        ]));
+        $api = $this->api($http);
+
+        $execution = $api->execute($this->payment(), $api->simulate($this->payment()));
+
+        self::assertSame('ORD-0003', $execution->orderId);
+        self::assertSame('RES-0003', $execution->resubmitId);
+        self::assertTrue($execution->canBeResubmitted());
+        self::assertNull($execution->amount);
+        self::assertNull($execution->date);
+        self::assertNull($execution->creditor->bic);
+    }
+
+    /**
+     * D-62: the VoP outcome applies to the simulated name, so a different creditor name needs a new simulation.
+     */
+    #[Test]
+    public function it_refuses_a_simulation_made_for_another_creditor_name(): void
+    {
+        $http = new MockHttp(MockHttp::token(), $this->simulationResponse('MTCH'));
+        $api = $this->api($http);
+        $simulation = $api->simulate($this->payment());
+        $other = new InstantPayment('Someone Else Srl', self::CREDITOR_IBAN, 150.25, 'Fattura 1/2026', 'Example Srl');
+
+        try {
+            $api->execute($other, $simulation);
+            self::fail('InvalidRequestException was not thrown');
+        } catch (InvalidRequestException $exception) {
+            self::assertStringContainsString('different creditor name', $exception->getMessage());
+        }
+
+        self::assertSame(2, $http->count(), 'Nothing was sent to the execution API');
+    }
+
+    #[Test]
+    public function it_ignores_case_spacing_and_accents_when_comparing_the_creditor_name(): void
+    {
+        $http = new MockHttp(
+            MockHttp::token(),
+            MockHttp::fixture('SctInstant/simulation', ['vopMatchResult' => 'MTCH']),
+            MockHttp::fixture('SctInstant/execution'),
+        );
+        $api = $this->api($http);
+        $simulation = $api->simulate($this->payment());
+        $sameName = new InstantPayment('  MARIO   RÒSSI ', self::CREDITOR_IBAN, 150.25, 'Fattura 1/2026', 'Example Srl');
+
+        self::assertSame(PaymentStatus::Executed, $api->execute($sameName, $simulation)->paymentStatus);
+    }
+
+    /**
      * Q-37: executing counts as accepting the VoP outcome, so anything but a full match needs a confirmation.
      */
     #[Test]

@@ -64,6 +64,6 @@ final readonly class InstantPayment
         $this->debtorName = Validator::text($debtorName, 'debtor name', Validator::MAX_NAME_LENGTH);
         $this->debtorIban = $debtorIban === null ? null : Validator::iban($debtorIban, 'debtor IBAN');
         $this->endToEndId = Validator::endToEndId($endToEndId);
-        $this->siaCode = Validator::optional($siaCode);
+        $this->siaCode = Validator::optional($siaCode, 'SIA code');
     }
 }

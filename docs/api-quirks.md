@@ -286,6 +286,8 @@ Valori reali della sandbox, cioè le etichette della FAQ e non i codici ISO:
 
 La 3.0 riconosce sia le etichette sia i codici ISO (`MTCH`, `CMTC`, `NMTC`, `NOAP`). I valori di Live non sono ancora verificati: serve una simulazione in Live, che va approvata a parte (D-55).
 
+La risposta della simulazione riporta in `creditorName` il nome inviato, anche nel close match; il nome suggerito è solo nell'header `vopMatchedName` (`SANDBOX`). Su questo si basa il controllo del nome in `execute()` (D-62).
+
 **Procedere con l'esecuzione equivale ad accettare l'esito VoP.** Per le persone giuridiche con un codice identificativo (es. TXID), se la verifica non è possibile si ripete la simulazione con la sola denominazione. La 2.x scarta gli header, quindi l'esito VoP non è disponibile.
 - 3.0: l'esito è in `VopResult` sulle simulazioni. `execute()` richiede `acceptVopResult: true` se l'esito non è un match pieno, anche quando manca (D-36).
 - Fonti: `SPEC`, `WEB`, `FAQ`.
@@ -330,6 +332,8 @@ Oltre i 200 record la risposta contiene `nextPage`, una URL completa con un para
 - La spec non prevede `limit` né `paymentDirection`, ma la 2.x li invia (`limit=30`, `paymentDirection=O`) e funziona.
 - La 2.x si ferma quando `paymentsResults` è vuoto.
 - 3.0: stessi parametri della 2.x (`offset=0`, `limit=30`, `paymentDirection=O`); `paymentDirection` viene aggiunto ai link che non lo hanno, e la lista si ferma su una pagina vuota.
+- La spec dichiara `links` come stringa, mentre i suoi esempi e la 2.x usano `{"next": …}`: la 3.0 accetta entrambe le forme, anche per la lista SCT Instant e per `nextPage` dei movimenti, la cui descrizione mostra `{"next": …}` pur dichiarando una stringa.
+- La paginazione si ferma con un'eccezione oltre 100 pagine, cioè 3.000 pagamenti: per intervalli così ampi si usano intervalli più brevi.
 - In Live i parametri della 2.x funzionano. Con 21 risultati in una sola pagina la risposta non ha `links` e riporta `pageSize: 1`, che quindi non è affidabile.
 - Fonti: `SPEC`, `PROD`, `LIVE`.
 

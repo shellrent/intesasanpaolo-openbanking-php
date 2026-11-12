@@ -131,7 +131,7 @@ Nella 2.x i campi testuali assenti diventavano stringhe vuote; nella 3.0 sono `n
 ### Comportamenti nuovi
 
 - **Blocco VoP**: `execute()` richiede l'oggetto simulazione e, se l'esito VoP non è un match pieno (compreso un esito mancante), lancia `VopConfirmationRequiredException` finché non si passa `acceptVopResult: true`. Per eseguire in un altro processo si salva la simulazione con `toArray()` e la si ricarica con `InstantSimulation::fromArray()`.
-- **Controlli sulla simulazione**: `execute()` rifiuta una simulazione non accettata, o fatta per un altro creditore o un altro importo (`InvalidRequestException`).
+- **Controlli sulla simulazione**: `execute()` rifiuta una simulazione non accettata, o fatta per un altro IBAN, un altro nome del creditore o un altro importo (`InvalidRequestException`). Per pagare con il nome suggerito da un close match si simula di nuovo.
 - **Validazione della richiesta**:
   - campi obbligatori;
   - nomi al massimo 70 caratteri, causale 140, `endToEndId` 35;

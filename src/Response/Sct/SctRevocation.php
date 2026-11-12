@@ -39,13 +39,16 @@ final readonly class SctRevocation
         $payload = $response->requirePayload();
         $rawStatus = $payload->string('status');
 
+        // The code may be followed by a description, e.g. "KO - Generic error".
+        $revoked = match (strtoupper(preg_split('/\s+/', trim((string) $rawStatus))[0] ?? '')) {
+            'OK' => true,
+            'KO' => false,
+            default => null,
+        };
+
         return new self(
-            // The code may be followed by a description, e.g. "KO - Generic error".
-            revoked: match (strtoupper(preg_split('/\s+/', trim((string) $rawStatus))[0] ?? '')) {
-                'OK' => true,
-                'KO' => false,
-                default => null,
-            },
+            // An "OK" inside an unsuccessful response is contradictory: never report it as revoked (D-58).
+            revoked: $response->unsuccessful && $revoked === true ? null : $revoked,
             rawStatus: $rawStatus,
             paymentId: $payload->string('paymentId', 'payment-id'),
             customerCro: $payload->string('customerCRO', 'customerCro'),

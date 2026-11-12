@@ -105,7 +105,7 @@ final class SctInstantApi
      */
     public function execute(InstantPayment $payment, InstantSimulation $simulation, bool $acceptVopResult = false): InstantExecution
     {
-        $simulationId = PaymentGuard::simulationId($simulation, $payment->creditorIban, $payment->amount, $acceptVopResult);
+        $simulationId = PaymentGuard::simulationId($simulation, $payment->creditorIban, $payment->creditorName, $payment->amount, $acceptVopResult);
 
         return InstantExecution::fromResponse($this->transport->post(
             'payments/sct/instant',
@@ -190,7 +190,7 @@ final class SctInstantApi
             }
 
             // "paymentDirection" is required: keep it on every page (docs/api-quirks.md, Q-42).
-            return Url::withQueryValue($payload->object('links')?->string('next'), 'paymentDirection', 'O');
+            return Url::withQueryValue($payload->link('links'), 'paymentDirection', 'O');
         };
 
         foreach ($this->paginator->pages(sprintf('payments/sct/instant/%s/history', rawurlencode($this->config->iban)), $query, $nextLink) as $page) {

@@ -91,7 +91,7 @@ final class SctApi
      */
     public function execute(SctPayment $payment, SctSimulation $simulation, bool $acceptVopResult = false): SctExecution
     {
-        $simulationId = PaymentGuard::simulationId($simulation, $payment->creditorIban, $payment->amount, $acceptVopResult);
+        $simulationId = PaymentGuard::simulationId($simulation, $payment->creditorIban, $payment->creditorName, $payment->amount, $acceptVopResult);
 
         return SctExecution::fromResponse($this->transport->post(
             'payments/bonsct',
@@ -160,7 +160,7 @@ final class SctApi
                 return null;
             }
 
-            return Url::withQueryValue($payload->object('links')?->string('next'), 'paymentDirection', 'O');
+            return Url::withQueryValue($payload->link('links'), 'paymentDirection', 'O');
         };
 
         $pages = [];

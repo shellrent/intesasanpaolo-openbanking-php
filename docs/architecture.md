@@ -137,8 +137,18 @@ Il token è una credenziale: lo store non deve essere leggibile da terzi.
 - ogni getter accetta più nomi di campo e usa il primo che ha un valore, così si coprono le varianti come `debtorIBAN`/`debtorIban` (Q-12) e `orderId`/`order-id` (Q-13);
 - un campo mancante, `null`, stringa vuota o stringa `"null"` (Q-50) non ha valore e restituisce `null`;
 - un valore di tipo sbagliato genera un'`UnexpectedResponseException` con il percorso del campo, per esempio `payload.accountedTransactions[3].amount`;
+- le risposte delle esecuzioni di pagamento si leggono in modalità tollerante (`lenient()`): un valore di tipo o formato sbagliato vale `null`, perché a quel punto la banca ha già agito e l'esito e gli identificativi non devono andare persi (D-61);
+- i link di paginazione si leggono con `link()`, che accetta sia una URL sia un oggetto `{"next": …}` (Q-41…Q-43);
 - le date si leggono solo con un formato esplicito ([dates-and-formats.md](dates-and-formats.md)).
 
 ## Logging
 
 L'SDK non ha un logger integrato (D-22). Per registrare le chiamate si passa un client Guzzle con il middleware di log di Guzzle. `transactionId` è disponibile su risposte ed eccezioni.
+
+## Sicurezza del trasporto
+
+- Le credenziali e il certificato vanno solo all'host delle API ISP: un link di paginazione verso un altro host (per esempio `http://localhost:8081` in Live) genera un'`UnexpectedResponseException` e non viene seguito (D-63).
+- I redirect non vengono mai seguiti.
+- I parametri di `Sender::send()` che portano le credenziali (header, body) sono marcati `#[SensitiveParameter]` e non compaiono negli argomenti degli stack trace.
+- L'eccezione Guzzle originale, disponibile come `getPrevious()` di una `TransportException`, contiene invece la richiesta con i suoi header: chi invia le eccezioni a un servizio esterno non deve serializzarne la richiesta.
+- I messaggi delle eccezioni non contengono segreti.

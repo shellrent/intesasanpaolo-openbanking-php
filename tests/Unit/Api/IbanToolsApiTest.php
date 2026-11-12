@@ -153,6 +153,14 @@ final class IbanToolsApiTest extends TestCase
     }
 
     #[Test]
+    public function it_never_reports_a_positive_outcome_inside_an_unsuccessful_response(): void
+    {
+        $http = new MockHttp(MockHttp::token(), MockHttp::json(['success' => false, 'payload' => ['isAllowed' => true]]));
+
+        self::assertFalse($this->api($http)->verify(self::CHECKED_IBAN, vatNumber: '01234567890')->isAllowed());
+    }
+
+    #[Test]
     public function it_still_reports_unsuccessful_responses_with_errors(): void
     {
         $http = new MockHttp(MockHttp::token(), MockHttp::json([

@@ -47,6 +47,8 @@ Versione 3.0.0 in preparazione sul branch `3.x`. Contiene modifiche incompatibil
   - `ConfigurationException` per configurazioni non valide.
 - Lettura tollerante dei comportamenti osservati con le API reali: la stringa `"null"` vale come valore assente, anche nell'header VoP, e le date-ora della sandbox con `:` prima dei millisecondi sono accettate.
 - Certificato PKCS#12 di SmartHub, che OpenSSL 3 non legge: istruzioni di conversione nel README e suggerimento nel messaggio della `TransportException`.
+- Protezioni aggiuntive sui pagamenti: `execute()` rifiuta anche una simulazione fatta per un altro **nome** del creditore, perché l'esito VoP vale per il nome simulato. Le risposte delle esecuzioni si leggono in modo tollerante, così un campo in un formato inatteso non nasconde l'esito né gli identificativi.
+- Trasporto: credenziali e certificato vanno solo all'host delle API ISP, anche sui link di paginazione; nessun redirect; credenziali nascoste dagli stack trace (`#[SensitiveParameter]`); testi delle richieste validati come UTF-8; link di paginazione accettati sia come URL sia come `{"next": …}`.
 - Test di integrazione opzionali (`composer test:integration`): casi di test della sandbox e verifiche di sola lettura in Live, con blocco delle richieste di scrittura.
 - `TokenStore` per condividere il token OAuth2 tra istanze e processi; il token si rinnova 60 s prima della scadenza.
 - Core di trasporto 3.0:

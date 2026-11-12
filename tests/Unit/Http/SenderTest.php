@@ -11,6 +11,8 @@ use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use Psr\Http\Client\NetworkExceptionInterface;
+use ReflectionMethod;
+use SensitiveParameter;
 use Shellrent\OpenBanking\Config\ClientConfig;
 use Shellrent\OpenBanking\Config\Environment;
 use Shellrent\OpenBanking\Exception\TransportException;
@@ -38,6 +40,26 @@ final class SenderTest extends TestCase
         self::assertSame($config->certificate->toGuzzleOptions()['cert'], $options['cert'] ?? null);
         self::assertSame($config->certificate->toGuzzleOptions()['ssl_key'] ?? null, $options['ssl_key'] ?? null);
         self::assertSame('yes', $http->request(0)->getHeaderLine('X-Test'));
+    }
+
+    #[Test]
+    public function it_never_follows_redirects_and_hides_credentials_from_stack_traces(): void
+    {
+        $http = new MockHttp(new Response(200));
+
+        (new Sender($this->config(), $http->client))->send('GET', 'https://example.test/');
+
+        self::assertFalse($http->options(0)['allow_redirects'] ?? null);
+
+        $sensitive = [];
+
+        foreach ((new ReflectionMethod(Sender::class, 'send'))->getParameters() as $parameter) {
+            if ($parameter->getAttributes(SensitiveParameter::class) !== []) {
+                $sensitive[] = $parameter->getName();
+            }
+        }
+
+        self::assertSame(['headers', 'json', 'formParams', 'body'], $sensitive);
     }
 
     #[Test]

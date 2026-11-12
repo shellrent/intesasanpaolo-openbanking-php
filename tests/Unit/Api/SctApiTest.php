@@ -250,6 +250,42 @@ final class SctApiTest extends TestCase
         self::assertSame(80.5, $second->amount);
     }
 
+    /**
+     * Q-43: the spec declares "links" as a string, while the examples and 2.x use {"next": …}.
+     */
+    #[Test]
+    public function it_follows_a_next_link_sent_as_a_plain_url(): void
+    {
+        $http = new MockHttp(
+            MockHttp::token(),
+            MockHttp::envelope([
+                'paymentsTotalCount' => 2,
+                'links' => self::BASE.'/'.self::IBAN.'/list?offset=PAY-1',
+                'paymentsResults' => [['paymentId' => 'PAY-1', 'amount' => 10]],
+            ]),
+            MockHttp::envelope(['paymentsTotalCount' => 2, 'paymentsResults' => [['paymentId' => 'PAY-2', 'amount' => 20]]]),
+        );
+
+        $list = $this->api($http)->payments(new DateTimeImmutable('2026-01-01'));
+
+        self::assertSame(self::BASE.'/'.self::IBAN.'/list?offset=PAY-1&paymentDirection=O', (string) $http->request(2)->getUri());
+        self::assertTrue($list->isComplete());
+    }
+
+    /**
+     * D-58: an "OK" inside an unsuccessful response is contradictory and never counts as revoked.
+     */
+    #[Test]
+    public function it_never_reports_a_revocation_inside_an_unsuccessful_response(): void
+    {
+        $http = new MockHttp(MockHttp::token(), MockHttp::json(['success' => false, 'payload' => ['status' => 'OK']]));
+
+        $revocation = $this->api($http)->revoke(paymentId: 'PAY-SCT-0004');
+
+        self::assertNull($revocation->revoked);
+        self::assertFalse($revocation->isRevoked());
+    }
+
     #[Test]
     public function it_stops_listing_on_an_empty_page(): void
     {

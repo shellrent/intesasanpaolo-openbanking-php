@@ -105,7 +105,12 @@ final class Transport
 
     private function resolve(string $pathOrUrl): string
     {
-        if (preg_match('#^https?://#i', $pathOrUrl) === 1) {
+        if (preg_match('#^[a-z][a-z0-9+.-]*://#i', $pathOrUrl) === 1) {
+            // Absolute URLs come from pagination links: the credentials and the certificate go only to the ISP API.
+            if (! str_starts_with(strtolower($pathOrUrl), strtolower(ClientConfig::HOST).'/')) {
+                throw new UnexpectedResponseException(sprintf('The link "%s" points outside the Intesa Sanpaolo API.', $pathOrUrl));
+            }
+
             return $pathOrUrl;
         }
 
@@ -137,10 +142,13 @@ final class Transport
             throw new UnexpectedResponseException(
                 sprintf('The response (HTTP %d) is not a JSON object.', $status),
                 $transactionId,
+                responseBody: self::excerpt($body),
             );
         }
 
-        if (($decoded->success ?? null) === false && ! ($acceptNegativeOutcome && self::isNegativeOutcome($decoded))) {
+        $unsuccessful = self::isUnsuccessful($decoded);
+
+        if ($unsuccessful && ! ($acceptNegativeOutcome && self::isNegativeOutcome($decoded))) {
             throw ApiException::fromResponse($status, $decoded->errors ?? null, $transactionId, $body);
         }
 
@@ -152,7 +160,11 @@ final class Transport
         }
 
         if ($payload !== null && ! $payload instanceof stdClass) {
-            throw new UnexpectedResponseException('The response payload is not a JSON object.', $transactionId);
+            throw new UnexpectedResponseException(
+                'The response payload is not a JSON object.',
+                $transactionId,
+                responseBody: self::excerpt($body),
+            );
         }
 
         return new ApiResponse(
@@ -160,7 +172,25 @@ final class Transport
             $payload === null ? null : new Payload($payload, 'payload', $transactionId),
             $headers,
             $transactionId,
+            $unsuccessful,
         );
+    }
+
+    /**
+     * "success" is false, also as the string "false" or the number 0; a missing "success" is not a failure.
+     */
+    private static function isUnsuccessful(stdClass $decoded): bool
+    {
+        $success = $decoded->success ?? null;
+
+        return $success === false
+            || $success === 0
+            || (is_string($success) && in_array(strtolower(trim($success)), ['false', '0'], true));
+    }
+
+    private static function excerpt(string $body): ?string
+    {
+        return $body === '' ? null : substr($body, 0, ApiException::MAX_BODY_LENGTH);
     }
 
     /**
@@ -181,7 +211,8 @@ final class Transport
         }
 
         try {
-            return json_decode($body, false, 512, JSON_THROW_ON_ERROR);
+            // Integers beyond PHP_INT_MAX stay exact as strings (e.g. numeric identifiers).
+            return json_decode($body, false, 512, JSON_THROW_ON_ERROR | JSON_BIGINT_AS_STRING);
         } catch (JsonException) {
             return null;
         }

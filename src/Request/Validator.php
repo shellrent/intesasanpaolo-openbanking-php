@@ -39,7 +39,7 @@ final class Validator
             throw new InvalidRequestException(sprintf('The %s must not be empty.', $field));
         }
 
-        if (self::length($value) > $maxLength) {
+        if (self::length($value, $field) > $maxLength) {
             throw new InvalidRequestException(sprintf('The %s must be at most %d characters long.', $field, $maxLength));
         }
 
@@ -83,7 +83,7 @@ final class Validator
     {
         $value = EndToEndId::normalize($value);
 
-        if ($value !== null && self::length($value) > self::MAX_END_TO_END_ID_LENGTH) {
+        if ($value !== null && self::length($value, 'end-to-end ID') > self::MAX_END_TO_END_ID_LENGTH) {
             throw new InvalidRequestException(sprintf('The end-to-end ID must be at most %d characters long.', self::MAX_END_TO_END_ID_LENGTH));
         }
 
@@ -123,18 +123,32 @@ final class Validator
         return $value;
     }
 
-    public static function optional(?string $value): ?string
+    public static function optional(?string $value, string $field = 'value'): ?string
     {
         $value = $value === null ? '' : trim($value);
 
-        return $value === '' ? null : $value;
+        if ($value === '') {
+            return null;
+        }
+
+        self::length($value, $field);
+
+        return $value;
     }
 
     /**
      * Number of characters of a UTF-8 string, without requiring the mbstring extension.
+     *
+     * @throws InvalidRequestException When the text is not valid UTF-8, which the JSON body cannot carry.
      */
-    private static function length(string $value): int
+    private static function length(string $value, string $field): int
     {
-        return (int) preg_match_all('/./su', $value);
+        $length = preg_match_all('/./su', $value);
+
+        if ($length === false) {
+            throw new InvalidRequestException(sprintf('The %s is not valid UTF-8 text.', $field));
+        }
+
+        return $length;
     }
 }

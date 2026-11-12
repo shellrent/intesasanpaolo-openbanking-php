@@ -17,6 +17,8 @@ use stdClass;
  * - A field that is missing, null, an empty string or the string "null" counts as "no value"
  *   (docs/api-quirks.md, Q-50).
  * - A value of the wrong type is an error: it raises an UnexpectedResponseException that names the field.
+ *   In lenient mode (lenient()) the value is dropped instead, for the responses read after the bank
+ *   has already acted on the request, such as payment executions (docs/decisions.md, D-61).
  *
  * @internal
  */
@@ -26,7 +28,17 @@ final readonly class Payload
         private stdClass $data,
         private string $path = 'payload',
         private ?string $transactionId = null,
+        private bool $lenient = false,
     ) {}
+
+    /**
+     * A copy that returns null (or an empty list) for values of the wrong type or format, instead of throwing.
+     * Missing required fields still throw.
+     */
+    public function lenient(): self
+    {
+        return new self($this->data, $this->path, $this->transactionId, true);
+    }
 
     /**
      * Whether at least one of the fields has a value.
@@ -49,7 +61,7 @@ final readonly class Payload
         return match (true) {
             is_string($value) => $value,
             is_int($value), is_float($value) => (string) $value,
-            default => throw $this->unexpected($key, 'a string', $value),
+            default => $this->reject($this->unexpected($key, 'a string', $value)),
         };
     }
 
@@ -71,7 +83,7 @@ final readonly class Payload
         return match (true) {
             is_int($value), is_float($value) => (float) $value,
             is_string($value) && is_numeric($value) => (float) $value,
-            default => throw $this->unexpected($key, 'a number', $value),
+            default => $this->reject($this->unexpected($key, 'a number', $value)),
         };
     }
 
@@ -98,7 +110,7 @@ final readonly class Payload
             return (int) $value;
         }
 
-        throw $this->unexpected($key, 'an integer', $value);
+        return $this->reject($this->unexpected($key, 'an integer', $value));
     }
 
     public function requireInt(string ...$keys): int
@@ -131,7 +143,7 @@ final readonly class Payload
             return $value === 1;
         }
 
-        throw $this->unexpected($key, 'a boolean', $value);
+        return $this->reject($this->unexpected($key, 'a boolean', $value));
     }
 
     /**
@@ -156,7 +168,7 @@ final readonly class Payload
         }
 
         if (! is_string($value)) {
-            throw $this->unexpected($key, 'a date', $value);
+            return $this->reject($this->unexpected($key, 'a date', $value));
         }
 
         if ($value === '0') {
@@ -166,11 +178,11 @@ final readonly class Payload
         try {
             return DateParser::date($value, ...$formats);
         } catch (InvalidArgumentException $exception) {
-            throw new UnexpectedResponseException(
+            return $this->reject(new UnexpectedResponseException(
                 sprintf('Unexpected value for %s: %s', $this->pathOf($key), $exception->getMessage()),
                 $this->transactionId,
                 $exception,
-            );
+            ));
         }
     }
 
@@ -188,17 +200,17 @@ final readonly class Payload
         [$key, $value] = $found;
 
         if (! is_string($value)) {
-            throw $this->unexpected($key, 'a date-time', $value);
+            return $this->reject($this->unexpected($key, 'a date-time', $value));
         }
 
         try {
             return DateParser::dateTime($value);
         } catch (InvalidArgumentException $exception) {
-            throw new UnexpectedResponseException(
+            return $this->reject(new UnexpectedResponseException(
                 sprintf('Unexpected value for %s: %s', $this->pathOf($key), $exception->getMessage()),
                 $this->transactionId,
                 $exception,
-            );
+            ));
         }
     }
 
@@ -213,10 +225,10 @@ final readonly class Payload
         [$key, $value] = $found;
 
         if (! $value instanceof stdClass) {
-            throw $this->unexpected($key, 'an object', $value);
+            return $this->reject($this->unexpected($key, 'an object', $value));
         }
 
-        return new self($value, $this->pathOf($key), $this->transactionId);
+        return new self($value, $this->pathOf($key), $this->transactionId, $this->lenient);
     }
 
     public function requireObject(string ...$keys): self
@@ -240,7 +252,9 @@ final readonly class Payload
         [$key, $value] = $found;
 
         if (! is_array($value) || ! array_is_list($value)) {
-            throw $this->unexpected($key, 'a list', $value);
+            $this->reject($this->unexpected($key, 'a list', $value));
+
+            return [];
         }
 
         $items = [];
@@ -249,16 +263,39 @@ final readonly class Payload
             $itemPath = sprintf('%s[%d]', $this->pathOf($key), $index);
 
             if (! $item instanceof stdClass) {
-                throw new UnexpectedResponseException(
+                $this->reject(new UnexpectedResponseException(
                     sprintf('Unexpected value for %s: expected an object, got %s.', $itemPath, get_debug_type($item)),
                     $this->transactionId,
-                );
+                ));
+
+                continue;
             }
 
-            $items[] = new self($item, $itemPath, $this->transactionId);
+            $items[] = new self($item, $itemPath, $this->transactionId, $this->lenient);
         }
 
         return $items;
+    }
+
+    /**
+     * Reads a pagination link, sent either as a URL or as an object with a "next" URL: the spec declares a
+     * string, but its examples show {"next": "…"} (docs/api-quirks.md, Q-41 to Q-43).
+     */
+    public function link(string ...$keys): ?string
+    {
+        $found = $this->first($keys);
+
+        if ($found === null) {
+            return null;
+        }
+
+        [$key, $value] = $found;
+
+        return match (true) {
+            is_string($value) => $value,
+            $value instanceof stdClass => (new self($value, $this->pathOf($key), $this->transactionId, $this->lenient))->string('next'),
+            default => $this->reject($this->unexpected($key, 'a link', $value)),
+        };
     }
 
     /**
@@ -299,6 +336,20 @@ final readonly class Payload
         }
 
         return null;
+    }
+
+    /**
+     * Throws the error, or drops the value in lenient mode.
+     *
+     * @throws UnexpectedResponseException
+     */
+    private function reject(UnexpectedResponseException $exception): null
+    {
+        if ($this->lenient) {
+            return null;
+        }
+
+        throw $exception;
     }
 
     private function pathOf(string $key): string
