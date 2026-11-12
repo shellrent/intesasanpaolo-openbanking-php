@@ -43,6 +43,28 @@ composer require shellrent/intesasanpaolo-openbanking-php
   - Lo stesso certificato vale per Live e sandbox.
   - Dura un anno, e se ne possono avere al massimo due attivi: genera e installa il nuovo prima che scada il vecchio.
 
+### Certificato
+
+Il file `.p12` scaricato da SmartHub usa una cifratura legacy (RC2-40) che OpenSSL 3 non legge. Senza conversione la richiesta fallisce con `cURL error 58: could not parse PKCS12 file`, anche se la passphrase è giusta. Basta convertirlo una volta, scegliendo uno dei due formati:
+
+```bash
+# PKCS#12 con cifratura moderna (AES-256): chiede la passphrase attuale e quella nuova
+openssl pkcs12 -legacy -in certificato.p12 -nodes | openssl pkcs12 -export -out certificato-aes.p12
+```
+
+```bash
+# oppure PEM: certificato e chiave privata cifrata in due file
+openssl pkcs12 -legacy -in certificato.p12 -clcerts -nokeys -out certificato.pem
+openssl pkcs12 -legacy -in certificato.p12 -nocerts -out chiave.pem
+```
+
+```php
+MutualTlsCertificate::pkcs12('/path/certificato-aes.p12', 'passphrase');
+MutualTlsCertificate::pem('/path/certificato.pem', '/path/chiave.pem', 'passphrase della chiave');
+```
+
+Il file convertito contiene la chiave privata: va protetto come l'originale (permessi `600`, mai nel repository).
+
 ## Verification of Payee (VoP)
 
 Dal 2025 la simulazione di un bonifico (SCT e SCT Instant) restituisce anche l'esito della verifica del beneficiario, cioè la corrispondenza tra IBAN e nome. **Eseguire il bonifico equivale ad accettare quell'esito.** La 3.0 lo espone nel risultato della simulazione (`$simulation->vop`) e **esegue in automatico solo con un match pieno**; negli altri casi serve una conferma esplicita (`acceptVopResult: true`).

@@ -69,7 +69,7 @@ API                                        Payload → DTO di risposta
 - **Header**: sono gli stessi della 2.x, che funzionano in produzione: `Authorization: Bearer …` e `apikey: <client ID>` ([api-quirks.md](api-quirks.md), Q-03). `Content-Type: application/json` si aggiunge solo con un body JSON o quando la singola chiamata lo chiede (Q-04). Gli header aggiuntivi non possono sovrascrivere l'autenticazione.
 - **mTLS e timeout** si applicano a ogni richiesta, quindi valgono anche con un client Guzzle fornito dall'applicazione.
 - **Stati HTTP**: Guzzle non lancia eccezioni per gli stati di errore (`http_errors` disattivato): il `Transport` legge lo stato da sé. In questo modo il comportamento è identico con Guzzle 7 e 8.
-- **Nessun retry automatico.** Ripetere un'esecuzione di pagamento potrebbe eseguirla due volte. Dopo una `TransportException` su un pagamento l'esito è sconosciuto, e va verificato con le API di stato prima di riprovare.
+- **Nessun retry automatico.** Ripetere un'esecuzione di pagamento potrebbe eseguirla due volte. Dopo una `TransportException`, una `UnexpectedResponseException` o un'`ApiException` con stato 5xx su un pagamento l'esito è sconosciuto, e va verificato con le API di stato prima di riprovare.
 - **HTTP 401**: il token in cache viene scartato, così la chiamata successiva rifà il login. La chiamata fallita non viene ripetuta.
 
 ## Risposte
@@ -94,7 +94,7 @@ Tutte implementano `Shellrent\OpenBanking\Exception\OpenBankingException`.
 | `AuthenticationException` | login rifiutato o HTTP 401 (estende `ApiException`) | come sopra |
 | `InvalidRequestException` | dati della richiesta non validi (non inviata), simulazione non accettata o di un altro pagamento | messaggio |
 | `VopConfirmationRequiredException` | esecuzione bloccata: l'esito VoP non è un match pieno e non è stato accettato | `vop` (`VopResult`) |
-| `UnexpectedResponseException` | risposta non interpretabile, campo obbligatorio mancante, tipo inatteso, paginazione anomala | `transactionId` |
+| `UnexpectedResponseException` | risposta non interpretabile, campo obbligatorio mancante, tipo inatteso, paginazione anomala | `transactionId`; **per i pagamenti l'esito è sconosciuto** |
 
 `transactionId` è il valore dell'header `X-ISP-Transaction-ID`, da indicare al supporto ISP.
 
@@ -135,7 +135,7 @@ Il token è una credenziale: lo store non deve essere leggibile da terzi.
 
 `Payload` incapsula un oggetto JSON decodificato e fa da unico punto di contatto tra il JSON delle API e i DTO di risposta:
 - ogni getter accetta più nomi di campo e usa il primo che ha un valore, così si coprono le varianti come `debtorIBAN`/`debtorIban` (Q-12) e `orderId`/`order-id` (Q-13);
-- un campo mancante, `null` o stringa vuota non ha valore e restituisce `null`;
+- un campo mancante, `null`, stringa vuota o stringa `"null"` (Q-50) non ha valore e restituisce `null`;
 - un valore di tipo sbagliato genera un'`UnexpectedResponseException` con il percorso del campo, per esempio `payload.accountedTransactions[3].amount`;
 - le date si leggono solo con un formato esplicito ([dates-and-formats.md](dates-and-formats.md)).
 

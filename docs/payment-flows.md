@@ -8,7 +8,7 @@ Come si esegue un bonifico con l'SDK, e cosa fare in ogni esito. I comportamenti
 
 1. **Prima si simula, poi si esegue.** La simulazione verifica fattibilità e beneficiario e restituisce un `simulationId` valido **5 minuti** (Q-33). L'esecuzione richiede la simulazione.
 2. **Eseguire equivale ad accettare l'esito della Verification of Payee (VoP)** (Q-37). L'SDK esegue in automatico solo con un match pieno. In ogni altro caso, compreso un esito assente o sconosciuto, `execute()` lancia `VopConfirmationRequiredException` finché non si passa `acceptVopResult: true` (D-36).
-3. **Nessun retry automatico.** Dopo una `TransportException` su un'esecuzione l'esito è **sconosciuto**: il bonifico potrebbe essere partito. Prima di riprovare si controlla lo stato o la lista dei pagamenti.
+3. **Nessun retry automatico.** Dopo una `TransportException`, una `UnexpectedResponseException` o un'`ApiException` con stato 5xx su un'esecuzione l'esito è **sconosciuto**: il bonifico potrebbe essere partito. Prima di riprovare si controlla lo stato o la lista dei pagamenti.
 4. **La simulazione deve corrispondere al pagamento.** `execute()` rifiuta una simulazione non accettata, o fatta per un altro creditore o un altro importo (`InvalidRequestException`).
 5. **Importi**: euro, positivi, al massimo 2 decimali. L'errore di calcolo dei float viene assorbito (`0.1 + 0.2` diventa `0.3`), un importo come `10.567` viene rifiutato (D-38).
 6. **Testi**: l'SDK controlla solo i campi obbligatori e le lunghezze SEPA (nomi 70 caratteri, causale 140, `endToEndId` 35) e invia i caratteri così come sono. Per restare nel set ammesso dalla banca c'è l'helper opzionale `SepaText::sanitize()`. Attenzione: cambiare il nome del creditore può cambiare l'esito VoP (D-39).
@@ -155,6 +155,6 @@ $revocation = $client->sct()->revoke(customerCro: $execution->customerCro);
 $revocation->isRevoked();       // solo entro il cut-off della banca (Q-40)
 ```
 
-### Dopo un errore di rete sull'esecuzione
+### Dopo un errore sull'esecuzione
 
-Dopo una `TransportException` il bonifico potrebbe essere partito. Prima di simulare e riprovare si cerca il pagamento con `status(simulationId: …)` (o `endToEndId`), oppure nella lista.
+Dopo una `TransportException`, una `UnexpectedResponseException` (la banca ha risposto, ma la risposta non è interpretabile) o un'`ApiException` con stato 5xx il bonifico potrebbe essere partito. Prima di simulare e riprovare si cerca il pagamento con `status(simulationId: …)` (o `endToEndId`), oppure nella lista.
