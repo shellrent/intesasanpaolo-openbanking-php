@@ -140,6 +140,30 @@ final class SctInstantApiTest extends TestCase
     }
 
     /**
+     * Q-50: the sandbox answers VRFY with the string "null" in place of the missing values.
+     */
+    #[Test]
+    public function it_reads_an_execution_to_verify_with_null_strings(): void
+    {
+        $http = new MockHttp(MockHttp::token(), $this->simulationResponse('MTCH'), MockHttp::fixture('SctInstant/execution-verify'));
+        $api = $this->api($http);
+
+        $execution = $api->execute($this->payment(), $api->simulate($this->payment()));
+
+        self::assertSame(PaymentStatus::ToVerify, $execution->paymentStatus);
+        self::assertNull($execution->orderId);
+        self::assertNull($execution->paymentId);
+        self::assertNull($execution->customerCro);
+        self::assertNull($execution->resubmitId);
+        self::assertFalse($execution->canBeResubmitted());
+        self::assertNull($execution->date);
+        self::assertNull($execution->currency);
+        self::assertNull($execution->creditor->bic);
+        self::assertSame('E2E-0001', $execution->endToEndId);
+        self::assertSame(self::CREDITOR_IBAN, $execution->creditor->iban);
+    }
+
+    /**
      * Q-37: executing counts as accepting the VoP outcome, so anything but a full match needs a confirmation.
      */
     #[Test]

@@ -173,6 +173,31 @@ final class TransportTest extends TestCase
     }
 
     #[Test]
+    public function it_returns_a_negative_outcome_only_when_asked(): void
+    {
+        $negative = ['success' => false, 'payload' => ['status' => 'KO']];
+        $http = new MockHttp(MockHttp::token(), MockHttp::json($negative), MockHttp::json($negative));
+        $transport = $this->transport($http);
+
+        self::assertSame('KO', $transport->get('anything', acceptNegativeOutcome: true)->requirePayload()->string('status'));
+
+        $this->expectException(ApiException::class);
+        $this->expectExceptionMessage('no error details in the response');
+
+        $transport->get('anything');
+    }
+
+    #[Test]
+    public function it_does_not_accept_a_negative_outcome_without_payload(): void
+    {
+        $http = new MockHttp(MockHttp::token(), MockHttp::json(['success' => false, 'errors' => [], 'payload' => null]));
+
+        $this->expectException(ApiException::class);
+
+        $this->transport($http)->get('anything', acceptNegativeOutcome: true);
+    }
+
+    #[Test]
     public function it_reports_non_json_error_responses(): void
     {
         $http = new MockHttp(MockHttp::token(), new Response(502, ['Content-Type' => 'text/html'], '<html>Bad Gateway</html>'));

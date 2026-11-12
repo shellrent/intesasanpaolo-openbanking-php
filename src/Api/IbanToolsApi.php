@@ -79,6 +79,9 @@ final class IbanToolsApi
             $query['vatNumber'] = $vatNumber;
         }
 
-        return IbanVerification::fromResponse($this->transport->get('tools/iban/chargeabilityMulti', $query));
+        // A negative outcome may arrive with "success: false" and no errors (docs/api-quirks.md, Q-20).
+        return IbanVerification::fromResponse(
+            $this->transport->get('tools/iban/chargeabilityMulti', $query, acceptNegativeOutcome: true),
+        );
     }
 }

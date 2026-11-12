@@ -95,6 +95,8 @@ final class DateParserTest extends TestCase
         yield 'offset with colon' => ['2018-05-04T09:52:10+02:00', '2018-05-04T09:52:10.000+02:00'];
         yield 'leap second of the spec examples' => ['2017-12-31T23:59:60Z', '2018-01-01T00:00:00.000+00:00'];
         yield 'no offset is read in Rome' => ['2026-07-01T12:00:00', '2026-07-01T12:00:00.000+02:00'];
+        yield 'Q-49: sandbox fraction separated by a colon' => ['2026-11-12T21:58:58:538+0100', '2026-11-12T21:58:58.538+01:00'];
+        yield 'Live balance and transactions' => ['2026-11-12T10:15:30+0100', '2026-11-12T10:15:30.000+01:00'];
     }
 
     #[Test]

@@ -76,8 +76,9 @@ final class SctApi
      * Executing counts as accepting the Verification of Payee outcome: unless it is a full match,
      * the payment is executed only with `$acceptVopResult = true`.
      *
-     * After a TransportException the outcome is unknown: look for the payment with status()
-     * (e.g. by simulation ID) or payments() before trying again.
+     * After a TransportException, an UnexpectedResponseException or an ApiException with a 5xx status
+     * the outcome is unknown: look for the payment with status() (e.g. by simulation ID) or payments()
+     * before trying again.
      *
      * @param  bool  $acceptVopResult  Execute even if the VoP outcome is not a full match, after reviewing it.
      *
@@ -189,7 +190,8 @@ final class SctApi
     {
         $query = self::identifiers(['customerCRO' => $customerCro, 'paymentId' => $paymentId]);
 
-        return SctRevocation::fromResponse($this->transport->get($this->path('revoke'), $query));
+        // A refused revocation may arrive with "success: false" and no errors (docs/api-quirks.md, Q-31).
+        return SctRevocation::fromResponse($this->transport->get($this->path('revoke'), $query, acceptNegativeOutcome: true));
     }
 
     /**

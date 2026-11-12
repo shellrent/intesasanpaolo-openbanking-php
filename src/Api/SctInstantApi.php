@@ -91,8 +91,8 @@ final class SctInstantApi
      * Executing counts as accepting the Verification of Payee outcome: unless it is a full match,
      * the payment is executed only with `$acceptVopResult = true`.
      *
-     * After a TransportException the outcome is unknown: check the status or the payment list
-     * before trying again.
+     * After a TransportException, an UnexpectedResponseException or an ApiException with a 5xx status
+     * the outcome is unknown: check the status or the payment list before trying again.
      *
      * @param  bool  $acceptVopResult  Execute even if the VoP outcome is not a full match, after reviewing it.
      *

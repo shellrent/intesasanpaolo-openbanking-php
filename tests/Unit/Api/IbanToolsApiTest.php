@@ -8,6 +8,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use Shellrent\OpenBanking\Api\IbanToolsApi;
 use Shellrent\OpenBanking\Config\Environment;
+use Shellrent\OpenBanking\Exception\ApiException;
 use Shellrent\OpenBanking\Exception\InvalidRequestException;
 use Shellrent\OpenBanking\IntesaSanPaoloClient;
 use Shellrent\OpenBanking\Response\Iban\IbanFormalCheck;
@@ -132,6 +133,38 @@ final class IbanToolsApiTest extends TestCase
 
         self::assertFalse($verification->isAllowed());
         self::assertTrue($verification->isTransferred(), 'Moved to another bank');
+    }
+
+    /**
+     * Q-20: some negative outcomes arrive with "success: false" and no errors, and are still an outcome.
+     */
+    #[Test]
+    public function it_reports_a_negative_outcome_sent_as_unsuccessful(): void
+    {
+        $http = new MockHttp(MockHttp::token(), MockHttp::json([
+            'success' => false,
+            'payload' => ['isAllowed' => false, 'additionalInfo' => 'vatNumber is mandatory for companies accounts'],
+        ]));
+
+        $verification = $this->api($http)->verify(self::CHECKED_IBAN, fiscalCode: 'AAAAAA00A00A000A');
+
+        self::assertFalse($verification->isAllowed());
+        self::assertSame('vatNumber is mandatory for companies accounts', $verification->additionalInfo);
+    }
+
+    #[Test]
+    public function it_still_reports_unsuccessful_responses_with_errors(): void
+    {
+        $http = new MockHttp(MockHttp::token(), MockHttp::json([
+            'success' => false,
+            'errors' => [['type' => 'WRONG_INPUT_EXCEPTION', 'code' => 'WI05', 'description' => 'At least one field among fiscalCode and vatNumber must be present']],
+            'payload' => ['isAllowed' => false],
+        ]));
+
+        $this->expectException(ApiException::class);
+        $this->expectExceptionMessage('WI05');
+
+        $this->api($http)->verify(self::CHECKED_IBAN);
     }
 
     #[Test]

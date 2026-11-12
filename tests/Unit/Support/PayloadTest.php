@@ -30,6 +30,21 @@ final class PayloadTest extends TestCase
         self::assertFalse($payload->has('debtorIBAN'));
     }
 
+    /**
+     * Q-50: the string "null" stands for a missing value.
+     */
+    #[Test]
+    public function it_treats_the_string_null_as_no_value(): void
+    {
+        $payload = self::payload(['orderId' => 'null', 'order-id' => 'ORD-1', 'date' => 'null', 'amount' => 'null', 'nested' => 'null']);
+
+        self::assertSame('ORD-1', $payload->string('orderId', 'order-id'));
+        self::assertNull($payload->dateTime('date'));
+        self::assertNull($payload->float('amount'));
+        self::assertNull($payload->object('nested'));
+        self::assertFalse($payload->has('orderId'));
+    }
+
     #[Test]
     public function it_converts_numbers_to_strings_and_numeric_strings_to_numbers(): void
     {

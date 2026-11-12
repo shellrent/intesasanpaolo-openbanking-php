@@ -11,6 +11,7 @@ use Psr\Http\Client\NetworkExceptionInterface;
 use Psr\Http\Message\ResponseInterface;
 use Shellrent\OpenBanking\Config\ClientConfig;
 use Shellrent\OpenBanking\Exception\TransportException;
+use Throwable;
 
 /**
  * Sends HTTP requests through Guzzle with the options shared by every call.
@@ -79,18 +80,31 @@ final class Sender
             return $this->http->request($method, $uri, $options);
         } catch (NetworkExceptionInterface $exception) {
             throw new TransportException(
-                sprintf('Network error on %s %s: %s', $method, $uri, $exception->getMessage()),
+                sprintf('Network error on %s %s: %s%s', $method, $uri, $exception->getMessage(), self::hint($exception)),
                 $method,
                 $uri,
                 $exception,
             );
         } catch (GuzzleException $exception) {
             throw new TransportException(
-                sprintf('HTTP transfer error on %s %s: %s', $method, $uri, $exception->getMessage()),
+                sprintf('HTTP transfer error on %s %s: %s%s', $method, $uri, $exception->getMessage(), self::hint($exception)),
                 $method,
                 $uri,
                 $exception,
             );
         }
+    }
+
+    /**
+     * Explains the most common certificate failure (docs/api-quirks.md, Q-48).
+     */
+    private static function hint(Throwable $exception): string
+    {
+        if (stripos($exception->getMessage(), 'PKCS12') === false) {
+            return '';
+        }
+
+        return ' (the PKCS#12 file may use a legacy encryption that OpenSSL 3 cannot read:'
+            .' convert it to PEM, see the README section on the certificate)';
     }
 }

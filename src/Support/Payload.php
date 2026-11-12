@@ -14,7 +14,8 @@ use stdClass;
  *
  * - Every getter accepts several field names and reads the first one that has a value,
  *   to cover the naming variants of the APIs (docs/api-quirks.md, Q-12 and following).
- * - A field that is missing, null or an empty string counts as "no value".
+ * - A field that is missing, null, an empty string or the string "null" counts as "no value"
+ *   (docs/api-quirks.md, Q-50).
  * - A value of the wrong type is an error: it raises an UnexpectedResponseException that names the field.
  *
  * @internal
@@ -291,7 +292,8 @@ final readonly class Payload
 
             $value = $this->data->{$key};
 
-            if ($value !== null && $value !== '') {
+            // Some responses serialize a missing value as the string "null" (docs/api-quirks.md, Q-50).
+            if ($value !== null && $value !== '' && $value !== 'null') {
                 return [$key, $value];
             }
         }

@@ -78,6 +78,19 @@ final class VopResultTest extends TestCase
         self::assertTrue($unknown->requiresConfirmation());
     }
 
+    /**
+     * Q-37, Q-50: on a rejected simulation the sandbox sends the header with the string "null".
+     */
+    #[Test]
+    public function it_treats_a_null_string_header_as_no_outcome(): void
+    {
+        $vop = VopResult::fromResponse(new ApiResponse(200, null, ['vopMatchResult' => ['null']], null));
+
+        self::assertNull($vop->rawResult);
+        self::assertFalse($vop->wasPerformed());
+        self::assertTrue($vop->requiresConfirmation());
+    }
+
     #[Test]
     public function it_round_trips_through_an_array(): void
     {

@@ -33,7 +33,8 @@ final readonly class ApiResponse
             if (strcasecmp((string) $headerName, $name) === 0) {
                 $value = $values[0] ?? '';
 
-                return $value === '' ? null : $value;
+                // "null" stands for a missing value, e.g. vopMatchResult on a rejected simulation (Q-50).
+                return $value === '' || $value === 'null' ? null : $value;
             }
         }
 

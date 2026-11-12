@@ -57,6 +57,21 @@ final class SenderTest extends TestCase
         }
     }
 
+    /**
+     * Q-48: OpenSSL 3 cannot read the legacy encryption of the SmartHub PKCS#12 files.
+     */
+    #[Test]
+    public function it_explains_an_unreadable_pkcs12_certificate(): void
+    {
+        $request = new Request('POST', 'https://example.test/token');
+        $http = new MockHttp(new ConnectException('cURL error 58: could not parse PKCS12 file', $request));
+
+        $this->expectException(TransportException::class);
+        $this->expectExceptionMessage('legacy encryption that OpenSSL 3 cannot read');
+
+        (new Sender($this->config(), $http->client))->send('POST', 'https://example.test/token');
+    }
+
     #[Test]
     public function it_converts_other_transfer_errors_into_transport_exceptions(): void
     {

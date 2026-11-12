@@ -29,7 +29,10 @@ final class DateParser
 
     private const string ISO_DATE_FORMAT = 'Y-m-d';
 
-    private const string ISO_8601_PATTERN = '/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}:?\d{2})?$/';
+    /**
+     * ISO 8601 date-time; the fraction may also be separated by ":", as the sandbox does (docs/api-quirks.md, Q-49).
+     */
+    private const string ISO_8601_PATTERN = '/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:[.:]\d{1,9})?(?:Z|[+-]\d{2}:?\d{2})?$/';
 
     /**
      * Parses a date without time, at midnight in Europe/Rome.
@@ -77,6 +80,9 @@ final class DateParser
         if (preg_match(self::ISO_8601_PATTERN, $value) !== 1) {
             throw new InvalidArgumentException(sprintf('"%s" is not an ISO 8601 date-time.', $value));
         }
+
+        // "21:58:58:538" (sandbox) becomes "21:58:58.538".
+        $value = (string) preg_replace('/(T\d{2}:\d{2}:\d{2}):(\d{1,9})/', '$1.$2', $value);
 
         try {
             return new DateTimeImmutable($value, self::timezone());

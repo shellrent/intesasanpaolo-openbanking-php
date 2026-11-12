@@ -288,6 +288,25 @@ final class SctApiTest extends TestCase
         self::assertSame('KO', $refused->rawStatus);
     }
 
+    /**
+     * Q-31: the sandbox refuses a revocation with "success: false", no errors and a status with a description.
+     */
+    #[Test]
+    public function it_reports_a_refused_revocation_sent_as_unsuccessful(): void
+    {
+        $http = new MockHttp(MockHttp::token(), MockHttp::json([
+            'success' => false,
+            'payload' => ['paymentId' => 'PAY-SCT-0003', 'status' => 'KO - Generic error'],
+        ]));
+
+        $revocation = $this->api($http)->revoke(paymentId: 'PAY-SCT-0003');
+
+        self::assertFalse($revocation->revoked);
+        self::assertFalse($revocation->isRevoked());
+        self::assertSame('KO - Generic error', $revocation->rawStatus);
+        self::assertSame('PAY-SCT-0003', $revocation->paymentId);
+    }
+
     #[Test]
     public function it_requires_an_identifier_to_revoke(): void
     {

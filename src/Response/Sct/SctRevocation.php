@@ -12,7 +12,7 @@ use Shellrent\OpenBanking\Http\ApiResponse;
 final readonly class SctRevocation
 {
     /**
-     * @param  bool|null  $revoked  True for "OK", false for "KO", null for an unknown value: see $rawStatus.
+     * @param  bool|null  $revoked  True for "OK", false for "KO" (also "KO - Generic error"), null for an unknown value: see $rawStatus.
      * @param  string|null  $transactionId  "X-ISP-Transaction-ID" of the response, for the ISP support.
      */
     public function __construct(
@@ -40,7 +40,8 @@ final readonly class SctRevocation
         $rawStatus = $payload->string('status');
 
         return new self(
-            revoked: match (strtoupper(trim((string) $rawStatus))) {
+            // The code may be followed by a description, e.g. "KO - Generic error".
+            revoked: match (strtoupper(preg_split('/\s+/', trim((string) $rawStatus))[0] ?? '')) {
                 'OK' => true,
                 'KO' => false,
                 default => null,

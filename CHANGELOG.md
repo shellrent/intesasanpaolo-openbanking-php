@@ -19,10 +19,10 @@ Versione 3.0.0 in sviluppo sul branch `3.x`. Contiene modifiche incompatibili co
   - `simulate()`, con esito VoP, commissioni e date previste;
   - `execute()`, con le stesse protezioni dell'Instant;
   - `status()`, per CRO, ID pagamento, end-to-end ID o simulation ID;
-  - `payments()` e `revoke()`.
+  - `payments()` e `revoke()`; un rifiuto della revoca è un esito (`revoked: false`), anche quando la banca lo invia con `success: false`.
 - Strumenti IBAN `ibanTools()`:
   - `formalCheck()`, verifica sintattica;
-  - `verify()`, esistenza dell'IBAN e congruenza con codice fiscale o partita IVA, anche per le banche CBI Globe.
+  - `verify()`, esistenza dell'IBAN e congruenza con codice fiscale o partita IVA, anche per le banche CBI Globe; un esito negativo è un risultato e non un'eccezione, anche quando arriva con `success: false`.
 - `sctInstant()->reachability()`: verifica se un IBAN può ricevere bonifici istantanei.
 - Richiesta `SctPayment`: valuta e `categoryPurpose` configurabili, data di esecuzione opzionale.
 - Richiesta `InstantPayment`, validata alla creazione (lunghezze SEPA, IBAN, importo con al massimo 2 decimali).
@@ -45,6 +45,9 @@ Versione 3.0.0 in sviluppo sul branch `3.x`. Contiene modifiche incompatibili co
   - `TransportException` per errori di rete e timeout;
   - `UnexpectedResponseException` per risposte non interpretabili;
   - `ConfigurationException` per configurazioni non valide.
+- Lettura tollerante dei comportamenti osservati con le API reali: la stringa `"null"` vale come valore assente, anche nell'header VoP, e le date-ora della sandbox con `:` prima dei millisecondi sono accettate.
+- Certificato PKCS#12 di SmartHub, che OpenSSL 3 non legge: istruzioni di conversione nel README e suggerimento nel messaggio della `TransportException`.
+- Test di integrazione opzionali (`composer test:integration`): casi di test della sandbox e verifiche di sola lettura in Live, con blocco delle richieste di scrittura.
 - `TokenStore` per condividere il token OAuth2 tra istanze e processi; il token si rinnova 60 s prima della scadenza.
 - Core di trasporto 3.0:
   - header di risposta e `X-ISP-Transaction-ID` disponibili;

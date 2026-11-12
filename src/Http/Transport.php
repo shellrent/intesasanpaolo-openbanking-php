@@ -40,6 +40,8 @@ final class Transport
      * @param  string  $pathOrUrl  Path relative to the API base URI (e.g. "accounts/IT.../balance") or absolute URL (pagination links).
      * @param  array<string, scalar>  $query
      * @param  array<string, string>  $headers  Additional request headers.
+     * @param  bool  $acceptNegativeOutcome  Return the payload of a "success: false" response without errors instead
+     *                                       of throwing: some endpoints answer a negative outcome that way (Q-20, Q-31).
      *
      * @throws ApiException When the API rejects the request.
      * @throws AuthenticationException When the API answers HTTP 401 or the token request is rejected.
@@ -48,9 +50,9 @@ final class Transport
      *
      * @phpstan-impure
      */
-    public function get(string $pathOrUrl, array $query = [], array $headers = []): ApiResponse
+    public function get(string $pathOrUrl, array $query = [], array $headers = [], bool $acceptNegativeOutcome = false): ApiResponse
     {
-        return $this->request('GET', $pathOrUrl, $query, null, $headers);
+        return $this->request('GET', $pathOrUrl, $query, null, $headers, $acceptNegativeOutcome);
     }
 
     /**
@@ -66,7 +68,7 @@ final class Transport
      */
     public function post(string $path, array $json, array $headers = []): ApiResponse
     {
-        return $this->request('POST', $path, [], $json, $headers);
+        return $this->request('POST', $path, [], $json, $headers, false);
     }
 
     /**
@@ -74,8 +76,14 @@ final class Transport
      * @param  array<string, mixed>|null  $json
      * @param  array<string, string>  $headers
      */
-    private function request(string $method, string $pathOrUrl, array $query, ?array $json, array $headers): ApiResponse
-    {
+    private function request(
+        string $method,
+        string $pathOrUrl,
+        array $query,
+        ?array $json,
+        array $headers,
+        bool $acceptNegativeOutcome,
+    ): ApiResponse {
         if ($json !== null) {
             $headers['Content-Type'] = 'application/json';
         }
@@ -92,7 +100,7 @@ final class Transport
             body: $json === null ? null : Json::encode($json),
         );
 
-        return $this->read($response);
+        return $this->read($response, $acceptNegativeOutcome);
     }
 
     private function resolve(string $pathOrUrl): string
@@ -104,7 +112,7 @@ final class Transport
         return $this->config->apiBaseUri().'/'.ltrim($pathOrUrl, '/');
     }
 
-    private function read(ResponseInterface $response): ApiResponse
+    private function read(ResponseInterface $response, bool $acceptNegativeOutcome): ApiResponse
     {
         $status = $response->getStatusCode();
         $headers = $response->getHeaders();
@@ -132,7 +140,7 @@ final class Transport
             );
         }
 
-        if (($decoded->success ?? null) === false) {
+        if (($decoded->success ?? null) === false && ! ($acceptNegativeOutcome && self::isNegativeOutcome($decoded))) {
             throw ApiException::fromResponse($status, $decoded->errors ?? null, $transactionId, $body);
         }
 
@@ -153,6 +161,17 @@ final class Transport
             $headers,
             $transactionId,
         );
+    }
+
+    /**
+     * A "success: false" response that carries an outcome in the payload and no errors.
+     */
+    private static function isNegativeOutcome(stdClass $decoded): bool
+    {
+        $errors = $decoded->errors ?? null;
+        $payload = $decoded->payload ?? null;
+
+        return ($errors === null || $errors === []) && $payload instanceof stdClass && get_object_vars($payload) !== [];
     }
 
     private static function decode(string $body): mixed
