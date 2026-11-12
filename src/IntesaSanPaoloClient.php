@@ -173,7 +173,7 @@ class IntesaSanPaoloClient {
 	 *
 	 * @return stdClass
 	 */
-	private function request( string $method, string $url, array $queryParameters = [], $jsonBody = null, string $plainBody = null ): ?stdClass {
+	private function request( string $method, string $url, array $queryParameters = [], $jsonBody = null, ?string $plainBody = null ): ?stdClass {
 		$now = new DateTime();
 		
 		try {
@@ -273,7 +273,7 @@ class IntesaSanPaoloClient {
 	 * @param string|null $privateKeyPassphrase String containing the passphrase for the Private Key
 	 * @return $this
 	 */
-	public function enableMutualAuthentication( string $certificatePath, ?string $certificatePassphrase = null, string $privateKeyPath = null, string $privateKeyPassphrase = null ): self {
+	public function enableMutualAuthentication( string $certificatePath, ?string $certificatePassphrase = null, ?string $privateKeyPath = null, ?string $privateKeyPassphrase = null ): self {
 		if( !empty( $certificatePassphrase ) ) {
 			$this->MutualAuthenticationCertificate = [
 				$certificatePath,
@@ -521,7 +521,7 @@ class IntesaSanPaoloClient {
 	 * @param string|null $paymentId
 	 * @return PaymentStatus
 	 */
-	public function getDelayedPaymentStatus( string $customerCro = null, string $paymentId = null ): PaymentStatus {
+	public function getDelayedPaymentStatus( ?string $customerCro = null, ?string $paymentId = null ): PaymentStatus {
 		$params = [];
 		
 		$paramsOk = false;
@@ -552,7 +552,7 @@ class IntesaSanPaoloClient {
 	 * @param string $orderId
 	 * @return PaymentStatus
 	 */
-	public function getPaymentStatus( string $orderId, string $paymentId = null ): PaymentStatus {
+	public function getPaymentStatus( string $orderId, ?string $paymentId = null ): PaymentStatus {
 		$params = [];
 		
 		if( $paymentId ) {
@@ -573,7 +573,7 @@ class IntesaSanPaoloClient {
 	 *
 	 * @return PaymentInfos
 	 */
-	public function getDelayedPaymentsList( DateTime $fromDate = null, DateTime $toDate = null ): PaymentInfos {
+	public function getDelayedPaymentsList( ?DateTime $fromDate = null, ?DateTime $toDate = null ): PaymentInfos {
 		if( is_null( $fromDate ) ) {
 			$fromDate = new DateTime();
 			$fromDate->modify( '-1 month' );
@@ -642,7 +642,7 @@ class IntesaSanPaoloClient {
 	 *
 	 * @return PaymentInfos
 	 */
-	public function getPaymentsList( DateTime $fromDate = null, DateTime $toDate = null ): PaymentInfos {
+	public function getPaymentsList( ?DateTime $fromDate = null, ?DateTime $toDate = null ): PaymentInfos {
 		if( is_null( $fromDate ) ) {
 			$fromDate = new DateTime();
 			$fromDate->modify( '-1 month' );
@@ -706,7 +706,7 @@ class IntesaSanPaoloClient {
 	 * Try to Revoke the SCT payment specified by IBAN and paymentId or customerCRO (BON SCT - Revoke API)
 	 * @return DelayedPaymentRevoke
 	 */
-	public function revokeDelayedPayment( string $customerCro = null, string $paymentId = null ): DelayedPaymentRevoke {
+	public function revokeDelayedPayment( ?string $customerCro = null, ?string $paymentId = null ): DelayedPaymentRevoke {
 		$params = [];
 		
 		$paramsOk = false;

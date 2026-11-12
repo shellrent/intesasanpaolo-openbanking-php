@@ -20,7 +20,7 @@ abstract class GenericModel {
 	
 	
 	
-	public final function __construct( stdClass $data = null ) {
+	public final function __construct( ?stdClass $data = null ) {
 		if( !is_null( $data ) ) {
 			$this->hydrate( $data );
 		}
