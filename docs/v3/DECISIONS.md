@@ -243,8 +243,35 @@ I controlli prima dell'esecuzione (D-36, D-40) stanno in un'unica classe interna
 ### D-50 · Codice 2.x eliminato — T6
 Con l'SCT riscritto sono stati eliminati `Legacy\IntesaSanPaoloClient`, `Models/`, `Exceptions/`, `DataSet/` e i test 2.x, insieme alle esclusioni da PHPStan e Pint. Questo chiude D-18 e D-30. Tutto `src/` è ora analizzato al livello max e formattato da Pint. I comportamenti 2.x fissati dai test di riferimento sono coperti dai test 3.0, che citano le voci Q-…; per confrontare un comportamento con la 2.x resta il tag `2.1.1`.
 
+### D-51 · "Verifica esistenza IBAN" tramite `chargeabilityMulti` — T7
+La spec scaricata per "Verifica esistenza IBAN" è una copia del formal-check, e il portale non dà altre indicazioni. L'esistenza si verifica quindi con `chargeabilityMulti` passando il solo IBAN (`ibanTools()->verify($iban)`): la sua descrizione dice "Check IBAN existence in addition to verification of IBAN holder", e codice fiscale e partita IVA sono opzionali. Va confermata con le verifiche reali di T8.
+- Decisione del maintainer. Chiude O-06.
+
+### D-52 · Raggiungibilità Instant in `sctInstant()` — T7
+La verifica di raggiungibilità SCT Instant è `sctInstant()->reachability()` e non sta negli strumenti IBAN: risponde alla domanda "posso pagare questo IBAN in istantaneo?" e precede la simulazione Instant. Gli strumenti IBAN (`ibanTools()`) non dipendono dal conto configurato.
+
+### D-53 · Formal-check senza rifiuto locale — T7
+`formalCheck()` normalizza l'IBAN (spazi, maiuscole) ma non lo valida da sé: un IBAN non valido è un esito dell'API (`isValid()` falso), non un'eccezione. Gli altri metodi che ricevono un IBAN lo validano prima della chiamata.
+
+### D-54 · Codice fiscale e partita IVA — T7
+`verify()` normalizza codice fiscale e partita IVA (spazi rimossi, maiuscole) e richiede solo 8–16 caratteri alfanumerici, senza controllo di checksum: le banche CBI Globe possono avere formati diversi, e la verifica vera la fa l'API.
+
+### D-55 · Verifiche reali in Live, solo lettura — proposta per T8
+Su indicazione del maintainer, in T8 si verificano i comportamenti ancora presunti con chiamate reali alle API di **sola lettura**:
+- in Live, con le credenziali di produzione: saldo, movimenti, liste e stati dei pagamenti, strumenti IBAN, raggiungibilità;
+- in sandbox: simulazioni ed esecuzioni.
+
+Le verifiche si fanno con una suite o uno script lanciati esplicitamente, con credenziali e certificato locali mai versionati. La regola 6 di `AGENTS.md` ("mai chiamare Live") verrà aggiornata per ammettere solo questo caso. Una simulazione in Live (per leggere gli header VoP reali) non sposta denaro, ma richiede un'approvazione esplicita a parte.
+
+Punti da verificare:
+- valori reali dell'header `vopMatchResult` (D-42);
+- comportamento dell'SCT senza `requestedExecutionDate` (D-45);
+- parametro `date` sul link `nextPage` dei movimenti con più di 200 record (D-35);
+- riscrittura `localhost:8081` → `/twa/sandbox` (Q-44);
+- esistenza IBAN tramite `chargeabilityMulti` (D-51);
+- tipi reali dei campi del formal-check (Q-19);
+- formato di `links` nelle liste.
+
 ## Aperte
 
-| ID | Questione | Da decidere in |
-|---|---|---|
-| O-06 | Quale endpoint corrisponde a "Verifica esistenza IBAN" | T7 |
+Nessuna questione aperta.

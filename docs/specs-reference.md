@@ -61,7 +61,7 @@ Per ogni API va usato il file indicato. I doppioni sono elencati più sotto.
 | SCT | Esecuzione ISO 20022 | `POST /payments/bonsct/iso` | `Spedizione pagamento ISO SCT_v1.json` | `sandbox/Spedizione pagamento ISO SCT_v1.json` |
 | Strumenti | Verifica sintattica IBAN | `GET /tools/iban/formal-check` | `Validazione sintattica IBAN_v1.json` | `sandbox/Validazione sintattica IBAN_v1.json` |
 | Strumenti | Esistenza IBAN e congruenza CF/P.IVA | `GET /tools/iban/chargeabilityMulti` | `Verifica congruenza IBAN CF_P.IVA Multibanca_v1.json` | `sandbox/Verifica congruenza IBAN CF_P.IVA Multibanca_v1.json` |
-| Strumenti | Verifica esistenza IBAN | da chiarire | `Verifica esistenza IBAN_v1.json` ⚠️ | `sandbox/Verifica esistenza IBAN_v1.json` ⚠️ |
+| Strumenti | Verifica esistenza IBAN | `GET /tools/iban/chargeabilityMulti` con il solo IBAN (D-51) | `Verifica esistenza IBAN_v1.json` ⚠️ copia del formal-check | `sandbox/Verifica esistenza IBAN_v1.json` ⚠️ |
 | Locator | ATM | `GET /locator/atm` | — | `sandbox/ATM Locator_v1.json` |
 | Locator | Filiali | `GET /locator/branch` | — | `sandbox/Branch Locator_v1.json` |
 
@@ -84,7 +84,7 @@ Questi file Live sono **copie identiche byte per byte** del file canonico: è la
 
 ## Anomalie note
 
-- **"Verifica esistenza IBAN" contiene la spec del formal-check**, sia Live sia sandbox (file identici a "Validazione sintattica IBAN"). Può essere un errore del portale, oppure l'esistenza dell'IBAN si verifica con `chargeabilityMulti`: la sua descrizione dice *"Check IBAN existence in addition to verification of IBAN holder"*, e SmartHub documenta esistenza e congruenza in un'unica pagina. Da chiarire in T7.
+- **"Verifica esistenza IBAN" contiene la spec del formal-check**, sia Live sia sandbox (file identici a "Validazione sintattica IBAN"). Può essere un errore del portale, oppure l'esistenza dell'IBAN si verifica con `chargeabilityMulti`: la sua descrizione dice *"Check IBAN existence in addition to verification of IBAN holder"*, e SmartHub documenta esistenza e congruenza in un'unica pagina. Il controllo nel portale non ha dato altre indicazioni. **Decisione (D-51)**: l'esistenza si verifica con `chargeabilityMulti` passando il solo IBAN (`ibanTools()->verify($iban)`), da confermare con le verifiche reali di T8.
 - **In sandbox mancano le spec di simulazione e lista SCT.** Gli endpoint esistono: in `old/` ci sono le spec sandbox del 2023.
 - **ISO 20022: versioni diverse.** Live usa `PAIN.001.001.03`, sandbox `pain.001.001.09`.
 - **Differenze di valori tra Live e sandbox** (dettagli in [api-quirks.md](api-quirks.md)): l'esito della simulazione SCT Instant vale `ACSC` in Live e `ACCP` in sandbox; lo stato Instant è `Cancelled` in Live e `Canceled` in sandbox.

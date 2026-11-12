@@ -197,6 +197,18 @@ Tutte le classi della 2.x sono state eliminate:
 - `Shellrent\OpenBanking\Exceptions\*` → `Shellrent\OpenBanking\Exception\*`;
 - `Shellrent\OpenBanking\DataSet\CurrencySet` → non serve più: l'SCT è in EUR, e la valuta di `SctPayment` è un codice ISO 4217.
 
-## Strumenti IBAN
+## Strumenti IBAN (novità)
 
-Da completare in T7.
+Nella 2.x non c'erano. Nella 3.0:
+
+| API | Metodo | Risultato |
+|---|---|---|
+| Verifica sintattica | `ibanTools()->formalCheck($iban)` | `IbanFormalCheck`: `isValid()`, `countryCode`, `checkDigits`, `bankCode`, `bankAgency`, `account`, `bban` |
+| Esistenza dell'IBAN | `ibanTools()->verify($iban)` | `IbanVerification`: `isAllowed()`, `additionalInfo`, `isTransferred()` |
+| Congruenza con l'intestatario | `ibanTools()->verify($iban, fiscalCode: …, vatNumber: …)` | come sopra |
+| Raggiungibilità SCT Instant | `sctInstant()->reachability($iban)` | `InstantReachability`: `isReachable()`, `status`, `bic` |
+
+Note:
+- **IBAN non valido**: `formalCheck()` lo invia comunque, e il risultato è `isValid()` falso, non un'eccezione.
+- **Input malformati**: `verify()` e `reachability()` rifiutano prima della chiamata IBAN, codici fiscali e partite IVA malformati.
+- **Esistenza**: che si verifichi con `chargeabilityMulti` e il solo IBAN è una deduzione dalla documentazione (D-51), da confermare con le verifiche reali.

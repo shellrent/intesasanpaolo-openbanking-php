@@ -1,0 +1,9 @@
+{
+    "success": true,
+    "errors": null,
+    "payload": {
+        "isAllowed": "true",
+        "ibanType": "account",
+        "additionalInfo": "AC15"
+    }
+}

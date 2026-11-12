@@ -18,13 +18,8 @@ Documentazione tecnica dell'SDK. Per installazione e uso parti dal [README](../R
 | [dates-and-formats.md](dates-and-formats.md) | come l'SDK legge e scrive le date, fusi orari, uso con Carbon |
 | [payment-flows.md](payment-flows.md) | simulazione, VoP, esecuzione, resubmit, stati, revoca, simulazioni salvate (SCT Instant e SCT) |
 | [testing.md](testing.md) | comandi, struttura dei test, `MockHttp`, regole sulle fixture |
+| [adding-an-endpoint.md](adding-an-endpoint.md) | ricetta per integrare una nuova API, con l'esempio delle verifiche IBAN |
 | [../UPGRADE-3.0.md](../UPGRADE-3.0.md) | aggiornamento dalla 2.x alla 3.0 (bozza) |
-
-## In arrivo con la 3.0
-
-| Documento | Task |
-|---|---|
-| `adding-an-endpoint.md` – come aggiungere una nuova API | T7 |
 
 ## Lavoro in corso (temporaneo)
 

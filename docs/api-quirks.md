@@ -130,15 +130,18 @@ Nella lista SCT la data di estrazione si chiama `executionInquiry`, non `executi
 
 ### Q-18 Raggiungibilità SCT Instant
 I campi della risposta sono `isReachable`, `IBAN_Status` e `BIC`, con le maiuscole.
+- 3.0: `SctInstantApi::reachability()` restituisce `InstantReachability` (`reachable`, `status`, `bic`).
 - Fonte: `SPEC`.
 
 ### Q-19 Verifica sintattica IBAN: campi "numerici"
 `checkDigits`, `bankCode`, `bankAgency` e `account` sono dichiarati `number`, ma sono stringhe con zeri iniziali o lettere (es. `"03069"`, `"XTESTCASEX1"`): vanno trattati come stringhe.
+- 3.0: `IbanFormalCheck` espone queste parti come stringhe. Se l'API le inviasse come numeri, gli zeri iniziali andrebbero persi: il `bban` resta il riferimento completo.
 - Fonti: `SPEC`, `WEB`.
 
 ### Q-20 `chargeabilityMulti`: esito
 La spec restituisce `allowed` e `additionalInfo`. La pagina SmartHub mostra invece `IsAllowed`/`isAllowed`, con valore stringa `"true"`: l'esito va letto in modo tollerante.
 - `additionalInfo` vale `AC15` se il conto è stato trasferito: esito OK se è rimasto nel gruppo ISP con nuove coordinate, KO se è passato a un'altra banca.
+- 3.0: `IbanToolsApi::verify()` legge `allowed`, `isAllowed` e `IsAllowed`, anche come stringa `"true"`, più `ibanType`. `IbanVerification::isTransferred()` riconosce `AC15`. Con il solo IBAN è la verifica di esistenza (D-51).
 - Fonti: `SPEC`, `WEB`.
 
 ## Campi assenti o nulli
@@ -311,4 +314,5 @@ Non ci sono spec sandbox di simulazione e lista SCT, ma gli endpoint esistono: l
 
 ### Q-47 Base URL di `chargeabilityMulti`
 La spec dichiara come base `/twa/live`, senza `/v1`, e mette `/v1` nel path: la URL finale è uguale a quella delle altre API. La risposta è dichiarata `*/*`.
+- 3.0: la richiesta va su `{base}/tools/iban/chargeabilityMulti`, cioè `/twa/{ambiente}/v1/tools/iban/chargeabilityMulti`.
 - Fonte: `SPEC`.

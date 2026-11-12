@@ -20,7 +20,7 @@ La colonna "3.0" indica il metodo della 3.0 (✅ disponibile) oppure la task che
 | Esecuzione | `POST /payments/sct/instant` | `createInstantPayment()` | ✅ `sctInstant()->execute()`, `resubmit()` | richiede la simulazione (5 min), resubmit per `PNDG` |
 | Stato | `GET /payments/sct/instant/{IBAN}/history/{orderId}` | `getPaymentStatus()` | ✅ `sctInstant()->status()` | |
 | Lista | `GET /payments/sct/instant/{IBAN}/history` | `getPaymentsList()` | ✅ `sctInstant()->payments()` | paginazione `links.next` |
-| Raggiungibilità IBAN | `GET /payments/sct/instant/reachability` | — | T7 | |
+| Raggiungibilità IBAN | `GET /payments/sct/instant/reachability` | — | ✅ `sctInstant()->reachability()` | se non raggiungibile, si usa l'SCT ordinario |
 | Simulazione ISO 20022 | `POST /payments/sct/instant/simulation/iso` | — | non pianificata | body XML pain.001 |
 | Esecuzione ISO 20022 | `POST /payments/sct/instant/iso` | — | non pianificata | body XML pain.001 |
 
@@ -42,9 +42,9 @@ Nella 2.x questi metodi usano il termine "Delayed".
 
 | Operazione | Endpoint | Metodo 2.x | 3.0 | Note |
 |---|---|---|---|---|
-| Verifica sintattica | `GET /tools/iban/formal-check` | — | T7 | campi "numerici" da trattare come stringhe |
-| Esistenza e congruenza con CF/P.IVA | `GET /tools/iban/chargeabilityMulti` | — | T7 | anche banche aderenti a CBI Globe |
-| Verifica esistenza | da chiarire | — | T7 | la spec scaricata è una copia del formal-check |
+| Verifica sintattica | `GET /tools/iban/formal-check` | — | ✅ `ibanTools()->formalCheck()` | campi "numerici" letti come stringhe |
+| Esistenza e congruenza con CF/P.IVA | `GET /tools/iban/chargeabilityMulti` | — | ✅ `ibanTools()->verify($iban, $cf, $piva)` | anche banche aderenti a CBI Globe |
+| Verifica esistenza | `GET /tools/iban/chargeabilityMulti` | — | ✅ `ibanTools()->verify($iban)` | con il solo IBAN (D-51); la spec scaricata è una copia del formal-check |
 
 ## Altre API SmartHub
 

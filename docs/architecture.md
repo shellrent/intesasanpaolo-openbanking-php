@@ -2,19 +2,20 @@
 
 Come è organizzato il codice della 3.0 e che percorso fa una richiesta. Le motivazioni delle scelte sono in [v3/DECISIONS.md](v3/DECISIONS.md), finché quel documento esiste.
 
-> Stato: core, Conti, SCT Instant e SCT ordinario completi (T3–T6); il codice 2.x è stato eliminato. Gli strumenti IBAN arrivano in T7.
+> Stato: tutte le API pianificate per la 3.0 sono implementate (T3–T7) e il codice 2.x è stato eliminato. Per aggiungere un'API: [adding-an-endpoint.md](adding-an-endpoint.md).
 
 ## Struttura
 
 ```
 src/
-├── IntesaSanPaoloClient.php   facade: accounts(), sctInstant(), sct(), poi ibanTools() [pubblico]
-├── Api/                       un oggetto per area: AccountsApi, SctInstantApi, SctApi [pubblico]
+├── IntesaSanPaoloClient.php   facade: accounts(), sctInstant(), sct(), ibanTools() [pubblico]
+├── Api/                       un oggetto per area: AccountsApi, SctInstantApi, SctApi, IbanToolsApi [pubblico]
 │   └── PaymentGuard           controlli prima dell'esecuzione (VoP, simulazione) [interno]
 ├── Response/                  DTO readonly di risposta, per area             [pubblico]
 │   ├── Accounts/              Balance, Transaction, TransactionList
-│   ├── SctInstant/            InstantSimulation, InstantExecution, InstantPaymentDetails, InstantPaymentList(Item)
+│   ├── SctInstant/            InstantSimulation, InstantExecution, InstantPaymentDetails, InstantPaymentList(Item), InstantReachability
 │   ├── Sct/                   SctSimulation, SctExecution, SctPaymentDetails, SctPaymentList(Item), SctRevocation
+│   ├── Iban/                  IbanFormalCheck, IbanVerification
 │   ├── Party                  debitore o creditore
 │   └── VopResult              esito della Verification of Payee (dagli header)
 ├── Enum/                      stati come enum tolleranti (FromApiValue)     [pubblico]

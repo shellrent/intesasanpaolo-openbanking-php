@@ -15,6 +15,14 @@ Come si esegue un bonifico con l'SDK, e cosa fare in ogni esito. I comportamenti
 
 ## SCT Instant
 
+### 0. Raggiungibilità (opzionale)
+
+```php
+if (! $client->sctInstant()->reachability($payment->creditorIban)->isReachable()) {
+    // la banca del beneficiario non aderisce all'istantaneo: usare un SCT ordinario
+}
+```
+
 ### 1. Simulazione
 
 ```php

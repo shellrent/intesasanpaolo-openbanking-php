@@ -20,6 +20,10 @@ Versione 3.0.0 in sviluppo sul branch `3.x`. Contiene modifiche incompatibili co
   - `execute()`, con le stesse protezioni dell'Instant;
   - `status()`, per CRO, ID pagamento, end-to-end ID o simulation ID;
   - `payments()` e `revoke()`.
+- Strumenti IBAN `ibanTools()`:
+  - `formalCheck()`, verifica sintattica;
+  - `verify()`, esistenza dell'IBAN e congruenza con codice fiscale o partita IVA, anche per le banche CBI Globe.
+- `sctInstant()->reachability()`: verifica se un IBAN può ricevere bonifici istantanei.
 - Richiesta `SctPayment`: valuta e `categoryPurpose` configurabili, data di esecuzione opzionale.
 - Richiesta `InstantPayment`, validata alla creazione (lunghezze SEPA, IBAN, importo con al massimo 2 decimali).
 - Simulazioni salvabili e ricaricabili (`toArray()`/`fromArray()`).
@@ -47,7 +51,7 @@ Versione 3.0.0 in sviluppo sul branch `3.x`. Contiene modifiche incompatibili co
   - paginazione con protezione da cicli e limite di pagine;
   - correzione dei link di paginazione della sandbox;
   - lettura delle date con formati espliciti.
-- Documentazione: `docs/architecture.md`, `docs/dates-and-formats.md`, `docs/testing.md`, `UPGRADE-3.0.md` (bozza).
+- Documentazione: `docs/architecture.md`, `docs/dates-and-formats.md`, `docs/testing.md`, `docs/adding-an-endpoint.md`, `UPGRADE-3.0.md` (bozza).
 - Documentazione per agent AI e sviluppatori: `AGENTS.md`, `CLAUDE.md`.
 - Documentazione tecnica in `docs/`: copertura delle API, quirk e comportamenti reali delle API, riferimento alle spec.
 - `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `.editorconfig`, `.gitattributes`.

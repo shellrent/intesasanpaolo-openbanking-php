@@ -22,6 +22,7 @@ use Shellrent\OpenBanking\Request\Validator;
 use Shellrent\OpenBanking\Response\SctInstant\InstantExecution;
 use Shellrent\OpenBanking\Response\SctInstant\InstantPaymentDetails;
 use Shellrent\OpenBanking\Response\SctInstant\InstantPaymentList;
+use Shellrent\OpenBanking\Response\SctInstant\InstantReachability;
 use Shellrent\OpenBanking\Response\SctInstant\InstantSimulation;
 use Shellrent\OpenBanking\Support\DateFormat;
 use Shellrent\OpenBanking\Support\DateParser;
@@ -30,7 +31,7 @@ use Shellrent\OpenBanking\Support\Url;
 /**
  * SCT Instant payments (bonifico istantaneo) from the configured account.
  *
- * Flow: simulate() → check the VoP outcome → execute() within 5 minutes → if pending, resubmit();
+ * Flow: optionally reachability() → simulate() → check the VoP outcome → execute() within 5 minutes → if pending, resubmit();
  * see docs/payment-flows.md. Obtain it with IntesaSanPaoloClient::sctInstant().
  */
 final class SctInstantApi
@@ -48,6 +49,25 @@ final class SctInstantApi
         private readonly Transport $transport,
         private readonly Paginator $paginator,
     ) {}
+
+    /**
+     * Whether an IBAN can receive SCT Instant payments, i.e. whether its bank joins the scheme.
+     *
+     * When it cannot, an ordinary SCT payment (IntesaSanPaoloClient::sct()) is the alternative.
+     *
+     * @throws InvalidRequestException When the IBAN is malformed.
+     * @throws ApiException
+     * @throws AuthenticationException
+     * @throws TransportException
+     * @throws UnexpectedResponseException
+     */
+    public function reachability(string $iban): InstantReachability
+    {
+        return InstantReachability::fromResponse($this->transport->get(
+            'payments/sct/instant/reachability',
+            ['iban' => Validator::iban($iban, 'IBAN')],
+        ));
+    }
 
     /**
      * Checks the feasibility of the payment, including the Verification of Payee.

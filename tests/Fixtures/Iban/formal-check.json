@@ -1,0 +1,13 @@
+{
+    "success": true,
+    "errors": null,
+    "payload": {
+        "isValid": true,
+        "countryCode": "IT",
+        "checkDigits": "00",
+        "bankCode": "00000",
+        "bankAgency": "00000",
+        "account": "000000000001",
+        "bban": "X0000000000000000000001"
+    }
+}

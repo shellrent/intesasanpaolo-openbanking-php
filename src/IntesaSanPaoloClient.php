@@ -7,6 +7,7 @@ namespace Shellrent\OpenBanking;
 use GuzzleHttp\Client;
 use GuzzleHttp\ClientInterface;
 use Shellrent\OpenBanking\Api\AccountsApi;
+use Shellrent\OpenBanking\Api\IbanToolsApi;
 use Shellrent\OpenBanking\Api\SctApi;
 use Shellrent\OpenBanking\Api\SctInstantApi;
 use Shellrent\OpenBanking\Auth\InMemoryTokenStore;
@@ -38,6 +39,8 @@ final class IntesaSanPaoloClient
     private ?SctInstantApi $sctInstant = null;
 
     private ?SctApi $sct = null;
+
+    private ?IbanToolsApi $ibanTools = null;
 
     /**
      * @param  ClientInterface|null  $httpClient  Guzzle client to use, e.g. with logging middleware; certificate
@@ -82,5 +85,13 @@ final class IntesaSanPaoloClient
     public function sct(): SctApi
     {
         return $this->sct ??= new SctApi($this->config, $this->transport, $this->paginator);
+    }
+
+    /**
+     * IBAN checks: formal check, existence and consistency with the holder's fiscal code or VAT number.
+     */
+    public function ibanTools(): IbanToolsApi
+    {
+        return $this->ibanTools ??= new IbanToolsApi($this->transport);
     }
 }

@@ -55,4 +55,4 @@ I riferimenti `file:riga` sono relativi al codice 2.1.1.
 | F-32 | Gli importi sono float senza arrotondamento a 2 decimali | `Models/GenericPayment.php:173` | T5, T6 | risolto (T6) |
 | F-33 | `CurrencySet` è incompleto e superfluo, perché l'SCT è solo in EUR | `DataSet/CurrencySet.php` | T6 | risolto (T6) |
 | F-34 | I test usano dati casuali (Faker) invece di fixture deterministiche | `tests/` | T2, T3 | risolto (T6) |
-| F-35 | La spec "Verifica esistenza IBAN" è una copia del formal-check (O-06) | spec locali | T7 | aperto |
+| F-35 | La spec "Verifica esistenza IBAN" è una copia del formal-check (O-06) | spec locali | T7 | risolto (T7): esistenza tramite `chargeabilityMulti` (D-51), da confermare in T8 |

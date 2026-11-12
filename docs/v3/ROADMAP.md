@@ -19,7 +19,7 @@ Piano di lavoro della riscrittura 3.0 dell'SDK. È la **fonte di verità sullo s
 | T4 | API Conti | ✅ completata |
 | T5 | API SCT Instant | ✅ completata |
 | T6 | API SCT (bonifico ordinario) | ✅ completata |
-| T7 | API IBAN e raggiungibilità | ⏳ da fare |
+| T7 | API IBAN e raggiungibilità | ✅ completata |
 | T8 | Rilascio 3.0.0 | ⏳ da fare |
 | T9 | Migrazione del gestionale (repo esterno) | ⏳ da fare |
 
@@ -105,7 +105,7 @@ Una task è completata quando:
 - Finding: F-08, F-09, F-10, F-11, F-13, F-14, F-16, F-24, F-25 (in parte), F-32, F-33, F-36.
 - Fatto anche: eliminato tutto il codice 2.x (`Legacy\`, `Models/`, `Exceptions/`, `DataSet/`) e le esclusioni degli strumenti (D-50); controlli di esecuzione condivisi in `PaymentGuard`.
 
-### T7 · API IBAN e raggiungibilità
+### T7 · API IBAN e raggiungibilità ✅
 - Verifica sintattica (Q-19).
 - `chargeabilityMulti` (Q-20, Q-47).
 - Raggiungibilità SCT Instant (Q-18).
@@ -115,7 +115,11 @@ Una task è completata quando:
 
 ### T8 · Rilascio 3.0.0
 - `UPGRADE-3.0.md` definitiva, `CHANGELOG.md` e README con gli esempi d'uso.
-- Test di integrazione in sandbox, opzionali: usano credenziali e certificato locali, mai nel repo.
+- Verifiche reali (D-55), con credenziali e certificato locali mai nel repo e lanciate solo esplicitamente:
+  - API di sola lettura in Live;
+  - simulazioni ed esecuzioni in sandbox;
+  - aggiornamento della regola 6 di `AGENTS.md`;
+  - conferma o correzione dei punti elencati in D-55.
 - Revisione finale del codice.
 - Spostare i contenuti ancora validi di `docs/v3/` ed eliminare la cartella.
 - PR da `3.x` verso `main` (serve 1 approvazione), tag `3.0.0`.
@@ -134,3 +138,4 @@ Migrazione alla 3.0, provabile prima del tag con `3.x-dev`, e correzioni lato ge
 | 2026-11-12 | T4 | Facade `IntesaSanPaoloClient` con `accounts()`: `balance()`, `transactions()`, `todayTransactions()`; DTO `Balance`, `Transaction`, `TransactionList` (`isComplete()`, transaction ID per pagina); enum `TransactionStatus` (trait `FromApiValue`); date ISO sempre accettate; `date` mantenuta tra le pagine di fine giornata; client 2.x in `Legacy\`; fixture in `tests/Fixtures/`; 115 test; README con esempi, `UPGRADE-3.0.md` per i conti |
 | 2026-11-12 | T5 | `sctInstant()`: `simulate()`, `execute()` con blocco VoP, `resubmit()`, `status()`, `payments()`; richiesta `InstantPayment` validata; DTO con `Party` e `VopResult`; enum `ValidationStatus`, `PaymentStatus`, `InstantStatus`, `VopMatchResult`; simulazioni salvabili; JSON deterministico; `SepaText`; 176 test; `docs/payment-flows.md`; decisioni D-36…D-44 |
 | 2026-11-12 | T6 | `sct()`: `simulate()`, `execute()` con blocco VoP, `status()` con 4 identificativi, `payments()`, `revoke()`; `SctPayment` (EUR, CASH, data opzionale); DTO con `fees`/`commissioni`, date `d/m/Y` corrette, revoca con data e ora; `PaymentGuard` condiviso; codice 2.x eliminato, PHPStan max su tutto `src/`; 188 test; finding aperti: solo F-35 (T7) |
+| 2026-11-12 | T7 | `ibanTools()`: `formalCheck()`, `verify()` (esistenza e congruenza con CF/P.IVA tramite `chargeabilityMulti`, D-51); `sctInstant()->reachability()`; DTO `IbanFormalCheck`, `IbanVerification`, `InstantReachability`; `docs/adding-an-endpoint.md`; 200 test; tutti i finding chiusi; D-55 pianifica le verifiche reali in Live solo lettura per T8 |

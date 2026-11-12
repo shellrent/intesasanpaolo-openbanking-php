@@ -15,7 +15,7 @@ SDK PHP **non ufficiale** per le API [SmartHub](https://smarthub.intesasanpaolo.
 | Conti | saldo, movimenti di fine giornata e intraday | ✅ | ✅ |
 | SCT Instant | simulazione (con esito VoP), esecuzione, resubmit, stato, lista | ✅ | ✅ |
 | SCT (bonifico ordinario) | simulazione (con esito VoP), esecuzione, stato, lista, revoca | ✅ | ✅ |
-| Strumenti | verifica IBAN (sintattica, esistenza, congruenza CF/P.IVA), raggiungibilità SCT Instant | — | pianificata |
+| Strumenti | verifica IBAN (sintattica, esistenza, congruenza CF/P.IVA), raggiungibilità SCT Instant | — | ✅ |
 
 Il dettaglio per endpoint è in [docs/api-coverage.md](docs/api-coverage.md).
 
@@ -93,6 +93,15 @@ $payment = new InstantPayment(
 
 $simulation = $client->sctInstant()->simulate($payment);
 $execution = $client->sctInstant()->execute($payment, $simulation);   // con VoP non pieno: VopConfirmationRequiredException
+```
+
+Verifiche IBAN, utili prima di un bonifico:
+
+```php
+$client->ibanTools()->formalCheck('IT…')->isValid();                            // formato
+$client->ibanTools()->verify('IT…')->isAllowed();                               // esistenza
+$client->ibanTools()->verify('IT…', vatNumber: '01234567890')->isAllowed();     // intestatario (CF o P.IVA)
+$client->sctInstant()->reachability('IT…')->isReachable();                      // istantaneo possibile?
 ```
 
 Il bonifico ordinario funziona allo stesso modo con `SctPayment` e `$client->sct()`, che offre anche lo stato per CRO, ID pagamento, end-to-end ID o simulazione, e la revoca. I flussi completi, con esiti, resubmit e simulazioni salvate, sono in [docs/payment-flows.md](docs/payment-flows.md).

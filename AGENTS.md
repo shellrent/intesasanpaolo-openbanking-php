@@ -73,7 +73,7 @@ Codice 3.0 (dettagli in [docs/architecture.md](docs/architecture.md)):
 | Percorso | Contenuto |
 |---|---|
 | `src/IntesaSanPaoloClient.php` | facade: `accounts()`, poi i pagamenti e gli strumenti IBAN (pubblico) |
-| `src/Api/` | un oggetto per area: `AccountsApi`, `SctInstantApi`, `SctApi` (pubblici); `PaymentGuard` (interno) |
+| `src/Api/` | un oggetto per area: `AccountsApi`, `SctInstantApi`, `SctApi`, `IbanToolsApi` (pubblici); `PaymentGuard` (interno) |
 | `src/Request/` | richieste di pagamento validate: `InstantPayment`, `SctPayment` (pubbliche); `Validator` (interno) |
 | `src/Response/` | DTO readonly di risposta, per area (pubblici) |
 | `src/Enum/` | stati come enum tolleranti con `fromApi()` (pubblici) |

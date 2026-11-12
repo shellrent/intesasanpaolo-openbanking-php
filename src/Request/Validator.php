@@ -104,6 +104,25 @@ final class Validator
         return $value;
     }
 
+    /**
+     * Normalizes an optional fiscal code or VAT number: spaces removed, letters uppercased; it must be
+     * alphanumeric, 8 to 16 characters long (e.g. 16-character codice fiscale, 11-digit partita IVA).
+     */
+    public static function taxCode(?string $value, string $field): ?string
+    {
+        $value = strtoupper((string) preg_replace('/\s+/', '', (string) $value));
+
+        if ($value === '') {
+            return null;
+        }
+
+        if (preg_match('/^[A-Z0-9]{8,16}$/', $value) !== 1) {
+            throw new InvalidRequestException(sprintf('The %s must be 8 to 16 letters or digits.', $field));
+        }
+
+        return $value;
+    }
+
     public static function optional(?string $value): ?string
     {
         $value = $value === null ? '' : trim($value);
