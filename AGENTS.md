@@ -23,7 +23,7 @@ Sul branch `3.x` è in corso la riscrittura per la versione 3.0.0. **Prima di in
 3. **I quirk sono intenzionali.** Molti comportamenti che sembrano sbagliati rispetto alla spec derivano dall'uso reale delle API e sono documentati in [docs/api-quirks.md](docs/api-quirks.md). Non "normalizzarli" alla spec. Per cambiare un comportamento serve un'evidenza (una risposta reale, la spec, una FAQ), da annotare in `api-quirks.md` insieme alla fonte.
 4. **Quando spec e realtà divergono, leggi entrambe le varianti** (per esempio `fees` e `commissioni`) invece di sceglierne una.
 5. **Mai `new DateTime($stringaApi)`**: PHP interpreta `02/01/2022` come 1° febbraio. Ogni campo data va letto con il suo formato esplicito (tabella Q-10 in `api-quirks.md`).
-6. **Mai chiamare l'ambiente Live** da test, script o sessioni di sviluppo. I test di integrazione usano solo la sandbox e si attivano esplicitamente.
+6. **Mai chiamare l'ambiente Live** da test, script o sessioni di sviluppo. Unica eccezione: la suite di integrazione di sola lettura (`LiveReadOnlyTest`), solo su richiesta esplicita del maintainer, con credenziali locali e il blocco delle scritture attivo ([docs/testing.md](docs/testing.md)). Simulazioni ed esecuzioni si provano solo in sandbox.
 7. **Pagamenti**: ogni modifica a simulazione, esecuzione, resubmit o revoca richiede test dedicati e una voce nel CHANGELOG.
 
 ## Convenzioni
@@ -45,11 +45,12 @@ Sul branch `3.x` è in corso la riscrittura per la versione 3.0.0. **Prima di in
 
 ```bash
 composer install
-composer test           # PHPUnit 12
-composer analyse        # PHPStan, livello max
-composer format         # Laravel Pint (preset laravel)
-composer format:check   # verifica la formattazione senza modificare i file
-composer ci             # tutti i controlli della CI: validate, format:check, analyse, test
+composer test              # PHPUnit 12, test unitari
+composer test:integration  # API reali, opzionale (docs/testing.md)
+composer analyse           # PHPStan, livello max
+composer format            # Laravel Pint (preset laravel)
+composer format:check      # verifica la formattazione senza modificare i file
+composer ci                # tutti i controlli della CI: validate, format:check, analyse, test
 ```
 
 La CI (GitHub Actions, `.github/workflows/ci.yml`) esegue i test su PHP 8.3, 8.4 e 8.5, ciascuno con dipendenze minime e massime. L'analisi statica e la formattazione girano su PHP 8.3 con le dipendenze massime. `composer.lock` non è versionato.
@@ -85,6 +86,7 @@ Codice 3.0 (dettagli in [docs/architecture.md](docs/architecture.md)):
 | `tests/Support/` | `MockHttp`, `FrozenClock` |
 | `tests/Unit/` | test del codice 3.0, con la base `TestCase` |
 | `tests/Fixtures/` | risposte JSON fittizie per area, lette con `MockHttp::fixture()` |
+| `tests/Integration/` | test opzionali contro le API reali: sandbox e Live in sola lettura |
 
 Le classi interne sono marcate `@internal`: non fanno parte dell'API pubblica e possono cambiare in qualsiasi versione.
 

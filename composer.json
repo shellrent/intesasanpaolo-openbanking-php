@@ -55,6 +55,7 @@
     },
     "scripts": {
         "test": "@php vendor/bin/phpunit",
+        "test:integration": "@php vendor/bin/phpunit --testsuite integration",
         "analyse": "@php vendor/bin/phpstan analyse --memory-limit=1G",
         "format": "@php vendor/bin/pint",
         "format:check": "@php vendor/bin/pint --test",
@@ -67,6 +68,7 @@
     },
     "scripts-descriptions": {
         "test": "Run the PHPUnit test suite",
+        "test:integration": "Run the opt-in integration tests against the real APIs (docs/testing.md)",
         "analyse": "Run PHPStan static analysis",
         "format": "Format the code with Laravel Pint",
         "format:check": "Check the code formatting without changing files",

@@ -21,7 +21,7 @@
 
 # Credenziali e certificati locali (mai nel repo)
 /env/*
-!/env/.env.example
+!/env/integration.env.example
 *.pem
 *.key
 *.p12
