@@ -15,7 +15,7 @@ parameters:
     # corresponding code is replaced; "(?)" keeps PHPStan quiet once it is gone.
     excludePaths:
         analyse:
-            - src/IntesaSanPaoloClient.php (?)
+            - src/Legacy (?)
             - src/DataSet (?)
             - src/Exceptions (?)
             - src/Models (?)

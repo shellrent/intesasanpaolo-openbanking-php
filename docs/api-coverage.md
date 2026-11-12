@@ -2,15 +2,15 @@
 
 Stato di implementazione delle API SmartHub nella libreria. I file di spec di riferimento per ogni API sono in [specs-reference.md](specs-reference.md), i comportamenti particolari in [api-quirks.md](api-quirks.md).
 
-I nomi dei metodi della 3.0 vengono definiti nelle task da T3 a T7: la colonna "3.0" indica la task che implementa l'API.
+La colonna "3.0" indica il metodo della 3.0 (✅ disponibile) oppure la task che lo implementerà.
 
 ## Conti
 
 | Operazione | Endpoint | Metodo 2.x | 3.0 | Note |
 |---|---|---|---|---|
-| Saldo | `GET /accounts/{IBAN}/balance` | `getBalance()` | T4 | data opzionale (default: oggi) |
-| Movimenti di fine giornata | `GET /accounts/{IBAN}/transactions` | `getTransactions()` | T4 | paginazione `nextPage`, storico fino a 18 mesi |
-| Movimenti intraday | `GET /accounts/{IBAN}/transactions/today` | `getTodayTransactions()` | T4 | include i movimenti non contabilizzati |
+| Saldo | `GET /accounts/{IBAN}/balance` | `getBalance()` | ✅ `accounts()->balance()` | data opzionale (default: oggi) |
+| Movimenti di fine giornata | `GET /accounts/{IBAN}/transactions` | `getTransactions()` | ✅ `accounts()->transactions()` | paginazione `nextPage`, storico fino a 18 mesi |
+| Movimenti intraday | `GET /accounts/{IBAN}/transactions/today` | `getTodayTransactions()` | ✅ `accounts()->todayTransactions()` | include i movimenti non contabilizzati |
 
 ## SCT Instant (bonifico istantaneo)
 

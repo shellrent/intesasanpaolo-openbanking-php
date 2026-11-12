@@ -155,6 +155,26 @@ Per i parametri di sola data l'SDK usa la data di calendario dell'oggetto ricevu
 ### D-29 · Ambiente predefinito: sandbox — T3
 `ClientConfig` usa `Environment::Sandbox` se l'ambiente non è indicato: Live va scelto esplicitamente, così una configurazione incompleta non può muovere denaro.
 
+### D-30 · Il client 2.x spostato in `Legacy\` — T4
+Il client 2.x è diventato `Shellrent\OpenBanking\Legacy\IntesaSanPaoloClient`, marcato `@deprecated` e privato dei metodi dei conti. Il nome `Shellrent\OpenBanking\IntesaSanPaoloClient` è passato alla nuova facade. I pagamenti 2.x restano utilizzabili e coperti dai test come riferimento fino alla loro riscrittura. `Legacy\` viene eliminato entro T6, e comunque prima del rilascio.
+- Alternative scartate: eliminare subito il client 2.x, che avrebbe lasciato il branch senza pagamenti e senza i test di riferimento dei quirk; dare un nome nuovo alla facade, che avrebbe cambiato per sempre il nome pubblico.
+- Decisione del maintainer.
+
+### D-31 · Le API paginate raccolgono tutte le pagine — T4
+Come nella 2.x, i metodi delle liste restituiscono un unico oggetto con le transazioni di tutte le pagine. Gli iteratori lazy restano possibili in futuro senza rompere questa API. Le liste espongono i totali dichiarati dalla banca e `isComplete()`, perché un elenco incompleto (per esempio per un problema di paginazione) non deve passare inosservato in una riconciliazione.
+
+### D-32 · DTO con i nomi dell'API, enum più valore originale — T4
+Le proprietà dei DTO usano i nomi dei campi dell'API in camelCase: `additionalInfo` invece del `getReason()` della 2.x, `siaCode` per `SIACode`. Gli stati sono un enum (`status`), affiancato sempre dal valore originale (`rawStatus`). I campi testuali assenti valgono `null`, non stringa vuota.
+
+### D-33 · Transaction ID nei DTO — T4
+Le risposte singole espongono `transactionId`, le liste paginate `transactionIds` (uno per pagina): sono i riferimenti da dare al supporto ISP.
+
+### D-34 · Date ISO sempre accettate — T4
+`DateParser::date()` accetta sempre anche `Y-m-d`, oltre al formato atteso: non è ambiguo, e la 2.x lo accettava tramite `new DateTime()`. Accettarlo evita una regressione se l'API usa questo formato in campi senza esempi nella spec, come `accountingDate` e `valueDate`. La protezione sulle date `d/m/Y` resta invariata.
+
+### D-35 · Movimenti di fine giornata: `date` mantenuta tra le pagine — T4
+Il link `nextPage` è documentato con il solo `offsetid`, ma `date` è obbligatorio. La 3.0 aggiunge `date` al link se manca e non lo duplica se c'è già (Q-41). Va verificato con una giornata reale di più di 200 movimenti.
+
 ## Aperte
 
 | ID | Questione | Da decidere in |

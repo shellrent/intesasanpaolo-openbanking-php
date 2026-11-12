@@ -1,0 +1,26 @@
+{
+    "success": true,
+    "errors": null,
+    "payload": {
+        "numTotalAccountedTransactions": 3,
+        "numResidualAccountedTransactions": 0,
+        "pageSize": 1,
+        "inquiryDate": "20260114",
+        "executionDate": "2026-01-15T07:30:01Z",
+        "nextPage": "",
+        "accountedTransactions": [
+            {
+                "uniqueId": "TX-0003",
+                "date": "20260114",
+                "reference": "REF-0003",
+                "amount": -0.5,
+                "currency": "EUR",
+                "type": "COMMISSIONI",
+                "description": "Commissioni bonifico",
+                "accountingDate": "20260114",
+                "valueDate": "20260114",
+                "status": "accounted"
+            }
+        ]
+    }
+}

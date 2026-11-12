@@ -8,6 +8,7 @@ Le API Intesa Sanpaolo usano formati di data diversi a seconda dell'API e del ca
 2. **Ogni campo si legge con il suo formato esplicito**, tramite `Payload::date(DateFormat::…, 'campo')` o `Payload::dateTime('campo')`.
 3. **Valori non validi**: una data impossibile (`31/02/2022`), con dati in più (`02/01/2022 10:00`) o nel formato sbagliato genera un errore, invece di essere "aggiustata".
 4. **Assenza di valore**: per una data, un campo mancante, vuoto o uguale a `"0"` vale `null` (Q-23).
+5. **Le date ISO (`2022-01-02`) sono sempre accettate**, qualunque sia il formato atteso: non si possono leggere male e la 2.x le accettava tramite `new DateTime()`. Così una variazione di formato dell'API non diventa un errore.
 
 ## Formati
 

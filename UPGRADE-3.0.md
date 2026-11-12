@@ -35,7 +35,7 @@ $config = new ClientConfig(
 
 | 2.x | 3.0 |
 |---|---|
-| `new IntesaSanPaoloClient($id, $secret, $iban, $live)` | `new ClientConfig(…)` passato alla facade (da T4) |
+| `new IntesaSanPaoloClient($id, $secret, $iban, $live)` | `new IntesaSanPaoloClient(new ClientConfig(…))` |
 | `$live = true/false` | `Environment::Live` / `Environment::Sandbox`, default **Sandbox** |
 | `enableMutualAuthentication($cert, $pass, $key, $keyPass)` | `MutualTlsCertificate::pem()` / `::pkcs12()`, obbligatorio |
 | `disableMutualAuthentication()` | rimosso: tutte le API richiedono mTLS |
@@ -68,6 +68,57 @@ Il namespace cambia da `Exceptions` (plurale) a `Exception` (singolare). Le ecce
 - Il token si può condividere tra istanze con un `TokenStore` (vedi `docs/architecture.md`). Nella 2.x ogni istanza rifaceva il login.
 - Il token si rinnova 60 secondi prima della scadenza.
 
-## Metodi e model
+## Client
 
-Da completare in T4–T7: corrispondenza tra metodi 2.x e API 3.0, nuovi DTO di risposta, stati come enum, esito VoP.
+```php
+$client = new IntesaSanPaoloClient($config);                        // client Guzzle predefinito
+$client = new IntesaSanPaoloClient($config, $guzzle, $tokenStore);  // client Guzzle e TokenStore propri
+```
+
+- Le API si raggiungono per area: `$client->accounts()`, poi (T5–T7) `sctInstant()`, `sct()`, `ibanTools()`.
+- Le risposte sono oggetti immutabili con **proprietà pubbliche** al posto dei getter: `$balance->getAvailableBalance()` diventa `$balance->availableBalance`.
+- Finché i pagamenti non sono riscritti, il client 2.x resta disponibile come `Shellrent\OpenBanking\Legacy\IntesaSanPaoloClient`, senza i metodi dei conti. Verrà eliminato prima del rilascio 3.0.0.
+
+## Conti
+
+| 2.x | 3.0 |
+|---|---|
+| `getBalance(DateTime $date)` → `Models\Balance` | `accounts()->balance(?DateTimeInterface $date = null)` → `Response\Accounts\Balance` (data opzionale: senza data è il saldo di oggi) |
+| `getTransactions(DateTime $date)` → `Models\Collections\Transactions` | `accounts()->transactions(DateTimeInterface $date)` → `Response\Accounts\TransactionList` |
+| `getTodayTransactions()` → `Models\Collections\Transactions` | `accounts()->todayTransactions()` → `Response\Accounts\TransactionList` |
+
+### `Balance`
+
+I getter diventano le proprietà `currency`, `availableBalance`, `accountingBalance`, `creditLine`, `inquiryDate` ed `executionDate`, tutte nullable. Nuova proprietà: `transactionId`.
+
+### `Transactions` → `TransactionList`
+
+| 2.x | 3.0 |
+|---|---|
+| `getAccountedTransactions()` | `accounted` |
+| `getUnaccountedTransactions()` | `unaccounted` |
+| `getTotalAccountedTransactions()` | `totalAccounted` (null se l'API non lo indica) |
+| `getTotalUnaccountedTransactions()` (0 se assente) | `totalUnaccounted` (null se assente) |
+| `getSIACode()` | `siaCode` |
+| `getInitialAccountingBalance()`, `getFinalAccountingBalance()`, `getLiquidBalance()` (stringhe) | `initialAccountingBalance`, `finalAccountingBalance`, `liquidBalance` (**float**) |
+| `getBankCode()`, `getCustomerCode()`, `getAccountType()`, `getAccountCurrency()`, `getAvailableBalance()`, `getCreditLine()` | proprietà con lo stesso nome |
+| `getInquiryDate()`, `getExecutionDate()` | `inquiryDate`, `executionDate` |
+| — | `iban`, `transactionIds` (uno per pagina), `isComplete()` |
+
+`isComplete()` dice se sono arrivati tutti i movimenti contabilizzati dichiarati dalla banca: conviene controllarlo prima di considerare completa la giornata.
+
+### `Transaction`
+
+| 2.x | 3.0 |
+|---|---|
+| `getReason()` | **`additionalInfo`** (il nome del campo dell'API) |
+| `getStatus()` (stringa) | `status` (enum `TransactionStatus`, null se il valore è sconosciuto) e `rawStatus` (stringa originale) |
+| `getValueDate()`: **data corrente** se l'API non la indica | `valueDate`: **null** se l'API non la indica, o se manda `""` o `"0"` |
+| `getAmount()`: 0.0 se l'importo manca | `amount`: un movimento senza importo genera un'`UnexpectedResponseException` |
+| `getUniqueId()`, `getReference()`, `getDate()`, `getAccountingDate()`, `getCurrency()`, `getOriginalAmount()`, `getOriginalCurrency()`, `getExchangeRate()`, `getType()`, `getDescription()` | proprietà con lo stesso nome |
+
+Nella 2.x i campi testuali assenti diventavano stringhe vuote; nella 3.0 sono `null`.
+
+## Pagamenti, strumenti IBAN
+
+Da completare in T5–T7.

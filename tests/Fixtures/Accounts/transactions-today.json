@@ -1,0 +1,50 @@
+{
+    "success": true,
+    "errors": null,
+    "payload": {
+        "numTotalAccountedTransactions": 1,
+        "numResidualAccountedTransactions": 0,
+        "numUnaccountedTransactions": 2,
+        "pageSize": 1,
+        "inquiryDate": "20260115",
+        "executionDate": "2026-01-15T11:00:00Z",
+        "IBAN": "IT00X0000000000000000000001",
+        "accountCurrency": "EUR",
+        "availableBalance": 9600,
+        "nextPage": null,
+        "unaccountedTransactions": [
+            {
+                "reference": "REF-U-0001",
+                "amount": -20,
+                "currency": "EUR",
+                "type": "POS",
+                "description": "Pagamento POS",
+                "valueDate": "",
+                "status": "unaccounted"
+            },
+            {
+                "reference": "REF-U-0002",
+                "amount": 5,
+                "currency": "EUR",
+                "type": "ACCREDITO",
+                "description": "Accredito in lavorazione",
+                "valueDate": "0",
+                "status": "unaccounted"
+            }
+        ],
+        "accountedTransactions": [
+            {
+                "uniqueId": "TX-0010",
+                "date": "20260115",
+                "reference": "REF-0010",
+                "amount": -80,
+                "currency": "EUR",
+                "type": "BONIFICO",
+                "description": "Bonifico istantaneo",
+                "accountingDate": "20260115",
+                "valueDate": "20260115",
+                "status": "ACCOUNTED"
+            }
+        ]
+    }
+}

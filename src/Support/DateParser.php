@@ -25,16 +25,25 @@ final class DateParser
      */
     public const string TIMEZONE = 'Europe/Rome';
 
+    private const string ISO_DATE_PATTERN = '/^\d{4}-\d{2}-\d{2}$/';
+
+    private const string ISO_DATE_FORMAT = 'Y-m-d';
+
     private const string ISO_8601_PATTERN = '/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}:?\d{2})?$/';
 
     /**
      * Parses a date without time, at midnight in Europe/Rome.
      *
+     * Besides the expected format, an ISO date ("2022-01-02") is always accepted: it cannot be
+     * misread, and the 2.x SDK accepted it through `new DateTime()`.
+     *
      * @throws InvalidArgumentException When the value does not match the format or is not a real date (e.g. 31/02/2022).
      */
     public static function date(string $value, DateFormat $format): DateTimeImmutable
     {
-        $date = DateTimeImmutable::createFromFormat('!'.$format->value, $value, self::timezone());
+        $pattern = preg_match(self::ISO_DATE_PATTERN, $value) === 1 ? self::ISO_DATE_FORMAT : $format->value;
+
+        $date = DateTimeImmutable::createFromFormat('!'.$pattern, $value, self::timezone());
         $errors = DateTimeImmutable::getLastErrors();
 
         if ($date === false || ($errors !== false && ($errors['warning_count'] > 0 || $errors['error_count'] > 0))) {

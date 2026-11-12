@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Shellrent\OpenBanking\Tests\Unit\Legacy;
 
 use ArrayObject;
-use DateTime;
 use GuzzleHttp\Client;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
@@ -18,7 +17,7 @@ use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use ReflectionProperty;
 use Shellrent\OpenBanking\Exceptions\HttpException;
-use Shellrent\OpenBanking\IntesaSanPaoloClient;
+use Shellrent\OpenBanking\Legacy\IntesaSanPaoloClient;
 use Shellrent\OpenBanking\Models\PaymentExecution;
 
 /**
@@ -50,24 +49,17 @@ final class ClientTest extends LegacyTestCase
      * the /twa/ base URL with the Bearer token and the "apikey" header.
      */
     #[Test]
-    public function it_requests_a_token_and_the_balance_over_mutual_tls(): void
+    public function it_requests_a_token_and_calls_the_api_over_mutual_tls(): void
     {
         $client = $this->client(true, $this->tokenResponse(), $this->json([
             'success' => true,
             'errors' => null,
-            'payload' => [
-                'currency' => 'EUR',
-                'availableBalance' => 1500.75,
-                'accountingBalance' => 1450.25,
-                'creditLine' => 0,
-                'inquiryDate' => '20180131',
-                'executionDate' => '2018-05-04T09:52:10.289+0200',
-            ],
+            'payload' => ['orderId' => 'ORD-0001', 'status' => 'Completed'],
         ]));
 
-        $balance = $client->getBalance(new DateTime('2018-01-31'));
+        $status = $client->getPaymentStatus('ORD-0001');
 
-        self::assertSame(1500.75, $balance->getAvailableBalance());
+        self::assertSame('Completed', $status->getStatus());
         self::assertCount(2, $this->history);
 
         $token = $this->recorded(0);
@@ -80,7 +72,7 @@ final class ClientTest extends LegacyTestCase
         $call = $this->recorded(1);
         self::assertSame('GET', $call['request']->getMethod());
         self::assertSame(
-            'https://external-api.intesasanpaolo.com/twa/live/v1/accounts/'.self::IBAN.'/balance?date=20180131',
+            'https://external-api.intesasanpaolo.com/twa/live/v1/payments/sct/instant/'.self::IBAN.'/history/ORD-0001',
             (string) $call['request']->getUri(),
         );
         self::assertSame('Bearer token-123', $call['request']->getHeaderLine('Authorization'));
@@ -102,7 +94,7 @@ final class ClientTest extends LegacyTestCase
         ], 400));
 
         try {
-            $client->getBalance(new DateTime('2018-01-31'));
+            $client->getPaymentStatus('ORD-0001');
             self::fail('HttpException was not thrown');
         } catch (HttpException $exception) {
             self::assertSame('INPUT_EXCEPTION E001: Invalid IBAN', $exception->getMessage());

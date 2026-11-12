@@ -1,0 +1,57 @@
+{
+    "success": true,
+    "errors": null,
+    "payload": {
+        "numTotalAccountedTransactions": 3,
+        "numResidualAccountedTransactions": 1,
+        "pageSize": 2,
+        "inquiryDate": "20260114",
+        "executionDate": "2026-01-15T07:30:00Z",
+        "bankCode": "03069",
+        "IBAN": "IT00X0000000000000000000001",
+        "customerCode": "0000000001",
+        "SIACode": "AB123",
+        "accountType": "CC",
+        "accountCurrency": "EUR",
+        "initialAccountingBalance": 10000,
+        "finalAccountingBalance": 9850.5,
+        "liquidBalance": 9850.5,
+        "availableBalance": 9700.25,
+        "creditLine": 0,
+        "nextPage": "https://external-api.intesasanpaolo.com/twa/live/v1/accounts/IT00X0000000000000000000001/transactions?offsetid=TkVYVDE=",
+        "accountedTransactions": [
+            {
+                "uniqueId": "TX-0001",
+                "date": "20260114",
+                "reference": "REF-0001",
+                "amount": -149.5,
+                "currency": "EUR",
+                "originalAmount": -149.5,
+                "originalCurrency": "EUR",
+                "exchangeRate": 1,
+                "type": "BONIFICO",
+                "description": "Bonifico a favore di Example Srl",
+                "additionalInfo": "Fattura 1/2026",
+                "accountingDate": "20260114",
+                "valueDate": "20260113",
+                "status": "accounted"
+            },
+            {
+                "uniqueId": "TX-0002",
+                "date": "20260114",
+                "reference": 20260002,
+                "amount": 250,
+                "currency": "EUR",
+                "originalAmount": null,
+                "originalCurrency": null,
+                "exchangeRate": null,
+                "type": "ACCREDITO",
+                "description": "Accredito da Cliente Esempio",
+                "additionalInfo": null,
+                "accountingDate": "20260114",
+                "valueDate": "20260114",
+                "status": "reversed"
+            }
+        ]
+    }
+}

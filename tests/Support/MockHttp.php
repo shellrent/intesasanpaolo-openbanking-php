@@ -99,6 +99,19 @@ final class MockHttp
         return self::json(['success' => true, 'errors' => null, 'payload' => $payload === null ? null : (object) $payload], 200, $headers);
     }
 
+    /**
+     * Response with the body of a fixture file, e.g. fixture('Accounts/balance') reads tests/Fixtures/Accounts/balance.json.
+     *
+     * @param  array<string, string>  $headers
+     */
+    public static function fixture(string $name, array $headers = [], int $status = 200): Response
+    {
+        $body = file_get_contents(__DIR__.'/../Fixtures/'.$name.'.json');
+        Assert::assertIsString($body, "Fixture {$name} not found");
+
+        return new Response($status, ['Content-Type' => 'application/json', ...$headers], $body);
+    }
+
     public static function token(string $value = 'token-123', int $expiresIn = 3600): Response
     {
         return self::json(['access_token' => $value, 'token_type' => 'Bearer', 'expires_in' => $expiresIn]);

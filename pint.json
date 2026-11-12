@@ -8,9 +8,7 @@
     "exclude": [
         "src/DataSet",
         "src/Exceptions",
+        "src/Legacy",
         "src/Models"
-    ],
-    "notPath": [
-        "src/IntesaSanPaoloClient.php"
     ]
 }

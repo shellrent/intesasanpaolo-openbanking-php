@@ -12,7 +12,7 @@ SDK PHP **non ufficiale** per le API [SmartHub](https://smarthub.intesasanpaolo.
 
 | Area | API | 2.x | 3.0 |
 |---|---|:---:|:---:|
-| Conti | saldo, movimenti di fine giornata e intraday | ✅ | in sviluppo |
+| Conti | saldo, movimenti di fine giornata e intraday | ✅ | ✅ |
 | SCT Instant | simulazione, esecuzione, stato, lista | ✅ | in sviluppo |
 | SCT (bonifico ordinario) | simulazione, esecuzione, stato, lista, revoca | ✅ | in sviluppo |
 | Strumenti | verifica IBAN (sintattica, esistenza, congruenza CF/P.IVA), raggiungibilità SCT Instant | — | pianificata |
@@ -49,7 +49,45 @@ Dal 2025 la simulazione di un bonifico (SCT e SCT Instant) restituisce anche l'e
 
 ## Utilizzo
 
-Gli esempi d'uso della 3.0 verranno aggiunti man mano che le API vengono riscritte. Per la 2.x fa fede il codice dei metodi pubblici di `IntesaSanPaoloClient`.
+```php
+use Shellrent\OpenBanking\Config\ClientConfig;
+use Shellrent\OpenBanking\Config\Environment;
+use Shellrent\OpenBanking\Config\MutualTlsCertificate;
+use Shellrent\OpenBanking\IntesaSanPaoloClient;
+
+$client = new IntesaSanPaoloClient(new ClientConfig(
+    clientId: '…',
+    clientSecret: '…',
+    iban: 'IT…',
+    certificate: MutualTlsCertificate::pkcs12('/path/certificate.p12', 'passphrase'),
+    environment: Environment::Live,   // il default è la sandbox
+));
+
+// Saldo di oggi, oppure di una data passata
+$balance = $client->accounts()->balance();
+echo $balance->availableBalance;
+
+// Movimenti di fine giornata di ieri, con tutte le pagine già raccolte
+$list = $client->accounts()->transactions(new DateTimeImmutable('yesterday'));
+
+if (! $list->isComplete()) {
+    // la banca ha dichiarato più movimenti di quelli ricevuti
+}
+
+foreach ($list->accounted as $transaction) {
+    echo $transaction->uniqueId, ' ', $transaction->amount, ' ', $transaction->valueDate?->format('d/m/Y');
+}
+
+// Movimenti di oggi, contabilizzati e non ancora contabilizzati
+$today = $client->accounts()->todayTransactions();
+```
+
+- Le risposte sono oggetti immutabili con proprietà pubbliche.
+- Le date sono `DateTimeImmutable` ([docs/dates-and-formats.md](docs/dates-and-formats.md)).
+- Gli errori sono eccezioni che implementano `Shellrent\OpenBanking\Exception\OpenBankingException` ([docs/architecture.md](docs/architecture.md)).
+
+> [!NOTE]
+> Finché i pagamenti non sono riscritti (T5–T6), il client 2.x resta disponibile come `Shellrent\OpenBanking\Legacy\IntesaSanPaoloClient`, solo per i pagamenti. Verrà eliminato prima del rilascio della 3.0.
 
 ## Sviluppo
 

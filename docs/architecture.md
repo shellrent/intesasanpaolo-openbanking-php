@@ -2,13 +2,17 @@
 
 Come è organizzato il codice della 3.0 e che percorso fa una richiesta. Le motivazioni delle scelte sono in [v3/DECISIONS.md](v3/DECISIONS.md), finché quel documento esiste.
 
-> Stato: il core (configurazione, autenticazione, trasporto, date, eccezioni) è completo da T3. La facade e le API arrivano da T4 a T7, e intanto il codice 2.x resta in `src/` (vedi in fondo).
+> Stato: core e API Conti completi (T3–T4). Le API di pagamento e degli strumenti IBAN arrivano da T5 a T7; intanto il codice 2.x dei pagamenti resta in `src/` (vedi in fondo).
 
 ## Struttura
 
 ```
 src/
-├── IntesaSanPaoloClient.php   facade (da T4); oggi è ancora il client 2.x
+├── IntesaSanPaoloClient.php   facade: accounts(), poi sctInstant(), sct(), ibanTools() [pubblico]
+├── Api/                       un oggetto per area: AccountsApi                [pubblico]
+├── Response/                  DTO readonly di risposta, per area             [pubblico]
+│   └── Accounts/              Balance, Transaction, TransactionList
+├── Enum/                      stati come enum tolleranti (FromApiValue)     [pubblico]
 ├── Config/                    configurazione                          [pubblico]
 │   ├── ClientConfig           credenziali, IBAN, ambiente, certificato, timeout
 │   ├── Environment            Live | Sandbox
@@ -29,7 +33,8 @@ src/
 │   ├── Payload                lettura tipizzata e tollerante del JSON
 │   └── Clock, SystemClock     ora corrente (sostituibile nei test)
 ├── Exception/                 eccezioni                               [pubblico]
-└── Api/, Request/, Response/, Enum/   da T4 a T7
+├── Request/                   richieste di pagamento (da T5)
+└── Legacy/                    client 2.x, solo per i pagamenti fino a T6     [deprecato]
 ```
 
 **Pubblico** vuol dire coperto dalla compatibilità semantica: cambia solo in una major. **Interno** (`@internal` nel PHPDoc) vuol dire che può cambiare in qualsiasi versione: non va usato direttamente da chi usa la libreria.
@@ -59,6 +64,12 @@ API                                        Payload → DTO di risposta
 - **Stati HTTP**: Guzzle non lancia eccezioni per gli stati di errore (`http_errors` disattivato): il `Transport` legge lo stato da sé. In questo modo il comportamento è identico con Guzzle 7 e 8.
 - **Nessun retry automatico.** Ripetere un'esecuzione di pagamento potrebbe eseguirla due volte. Dopo una `TransportException` su un pagamento l'esito è sconosciuto, e va verificato con le API di stato prima di riprovare.
 - **HTTP 401**: il token in cache viene scartato, così la chiamata successiva rifà il login. La chiamata fallita non viene ripetuta.
+
+## Risposte
+
+- I DTO di risposta (`Response/`) sono classi `final readonly` con proprietà pubbliche che portano i nomi dei campi dell'API (es. `additionalInfo`, `siaCode`). Si costruiscono da un `Payload` con `fromPayload()`, che è `@internal`.
+- Gli stati sono enum costruiti con `fromApi()` (trait `Enum\FromApiValue`): la conversione ignora maiuscole e spazi, considera solo la prima parola e conosce gli alias. Un valore sconosciuto dà `null`, e il DTO conserva sempre anche il valore originale (`rawStatus`).
+- Le API paginate raccolgono tutte le pagine prima di restituire il risultato. Le liste espongono i totali dichiarati dalla banca, un metodo `isComplete()` e il transaction ID di ogni pagina.
 
 ## Eccezioni
 
@@ -121,4 +132,4 @@ L'SDK non ha un logger integrato (D-22). Per registrare le chiamate si passa un 
 
 ## Convivenza con il codice 2.x
 
-Fino alla fine di T6 in `src/` restano anche le classi 2.x: `IntesaSanPaoloClient`, `Models/`, `Exceptions/` (al plurale) e `DataSet/`. Sono escluse da PHPStan e Pint, e i loro test stanno in `tests/Unit/Legacy/`. Ogni task elimina le classi 2.x che sostituisce.
+Fino alla fine di T6 in `src/` restano anche le classi 2.x dei pagamenti: `Legacy\IntesaSanPaoloClient` (il client 2.x, spostato in T4 e privato dei metodi dei conti), `Models/`, `Exceptions/` (al plurale) e `DataSet/`. Sono escluse da PHPStan e Pint, e i loro test stanno in `tests/Unit/Legacy/`. Ogni task elimina le classi 2.x che sostituisce: T4 ha eliminato i model 2.x dei conti.

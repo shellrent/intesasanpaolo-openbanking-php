@@ -149,7 +149,7 @@ IBAN e nomi di debitore e creditore possono mancare o essere `null` nelle rispos
 
 ### Q-23 Movimenti
 - I movimenti non contabilizzati (solo intraday) non hanno `uniqueId`, `date`, `accountingDate` né `additionalInfo`; il loro `status` è `unaccounted`.
-- `valueDate` può essere vuoto o `"0"` (commit `6833c0b`); in quel caso la 2.x usa la data corrente.
+- `valueDate` può essere vuoto o `"0"` (commit `6833c0b`); in quel caso la 2.x usa la data corrente, la 3.0 restituisce `null`.
 - Lo `status` dei movimenti contabilizzati vale `accounted`, `reversed` o `canceled`.
 - Fonti: `SPEC`, `WEB`, `PROD`.
 
@@ -257,6 +257,7 @@ Nei testi (nomi, causale) sono ammessi solo i caratteri SEPA del set Latin: `a-z
 
 ### Q-41 Movimenti
 Oltre i 200 record la risposta contiene `nextPage`, una URL completa con un parametro `offsetid` opaco che il client non deve costruire da sé.
+- La spec mostra il link con il solo `offsetid`, mentre per i movimenti di fine giornata `date` è obbligatorio. La 2.x seguiva il link così com'era. La 3.0 aggiunge `date` al link se manca e non lo duplica se c'è già: da verificare su una giornata reale con più di 200 movimenti.
 - Fonte: `SPEC`.
 
 ### Q-42 Lista SCT Instant

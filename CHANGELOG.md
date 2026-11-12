@@ -9,6 +9,14 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it-IT/1.1.0/) e i
 Versione 3.0.0 in sviluppo sul branch `3.x`. Contiene modifiche incompatibili con la 2.x, documentate in `UPGRADE-3.0.md` (bozza).
 
 ### Aggiunto
+- Nuova facade `IntesaSanPaoloClient` con le API per area.
+- API Conti `accounts()`:
+  - `balance()`, con data opzionale;
+  - `transactions($date)` e `todayTransactions()`, con tutte le pagine raccolte.
+- DTO immutabili `Balance`, `Transaction` e `TransactionList`, con:
+  - `isComplete()` per accorgersi di elenchi incompleti;
+  - i transaction ID delle risposte;
+  - l'enum `TransactionStatus` affiancato dal valore originale.
 - Configurazione con `ClientConfig`, `Environment` e `MutualTlsCertificate` (PEM o PKCS#12). **Il certificato mTLS è obbligatorio** e l'ambiente predefinito è la sandbox.
 - Timeout configurabili: 10 s per la connessione e 60 s per la richiesta.
 - Eccezioni con l'interfaccia comune `OpenBankingException`:
@@ -31,6 +39,9 @@ Versione 3.0.0 in sviluppo sul branch `3.x`. Contiene modifiche incompatibili co
 - Strumenti di sviluppo: PHPStan (livello max), Laravel Pint, script `composer ci`.
 
 ### Modificato
+- **Il client 2.x è ora `Shellrent\OpenBanking\Legacy\IntesaSanPaoloClient`**, deprecato e limitato ai pagamenti; sarà eliminato prima del rilascio 3.0.0. Eliminati i model 2.x dei conti (`Models\Balance`, `Models\Transaction`, `Models\Collections\Transactions`).
+- Movimenti: una data di valuta assente, vuota o `"0"` vale `null` (la 2.x usava la data corrente); un movimento senza importo è un errore (la 2.x usava 0).
+- Movimenti di fine giornata: il parametro `date` viene mantenuto anche sulle pagine successive.
 - **Requisito minimo PHP 8.3.**
 - **Guzzle è ora una dipendenza diretta, `^7.15.2 || ^8.0.1`** (minimi scelti per escludere le versioni con advisory di sicurezza). Rimosso `php-http/guzzle7-adapter`, che non veniva usato.
 - Parametri nullable resi espliciti: nessuna deprecation su PHP 8.4 e 8.5.

@@ -56,7 +56,7 @@ La CI (GitHub Actions, `.github/workflows/ci.yml`) esegue i test su PHP 8.3, 8.4
 
 ### Codice 2.x escluso dagli strumenti
 
-I file 2.x (`src/IntesaSanPaoloClient.php`, `src/DataSet`, `src/Exceptions`, `src/Models`) sono esclusi dall'analisi di PHPStan e dalla formattazione di Pint finché non vengono riscritti. Quando una task sostituisce uno di questi file, rimuovilo dalle esclusioni in `phpstan.neon.dist` e `pint.json`. I test della 2.x stanno in `tests/Unit/Legacy/` e si eliminano insieme alla classe che coprono.
+I file 2.x (`src/Legacy`, `src/DataSet`, `src/Exceptions`, `src/Models`) sono esclusi dall'analisi di PHPStan e dalla formattazione di Pint finché non vengono riscritti. Quando una task sostituisce uno di questi file, rimuovilo dalle esclusioni in `phpstan.neon.dist` e `pint.json`. I test della 2.x stanno in `tests/Unit/Legacy/` e si eliminano insieme alla classe che coprono.
 
 ### Ambiente locale: estensione PECL `psr`
 
@@ -76,6 +76,10 @@ Codice 3.0 (dettagli in [docs/architecture.md](docs/architecture.md)):
 
 | Percorso | Contenuto |
 |---|---|
+| `src/IntesaSanPaoloClient.php` | facade: `accounts()`, poi i pagamenti e gli strumenti IBAN (pubblico) |
+| `src/Api/` | un oggetto per area, es. `AccountsApi` (pubblico) |
+| `src/Response/` | DTO readonly di risposta, per area (pubblici) |
+| `src/Enum/` | stati come enum tolleranti con `fromApi()` (pubblici) |
 | `src/Config/` | `ClientConfig`, `Environment`, `MutualTlsCertificate` (pubblico) |
 | `src/Auth/` | `AccessToken`, `TokenStore`, `InMemoryTokenStore` (pubblici); `TokenProvider` (interno) |
 | `src/Http/` | `Sender`, `Transport`, `ApiResponse`, `Paginator`, `SandboxLinkRewriter` (interni) |
@@ -83,6 +87,7 @@ Codice 3.0 (dettagli in [docs/architecture.md](docs/architecture.md)):
 | `src/Exception/` | eccezioni con l'interfaccia comune `OpenBankingException` (pubbliche) |
 | `tests/Support/` | `MockHttp`, `FrozenClock` |
 | `tests/Unit/` | test del codice 3.0, con la base `TestCase` |
+| `tests/Fixtures/` | risposte JSON fittizie per area, lette con `MockHttp::fixture()` |
 
 Le classi interne sono marcate `@internal`: non fanno parte dell'API pubblica e possono cambiare in qualsiasi versione.
 
@@ -90,8 +95,8 @@ Codice 2.x, in sostituzione fino a T6:
 
 | Percorso | Contenuto |
 |---|---|
-| `src/IntesaSanPaoloClient.php` | client unico: OAuth2, richieste HTTP, paginazione, tutti gli endpoint |
-| `src/Models/`, `src/Models/Collections/` | model di richiesta e di risposta, `Transactions`, `PaymentInfos` |
+| `src/Legacy/IntesaSanPaoloClient.php` | client 2.x, `@deprecated`, ormai solo per i pagamenti |
+| `src/Models/`, `src/Models/Collections/` | model 2.x dei pagamenti, `PaymentInfos` |
 | `src/Exceptions/` (plurale) | `Exception`, `HttpException` |
 | `src/DataSet/CurrencySet.php` | costanti delle valute |
 | `tests/Unit/Legacy/` | test del codice 2.x, compresi i quirk di trasporto verificati con il `MockHandler` di Guzzle |

@@ -16,12 +16,13 @@ La CI esegue i test su PHP 8.3, 8.4 e 8.5, ciascuno con dipendenze minime (Guzzl
 
 ```
 tests/
+├── Fixtures/              risposte JSON fittizie per area (es. Accounts/balance.json)
 ├── Support/
 │   ├── MockHttp.php       client Guzzle con MockHandler che registra le richieste
 │   └── FrozenClock.php    orologio fermo e spostabile in avanti
 └── Unit/
     ├── TestCase.php       base: config e certificati di prova (file temporanei)
-    ├── Auth/  Config/  Exception/  Http/  Support/   test del codice 3.0
+    ├── Api/  Auth/  Config/  Enum/  Exception/  Http/  Support/   test del codice 3.0
     └── Legacy/            test del codice 2.x, da eliminare insieme alle classi coperte
 ```
 
@@ -30,6 +31,7 @@ tests/
 - **Nessuna chiamata di rete.** Le richieste HTTP passano sempre da `MockHttp`.
 - **Dati deterministici e fittizi.** Niente generatori casuali. Gli IBAN di prova sono segnaposto evidenti (`IT00X0000000000000000000001`).
 - **Nessun dato reale.** Le fixture ricavate da risposte reali vanno anonimizzate: IBAN, nomi, importi, CRO, ID.
+- **Fixture realistiche.** Struttura e formati devono essere quelli dell'API (spec e quirk), per esempio date `Ymd` per i movimenti e `nextPage` con il solo `offsetid`. Una fixture per scenario, in `tests/Fixtures/<Area>/`.
 - **I quirk hanno un test.** Ogni comportamento documentato in [api-quirks.md](api-quirks.md) che il codice gestisce ha un test che cita la voce (es. "Q-34: …") nel PHPDoc.
 - **I certificati sono file temporanei vuoti** (`TestCase::temporaryFile()`): il MockHandler non li legge. Non vanno committati certificati, nemmeno finti: `.gitignore` esclude `*.pem`, `*.key`, `*.p12`.
 
@@ -41,6 +43,7 @@ $http = new MockHttp(
     MockHttp::envelope(['currency' => 'EUR'], [              // { success: true, errors: null, payload: {...} }
         'X-ISP-Transaction-ID' => 'TX-1',
     ]),
+    MockHttp::fixture('Accounts/balance'),                  // body di tests/Fixtures/Accounts/balance.json
 );
 
 // ... codice che usa $http->client ...

@@ -34,6 +34,16 @@ final class DateParserTest extends TestCase
         self::assertSame('2018-01-31 00:00:00 Europe/Rome', DateParser::date('20180131', DateFormat::Compact)->format('Y-m-d H:i:s e'));
     }
 
+    /**
+     * An ISO date cannot be misread, so it is accepted whatever the expected format (2.x accepted it too).
+     */
+    #[Test]
+    public function it_always_accepts_iso_dates(): void
+    {
+        self::assertSame('2022-01-02', DateParser::date('2022-01-02', DateFormat::Italian)->format('Y-m-d'));
+        self::assertSame('2022-01-02', DateParser::date('2022-01-02', DateFormat::Compact)->format('Y-m-d'));
+    }
+
     #[Test]
     #[DataProvider('invalidDates')]
     public function it_rejects_invalid_dates(string $value, DateFormat $format): void
@@ -51,7 +61,8 @@ final class DateParserTest extends TestCase
         yield 'day out of range' => ['32/01/2022', DateFormat::Italian];
         yield 'nonexistent day' => ['31/02/2022', DateFormat::Italian];
         yield 'trailing data' => ['02/01/2022 10:00', DateFormat::Italian];
-        yield 'wrong format' => ['2022-01-02', DateFormat::Italian];
+        yield 'wrong format' => ['2022/01/02', DateFormat::Italian];
+        yield 'invalid ISO date' => ['2022-02-30', DateFormat::Compact];
         yield 'italian date as compact' => ['02/01/2022', DateFormat::Compact];
         yield 'compact month out of range' => ['20221301', DateFormat::Compact];
     }
