@@ -10,13 +10,19 @@ Documentazione tecnica dell'SDK. Per installazione e uso parti dal [README](../R
 | [api-quirks.md](api-quirks.md) | comportamenti reali delle API, differenze dalle spec, formati delle date, stati, ognuno con la sua fonte |
 | [specs-reference.md](specs-reference.md) | dove trovare le spec locali, quali file usare, doppioni e anomalie |
 
+## Codice
+
+| Documento | Contenuto |
+|---|---|
+| [architecture.md](architecture.md) | struttura del codice, percorso di una richiesta, eccezioni, token, API pubblica e interna |
+| [dates-and-formats.md](dates-and-formats.md) | come l'SDK legge e scrive le date, fusi orari, uso con Carbon |
+| [testing.md](testing.md) | comandi, struttura dei test, `MockHttp`, regole sulle fixture |
+| [../UPGRADE-3.0.md](../UPGRADE-3.0.md) | aggiornamento dalla 2.x alla 3.0 (bozza) |
+
 ## In arrivo con la 3.0
 
 | Documento | Task |
 |---|---|
-| `architecture.md` – struttura del codice e flusso di una richiesta | T3 |
-| `dates-and-formats.md` – parsing e formattazione delle date | T3 |
-| `testing.md` – fixture, `MockHandler`, test di integrazione in sandbox | T3 |
 | `payment-flows.md` – simulazione, esecuzione, VoP, resubmit, stati, revoca | T5–T6 |
 | `adding-an-endpoint.md` – come aggiungere una nuova API | T7 |
 

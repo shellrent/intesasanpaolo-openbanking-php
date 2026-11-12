@@ -20,6 +20,7 @@ Questo documento raccoglie i comportamenti delle API Intesa Sanpaolo che non ris
 ### Q-01 Base URL e mutua autenticazione (mTLS)
 La base URL è `https://external-api.intesasanpaolo.com` + `/twa` + `/{live|sandbox}` + `/v1`. Tutte le spec attuali usano `/twa/`, cioè la mutua autenticazione con certificato; le spec del 2020 non avevano `/twa/`.
 - 2.x: usa `/twa/` solo se è configurato un certificato.
+- 3.0: il certificato è obbligatorio e la base URL è sempre `/twa/` (D-23).
 - Fonti: `SPEC`, `SPEC-OLD`.
 
 ### Q-02 Token OAuth2
@@ -276,6 +277,7 @@ In sandbox i link di paginazione puntano a host irraggiungibili:
 - liste: `http://localhost:8081`, con l'IBAN fisso `IT59R0306901001100000002110`.
 
 La 2.x li riscrive verso la base sandbox e l'IBAN configurato.
+- 3.0 (`SandboxLinkRewriter`): l'host dei movimenti diventa l'host pubblico e il resto del percorso resta invariato. `http://localhost:8081` diventa `https://external-api.intesasanpaolo.com/twa/sandbox`, mentre la 2.x usava `/sandbox`, senza `/twa`, che con mTLS obbligatorio non è più disponibile. Il comportamento va verificato con i test in sandbox (T8).
 - Fonte: `PROD`.
 
 ## Altre differenze

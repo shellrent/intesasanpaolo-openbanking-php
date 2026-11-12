@@ -1,0 +1,80 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Shellrent\OpenBanking\Support;
+
+use DateTimeImmutable;
+use DateTimeInterface;
+use DateTimeZone;
+use Exception;
+use InvalidArgumentException;
+
+/**
+ * Parses and formats API dates with explicit formats (docs/dates-and-formats.md).
+ *
+ * Never use `new DateTime($value)` on API values: PHP reads "02/01/2022" as February 1st
+ * (docs/api-quirks.md, Q-09).
+ *
+ * @internal
+ */
+final class DateParser
+{
+    /**
+     * Time zone of the dates without a time: they are Italian business dates.
+     */
+    public const string TIMEZONE = 'Europe/Rome';
+
+    private const string ISO_8601_PATTERN = '/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}:?\d{2})?$/';
+
+    /**
+     * Parses a date without time, at midnight in Europe/Rome.
+     *
+     * @throws InvalidArgumentException When the value does not match the format or is not a real date (e.g. 31/02/2022).
+     */
+    public static function date(string $value, DateFormat $format): DateTimeImmutable
+    {
+        $date = DateTimeImmutable::createFromFormat('!'.$format->value, $value, self::timezone());
+        $errors = DateTimeImmutable::getLastErrors();
+
+        if ($date === false || ($errors !== false && ($errors['warning_count'] > 0 || $errors['error_count'] > 0))) {
+            throw new InvalidArgumentException(sprintf('"%s" is not a valid date in the "%s" format.', $value, $format->value));
+        }
+
+        return $date;
+    }
+
+    /**
+     * Parses an ISO 8601 date-time, e.g. "2017-12-31T23:59:60Z" or "2018-05-04T09:52:10.289+0200".
+     *
+     * The offset is kept; a value without offset is read in Europe/Rome.
+     *
+     * @throws InvalidArgumentException When the value is not an ISO 8601 date-time.
+     */
+    public static function dateTime(string $value): DateTimeImmutable
+    {
+        if (preg_match(self::ISO_8601_PATTERN, $value) !== 1) {
+            throw new InvalidArgumentException(sprintf('"%s" is not an ISO 8601 date-time.', $value));
+        }
+
+        try {
+            return new DateTimeImmutable($value, self::timezone());
+        } catch (Exception $exception) {
+            throw new InvalidArgumentException(sprintf('"%s" is not a valid ISO 8601 date-time.', $value), 0, $exception);
+        }
+    }
+
+    /**
+     * Formats a date for a request parameter, using the calendar date of the given object as it is
+     * (no time zone conversion).
+     */
+    public static function format(DateTimeInterface $date, DateFormat $format): string
+    {
+        return $date->format($format->value);
+    }
+
+    public static function timezone(): DateTimeZone
+    {
+        return new DateTimeZone(self::TIMEZONE);
+    }
+}

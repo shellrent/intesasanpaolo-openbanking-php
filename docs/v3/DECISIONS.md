@@ -75,6 +75,8 @@ src/
 
 Nomi: il termine "Delayed" della 2.x diventa "Sct", che è la terminologia ISP per il bonifico ordinario; "Instant" diventa "SctInstant". I dettagli si definiscono in T3 e si documentano in `docs/architecture.md`.
 
+Raffinamento in T3: le classi del token OAuth2 (`AccessToken`, `TokenStore`, `InMemoryTokenStore`, `TokenProvider`) stanno in `Auth/` invece che in `Http/`, perché in parte fanno parte dell'API pubblica.
+
 ### D-11 · Stati tolleranti
 Gli stati sono enum, ma il valore originale (`raw`) è sempre conservato.
 - L'enum si ricava dal primo token del valore, quindi `ACSC acquired` diventa `ACSC`.
@@ -114,11 +116,47 @@ L'estensione PECL `psr` (1.2.0), presente in molti ambienti Phalcon, ridefinisce
 
 Decisione: il vincolo resta aperto anche a Guzzle 7 (D-06), il problema è documentato nel README e in `AGENTS.md`, e in locale l'analisi si esegue con un PHP senza l'estensione. Il codice 3.0 deve funzionare anche con le interfacce dell'estensione: il gestionale usa Phalcon e potrebbe girare con l'estensione attiva (in locale è presente).
 
+### D-21 · Cache del token: interfaccia propria `TokenStore` — T3
+Il token si condivide tra istanze con un'interfaccia `Auth\TokenStore` di tre metodi (`get`, `put`, `forget`). La predefinita è `InMemoryTokenStore`; `AccessToken::toArray()` e `fromArray()` servono a chi la implementa su una cache esterna.
+- Alternative scartate: PSR-16, che porta una dipendenza esposta agli stessi conflitti dell'estensione PECL `psr` (D-20); nessuna cache, che lascerebbe un login per ogni istanza.
+- Decisione del maintainer. Chiude O-03.
+
+### D-22 · Nessun logger integrato — T3
+L'SDK non registra log. Espone `transactionId` (header `X-ISP-Transaction-ID`) su risposte ed eccezioni e accetta un client Guzzle dell'applicazione, a cui si può aggiungere il middleware di log di Guzzle. Non ci sono dipendenze e non c'è rischio di registrare dati sensibili.
+- Alternativa scartata: logger PSR-3 opzionale.
+- Decisione del maintainer. Chiude O-04.
+
+### D-23 · Certificato mTLS obbligatorio — T3
+`ClientConfig` richiede un `MutualTlsCertificate` e la base URL è sempre `/twa/{ambiente}/v1`: tutte le spec attuali la usano, mentre il percorso senza `/twa/` viene dalle spec del 2020. I file del certificato vengono controllati alla creazione della configurazione. Un PKCS#12 deve avere estensione `.p12`, che Guzzle usa per indicare a cURL il tipo di certificato.
+- Decisione del maintainer. Chiude O-05.
+
+### D-24 · Timeout, nessun retry, gestione del 401 — T3
+- Timeout predefiniti: 10 s per la connessione e 60 s per la richiesta, entrambi configurabili. Valori nulli o infiniti non sono ammessi, perché un daemon di pagamenti non deve bloccarsi.
+- **Nessun retry automatico**: ripetere un'esecuzione di pagamento potrebbe eseguirla due volte. Una `TransportException` su un pagamento significa "esito sconosciuto".
+- HTTP 401: il token in cache viene scartato e la chiamata fallisce con `AuthenticationException`, senza essere ripetuta.
+- Il token si rinnova 60 s prima della scadenza. Senza `expires_in` valido vale per la sola richiesta corrente.
+
+### D-25 · Errori HTTP gestiti dall'SDK, non da Guzzle — T3
+Le richieste partono con `http_errors` disattivato, e il `Transport` classifica le risposte per stato: 401 → `AuthenticationException`, ≥ 400 → `ApiException`, `success: false` → `ApiException`, JSON non valido → `UnexpectedResponseException`.
+- Gli errori di trasferimento si intercettano con `Psr\Http\Client\NetworkExceptionInterface` e `GuzzleHttp\Exception\GuzzleException`, che esistono sia in Guzzle 7 sia in Guzzle 8.
+- La gerarchia di eccezioni di Guzzle 8, cambiata rispetto alla 7, non viene mai esposta.
+
+### D-26 · API pubblica e interna — T3
+Sono pubblici `Config/`, `Exception/` e, in `Auth/`, `AccessToken`, `TokenStore` e `InMemoryTokenStore`; da T4 anche la facade, le API, le richieste e i DTO di risposta. Tutto il resto è `@internal` (`Http/`, `Support/`, `TokenProvider`) e può cambiare senza una major.
+
+### D-27 · Date in ingresso senza conversione di fuso — T3
+Per i parametri di sola data l'SDK usa la data di calendario dell'oggetto ricevuto, senza convertirlo in `Europe/Rome`. Convertire potrebbe spostare il giorno in modo inatteso, per esempio le 23:30 UTC del 31/01 diventerebbero il 1° febbraio. In uscita le date senza orario sono a mezzanotte in `Europe/Rome` (D-07).
+
+### D-28 · Tolleranza nella lettura delle risposte — T3
+- Un campo mancante, `null` o stringa vuota non ha valore. Con più nomi alternativi vince il primo che ha un valore.
+- Un valore del tipo sbagliato è un errore (`UnexpectedResponseException`, con il percorso del campo) e non viene convertito "a forza".
+- `"payload": []` vale come payload assente, perché alcuni backend serializzano così un oggetto vuoto. Un array non vuoto resta un errore.
+
+### D-29 · Ambiente predefinito: sandbox — T3
+`ClientConfig` usa `Environment::Sandbox` se l'ambiente non è indicato: Live va scelto esplicitamente, così una configurazione incompleta non può muovere denaro.
+
 ## Aperte
 
 | ID | Questione | Da decidere in |
 |---|---|---|
-| O-03 | Cache del token tra istanze: interfaccia propria minimale o PSR-16 | T3 |
-| O-04 | Logging opzionale con PSR-3 (metadati delle chiamate, mai segreti) | T3 |
-| O-05 | Rendere il mTLS obbligatorio, visto che tutte le spec attuali usano `/twa/` | T3 |
 | O-06 | Quale endpoint corrisponde a "Verifica esistenza IBAN" | T7 |

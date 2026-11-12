@@ -70,18 +70,31 @@ In questo caso esegui i controlli con un PHP senza l'estensione, come avviene in
 php8.4 $(command -v composer) ci
 ```
 
-## Mappa del codice (2.x, in sostituzione)
+## Mappa del codice
+
+Codice 3.0 (dettagli in [docs/architecture.md](docs/architecture.md)):
+
+| Percorso | Contenuto |
+|---|---|
+| `src/Config/` | `ClientConfig`, `Environment`, `MutualTlsCertificate` (pubblico) |
+| `src/Auth/` | `AccessToken`, `TokenStore`, `InMemoryTokenStore` (pubblici); `TokenProvider` (interno) |
+| `src/Http/` | `Sender`, `Transport`, `ApiResponse`, `Paginator`, `SandboxLinkRewriter` (interni) |
+| `src/Support/` | `DateParser`, `DateFormat`, `Payload`, `Clock` (interni) |
+| `src/Exception/` | eccezioni con l'interfaccia comune `OpenBankingException` (pubbliche) |
+| `tests/Support/` | `MockHttp`, `FrozenClock` |
+| `tests/Unit/` | test del codice 3.0, con la base `TestCase` |
+
+Le classi interne sono marcate `@internal`: non fanno parte dell'API pubblica e possono cambiare in qualsiasi versione.
+
+Codice 2.x, in sostituzione fino a T6:
 
 | Percorso | Contenuto |
 |---|---|
 | `src/IntesaSanPaoloClient.php` | client unico: OAuth2, richieste HTTP, paginazione, tutti gli endpoint |
-| `src/Models/` | model di richiesta e di risposta (gerarchia `GenericModel` → `GenericPayment*`) |
-| `src/Models/Collections/` | `Transactions`, `PaymentInfos` |
-| `src/Exceptions/` | `Exception`, `HttpException` |
+| `src/Models/`, `src/Models/Collections/` | model di richiesta e di risposta, `Transactions`, `PaymentInfos` |
+| `src/Exceptions/` (plurale) | `Exception`, `HttpException` |
 | `src/DataSet/CurrencySet.php` | costanti delle valute |
 | `tests/Unit/Legacy/` | test del codice 2.x, compresi i quirk di trasporto verificati con il `MockHandler` di Guzzle |
-
-La struttura di destinazione della 3.0 è descritta in `docs/v3/DECISIONS.md` (D-10) e, da T3, in `docs/architecture.md`.
 
 ## Spec OpenAPI locali
 

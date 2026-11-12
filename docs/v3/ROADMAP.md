@@ -15,7 +15,7 @@ Piano di lavoro della riscrittura 3.0 dell'SDK. È la **fonte di verità sullo s
 | T0 | Branch: `master` → `main`, creazione di `3.x` | ✅ completata |
 | T1 | Documentazione per agent e file di progetto | ✅ completata |
 | T2 | Tooling e dipendenze | ✅ completata |
-| T3 | Core: configurazione, trasporto, date, eccezioni | ⏳ da fare |
+| T3 | Core: configurazione, trasporto, date, eccezioni | ✅ completata |
 | T4 | API Conti | ⏳ da fare |
 | T5 | API SCT Instant | ⏳ da fare |
 | T6 | API SCT (bonifico ordinario) | ⏳ da fare |
@@ -59,8 +59,8 @@ Una task è completata quando:
 - Verificare la compatibilità con Guzzle 8: verificata, minimi alzati a `^7.15.2 || ^8.0.1` per le advisory di sicurezza; incompatibilità con l'estensione PECL `psr` documentata (D-20).
 - Finding: F-07, F-26, F-28 (in parte), F-34 (in parte).
 
-### T3 · Core
-- Configurazione: `ClientConfig`, `Environment`, `MutualTlsCertificate` (O-05).
+### T3 · Core ✅
+- Configurazione: `ClientConfig`, `Environment`, `MutualTlsCertificate`, con mTLS obbligatorio (D-23).
 - Trasporto:
   - timeout configurabili;
   - lettura del JSON con eccezioni e controllo di `success`;
@@ -68,13 +68,14 @@ Una task è completata quando:
   - header di risposta disponibili al chiamante;
   - `Content-Type` sulle GET SCT (Q-04) senza stato condiviso;
   - client Guzzle iniettabile.
-- `TokenProvider`: margine sulla scadenza e cache opzionale tra istanze (O-03); logging opzionale (O-04).
+- `Auth/`: `TokenProvider` con margine sulla scadenza e `TokenStore` per condividere il token tra istanze (D-21); nessun logger integrato (D-22).
 - `Paginator`: limite di pagine e riscrittura dei link della sandbox (Q-44).
 - `DateParser` con formati espliciti (Q-09–Q-11) e `Payload` per leggere i campi in modo tollerante.
 - Eccezioni con un'interfaccia comune.
 - Test con `MockHandler`.
 - Documentazione: `docs/architecture.md`, `docs/dates-and-formats.md`, `docs/testing.md`; prima bozza di `UPGRADE-3.0.md`.
 - Finding: F-01 (trasporto), F-02 (parser), F-04, F-05, F-06, F-17 (base), F-19, F-20, F-21, F-22, F-25 (in parte), F-29, F-30, F-31 (in parte).
+- Non incluso, come previsto: la facade `IntesaSanPaoloClient` arriva in T4 insieme alla prima API; il codice 2.x resta invariato.
 
 ### T4 · API Conti
 - Saldo con data opzionale.
@@ -90,7 +91,7 @@ Una task è completata quando:
 - Richiesta validata: campi obbligatori, importo, lunghezze, caratteri SEPA.
 - Quirk `endToEndId`/`siaCode` tra Live e sandbox (Q-34).
 - Documentazione: `docs/payment-flows.md`, parte SCT Instant.
-- Finding: F-01, F-03, F-10, F-11 (in parte), F-24, F-25 (in parte), F-32.
+- Finding: F-01, F-03, F-10, F-11 (in parte), F-24, F-25 (in parte), F-32, F-36.
 
 ### T6 · API SCT (bonifico ordinario)
 - Simulazione: VoP, `fees` o `commissioni`, `categoryPurpose` configurabile, data di esecuzione opzionale, EUR di default.
@@ -99,7 +100,7 @@ Una task è completata quando:
 - Lista completa.
 - Revoca.
 - Documentazione: `docs/payment-flows.md`, parte SCT.
-- Finding: F-08, F-09, F-10, F-11, F-13, F-14, F-16, F-24, F-25 (in parte), F-32, F-33.
+- Finding: F-08, F-09, F-10, F-11, F-13, F-14, F-16, F-24, F-25 (in parte), F-32, F-33, F-36.
 
 ### T7 · API IBAN e raggiungibilità
 - Verifica sintattica (Q-19).
@@ -126,3 +127,4 @@ Migrazione alla 3.0, provabile prima del tag con `3.x-dev`, e correzioni lato ge
 | 2026-11-12 | T0 | `master` rinominato in `main` (protezione mantenuta), eliminato `php80`, creato `3.x` |
 | 2026-11-12 | T1 | Documentazione per agent, area `docs/v3/`, documentazione permanente (copertura, quirk, spec), file di progetto, line ending a LF |
 | 2026-11-12 | T2 | PHP ^8.3, Guzzle `^7.15.2 \|\| ^8.0.1` senza adapter; PHPUnit 12.5, PHPStan max, Pint; CI GitHub Actions (8.3/8.4/8.5 × dipendenze minime e massime); test 2.x riscritti e verdi; nullable espliciti; `composer.lock` rimosso; trovata l'incompatibilità tra Guzzle 8 e l'estensione PECL `psr` (D-20) |
+| 2026-11-12 | T3 | Core 3.0: `Config/`, `Auth/` (`TokenStore`), `Http/` (`Sender`, `Transport`, `Paginator`, riscrittura dei link della sandbox), `Support/` (`DateParser`, `Payload`), `Exception/`; mTLS obbligatorio, timeout, nessun retry, errori 4xx/5xx/rete mappati, transaction ID esposto; 97 test (anche con Guzzle 7 + estensione `psr`); documentazione: architettura, date, test, bozza di `UPGRADE-3.0.md`; nuovo finding F-36 |

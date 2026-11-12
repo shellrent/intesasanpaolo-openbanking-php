@@ -6,9 +6,24 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it-IT/1.1.0/) e i
 
 ## [Unreleased]
 
-Versione 3.0.0 in sviluppo sul branch `3.x`. Contiene modifiche incompatibili con la 2.x, che verranno documentate in `UPGRADE-3.0.md`.
+Versione 3.0.0 in sviluppo sul branch `3.x`. Contiene modifiche incompatibili con la 2.x, documentate in `UPGRADE-3.0.md` (bozza).
 
 ### Aggiunto
+- Configurazione con `ClientConfig`, `Environment` e `MutualTlsCertificate` (PEM o PKCS#12). **Il certificato mTLS è obbligatorio** e l'ambiente predefinito è la sandbox.
+- Timeout configurabili: 10 s per la connessione e 60 s per la richiesta.
+- Eccezioni con l'interfaccia comune `OpenBankingException`:
+  - `ApiException` per HTTP 4xx/5xx e `success: false`, con gli errori della banca e il transaction ID;
+  - `AuthenticationException` per login rifiutato e HTTP 401;
+  - `TransportException` per errori di rete e timeout;
+  - `UnexpectedResponseException` per risposte non interpretabili;
+  - `ConfigurationException` per configurazioni non valide.
+- `TokenStore` per condividere il token OAuth2 tra istanze e processi; il token si rinnova 60 s prima della scadenza.
+- Core di trasporto 3.0:
+  - header di risposta e `X-ISP-Transaction-ID` disponibili;
+  - paginazione con protezione da cicli e limite di pagine;
+  - correzione dei link di paginazione della sandbox;
+  - lettura delle date con formati espliciti.
+- Documentazione: `docs/architecture.md`, `docs/dates-and-formats.md`, `docs/testing.md`, `UPGRADE-3.0.md` (bozza).
 - Documentazione per agent AI e sviluppatori: `AGENTS.md`, `CLAUDE.md`.
 - Documentazione tecnica in `docs/`: copertura delle API, quirk e comportamenti reali delle API, riferimento alle spec.
 - `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `.editorconfig`, `.gitattributes`.
