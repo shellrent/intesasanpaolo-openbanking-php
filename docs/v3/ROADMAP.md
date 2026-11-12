@@ -14,7 +14,7 @@ Piano di lavoro della riscrittura 3.0 dell'SDK. È la **fonte di verità sullo s
 |---|---|---|
 | T0 | Branch: `master` → `main`, creazione di `3.x` | ✅ completata |
 | T1 | Documentazione per agent e file di progetto | ✅ completata |
-| T2 | Tooling e dipendenze | ⏳ da fare |
+| T2 | Tooling e dipendenze | ✅ completata |
 | T3 | Core: configurazione, trasporto, date, eccezioni | ⏳ da fare |
 | T4 | API Conti | ⏳ da fare |
 | T5 | API SCT Instant | ⏳ da fare |
@@ -48,15 +48,15 @@ Una task è completata quando:
 - README riscritto; `LICENSE.md`, `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `.editorconfig`, `.gitattributes`, `.gitignore`.
 - Line ending normalizzati a LF.
 
-### T2 · Tooling e dipendenze
+### T2 · Tooling e dipendenze ✅
 - `composer.json`:
   - `php: ^8.3` e `guzzlehttp/guzzle: ^7.9 || ^8.0`, senza `php-http/guzzle7-adapter` (D-05, D-06);
   - script `test`, `analyse`, `format`, `ci`.
 - Dipendenze di sviluppo: PHPUnit 12.5, PHPStan 2 e formatter (O-02); file di configurazione `.dist`.
-- Decidere se tenere `composer.lock` nel repo (O-01).
+- Decidere se tenere `composer.lock` nel repo: rimosso (D-16).
 - GitHub Actions: PHP 8.3, 8.4 e 8.5, con dipendenze sia minime sia massime; `composer validate`, analisi statica, test.
-- Rendere verde la suite attuale come punto di partenza (env opzionale, fixture di `PaymentExecuted`).
-- Verificare la compatibilità con Guzzle 8.
+- Rendere verde la suite attuale come punto di partenza: test riscritti in `tests/Unit/Legacy/` senza Faker né phpdotenv, più `ClientTest` che verifica i quirk di trasporto con il `MockHandler` di Guzzle.
+- Verificare la compatibilità con Guzzle 8: verificata, minimi alzati a `^7.15.2 || ^8.0.1` per le advisory di sicurezza; incompatibilità con l'estensione PECL `psr` documentata (D-20).
 - Finding: F-07, F-26, F-28 (in parte), F-34 (in parte).
 
 ### T3 · Core
@@ -125,3 +125,4 @@ Migrazione alla 3.0, provabile prima del tag con `3.x-dev`, e correzioni lato ge
 |---|---|---|
 | 2026-11-12 | T0 | `master` rinominato in `main` (protezione mantenuta), eliminato `php80`, creato `3.x` |
 | 2026-11-12 | T1 | Documentazione per agent, area `docs/v3/`, documentazione permanente (copertura, quirk, spec), file di progetto, line ending a LF |
+| 2026-11-12 | T2 | PHP ^8.3, Guzzle `^7.15.2 \|\| ^8.0.1` senza adapter; PHPUnit 12.5, PHPStan max, Pint; CI GitHub Actions (8.3/8.4/8.5 × dipendenze minime e massime); test 2.x riscritti e verdi; nullable espliciti; `composer.lock` rimosso; trovata l'incompatibilità tra Guzzle 8 e l'estensione PECL `psr` (D-20) |

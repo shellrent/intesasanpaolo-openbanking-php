@@ -1,12 +1,17 @@
-# Dipendenze
+# Dipendenze (libreria: il lock non si versiona, la CI prova dipendenze minime e massime)
 /vendor/
 /composer.phar
+/composer.lock
 
 # Cache e report di test e strumenti
 /.phpunit.cache/
 .phpunit.result.cache
 /build/
 /coverage/
+
+# Override locali delle configurazioni versionate come .dist
+/phpunit.xml
+/phpstan.neon
 
 # IDE e sistema operativo
 /.idea/

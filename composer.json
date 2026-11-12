@@ -1,51 +1,78 @@
 {
-	"name": "shellrent/intesasanpaolo-openbanking-php",
-	"description": "Php Client for Intesa Sanpaolo's Open Banking Project",
-	"keywords": [
-		"Intesa Sanpaolo",
-		"Open Banking",
-		"Open Banking API",
-		"Bank API",
-		"Bank API PHP",
-		"PHP"
-	],
-	"type": "library",
-	"license": "MIT",
-	"authors": [
-		{
-			"name": "Tobia Zanarella",
-			"email": "tobia.zanarella@shellrent.com",
-			"homepage": "https://www.shellrent.com",
-			"role": "Developer"
-		},
-		{
-			"name": "Armando Caprio",
-			"email": "armando@shellrent.com",
-			"homepage": "https://www.shellrent.com",
-			"role": "Developer"
-		}
-	],
-	"require": {
-		"php": "^8.0",
-		"ext-json": "*",
-		"php-http/guzzle7-adapter": "^1.0"
-	},
-	"require-dev": {
-		"phpunit/phpunit": "^9.0",
-		"fakerphp/faker": "^1.21",
-		"vlucas/phpdotenv": "^5.1"
-	},
-	"autoload": {
-		"psr-4": {
-			"Shellrent\\OpenBanking\\": "src/"
-		}
-	},
-	"autoload-dev": {
-		"psr-4": {
-			"Shellrent\\OpenBanking\\Tests\\": "tests/"
-		}
-	},
-	"scripts": {
-		"test": "vendor/bin/phpunit"
-	}
+    "name": "shellrent/intesasanpaolo-openbanking-php",
+    "description": "Unofficial PHP SDK for the Intesa Sanpaolo SmartHub / Open Banking APIs",
+    "keywords": [
+        "Intesa Sanpaolo",
+        "SmartHub",
+        "Open Banking",
+        "Bank API",
+        "SEPA",
+        "SCT",
+        "SCT Instant",
+        "PHP"
+    ],
+    "type": "library",
+    "license": "MIT",
+    "homepage": "https://github.com/shellrent/intesasanpaolo-openbanking-php",
+    "authors": [
+        {
+            "name": "Tobia Zanarella",
+            "email": "tobia.zanarella@shellrent.com",
+            "homepage": "https://www.shellrent.com",
+            "role": "Developer"
+        },
+        {
+            "name": "Armando Caprio",
+            "email": "armando@shellrent.com",
+            "homepage": "https://www.shellrent.com",
+            "role": "Developer"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/shellrent/intesasanpaolo-openbanking-php/issues",
+        "source": "https://github.com/shellrent/intesasanpaolo-openbanking-php",
+        "security": "https://github.com/shellrent/intesasanpaolo-openbanking-php/blob/main/SECURITY.md"
+    },
+    "require": {
+        "php": "^8.3",
+        "ext-json": "*",
+        "guzzlehttp/guzzle": "^7.15.2 || ^8.0.1"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.32",
+        "phpstan/phpstan": "^2.3",
+        "phpunit/phpunit": "^12.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "Shellrent\\OpenBanking\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Shellrent\\OpenBanking\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "@php vendor/bin/phpunit",
+        "analyse": "@php vendor/bin/phpstan analyse --memory-limit=1G",
+        "format": "@php vendor/bin/pint",
+        "format:check": "@php vendor/bin/pint --test",
+        "ci": [
+            "@composer validate --strict",
+            "@format:check",
+            "@analyse",
+            "@test"
+        ]
+    },
+    "scripts-descriptions": {
+        "test": "Run the PHPUnit test suite",
+        "analyse": "Run PHPStan static analysis",
+        "format": "Format the code with Laravel Pint",
+        "format:check": "Check the code formatting without changing files",
+        "ci": "Run all the checks executed by the CI"
+    },
+    "config": {
+        "sort-packages": true
+    }
 }

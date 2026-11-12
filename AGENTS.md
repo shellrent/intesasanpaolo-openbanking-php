@@ -37,7 +37,7 @@ Sul branch `3.x` è in corso la riscrittura per la versione 3.0.0. **Prima di in
   - classi `final` se non sono pensate per l'estensione;
   - DTO `readonly` con proprietà pubbliche invece dei getter.
 
-  Il formatter viene configurato in T2.
+  La formattazione la applica Laravel Pint (`pint.json`), che aggiunge anche `declare_strict_types`, `strict_comparison` e `strict_param`.
 - **Date**: nessuna dipendenza da Carbon; in input `DateTimeInterface`, in output `DateTimeImmutable` (D-07).
 - **Codice 2.x**: lo stile con tab, proprietà PascalCase e getter è in via di sostituzione; non replicarlo nel codice nuovo.
 
@@ -45,10 +45,30 @@ Sul branch `3.x` è in corso la riscrittura per la versione 3.0.0. **Prima di in
 
 ```bash
 composer install
-composer test
+composer test           # PHPUnit 12
+composer analyse        # PHPStan, livello max
+composer format         # Laravel Pint (preset laravel)
+composer format:check   # verifica la formattazione senza modificare i file
+composer ci             # tutti i controlli della CI: validate, format:check, analyse, test
 ```
 
-Analisi statica, formatter e CI arrivano con T2: aggiorna questa sezione quando cambiano.
+La CI (GitHub Actions, `.github/workflows/ci.yml`) esegue i test su PHP 8.3, 8.4 e 8.5, ciascuno con dipendenze minime e massime. L'analisi statica e la formattazione girano su PHP 8.3 con le dipendenze massime. `composer.lock` non è versionato.
+
+### Codice 2.x escluso dagli strumenti
+
+I file 2.x (`src/IntesaSanPaoloClient.php`, `src/DataSet`, `src/Exceptions`, `src/Models`) sono esclusi dall'analisi di PHPStan e dalla formattazione di Pint finché non vengono riscritti. Quando una task sostituisce uno di questi file, rimuovilo dalle esclusioni in `phpstan.neon.dist` e `pint.json`. I test della 2.x stanno in `tests/Unit/Legacy/` e si eliminano insieme alla classe che coprono.
+
+### Ambiente locale: estensione PECL `psr`
+
+Se il PHP locale carica l'estensione PECL `psr`, spesso installata insieme a Phalcon (verificalo con `php -m | grep psr`), ci sono due conseguenze:
+- **Guzzle 8 non funziona**: psr7 3.x è incompatibile con le interfacce definite dall'estensione e il caricamento di `GuzzleHttp\Psr7\Request` va in errore fatale. Con Guzzle 7 non ci sono problemi.
+- **PHPStan legge male i tipi PSR-7**: tutti i metodi di `Psr\Http\Message\*` risultano `mixed`.
+
+In questo caso esegui i controlli con un PHP senza l'estensione, come avviene in CI. Gli script composer usano il PHP con cui viene lanciato Composer, quindi per esempio:
+
+```bash
+php8.4 $(command -v composer) ci
+```
 
 ## Mappa del codice (2.x, in sostituzione)
 
@@ -59,7 +79,7 @@ Analisi statica, formatter e CI arrivano con T2: aggiorna questa sezione quando 
 | `src/Models/Collections/` | `Transactions`, `PaymentInfos` |
 | `src/Exceptions/` | `Exception`, `HttpException` |
 | `src/DataSet/CurrencySet.php` | costanti delle valute |
-| `tests/` | test dei model (PHPUnit 9) |
+| `tests/Unit/Legacy/` | test del codice 2.x, compresi i quirk di trasporto verificati con il `MockHandler` di Guzzle |
 
 La struttura di destinazione della 3.0 è descritta in `docs/v3/DECISIONS.md` (D-10) e, da T3, in `docs/architecture.md`.
 

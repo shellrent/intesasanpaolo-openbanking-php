@@ -1,0 +1,23 @@
+parameters:
+    level: max
+
+    # Supported PHP range (D-05): analyse against 8.3 up to 8.5.
+    phpVersion:
+        min: 80300
+        max: 80599
+
+    paths:
+        - src
+        - tests
+
+    # Legacy 2.x code, frozen until it is rewritten (T3-T6). Its symbols are
+    # still discovered, it is just not analysed. Remove an entry as soon as the
+    # corresponding code is replaced; "(?)" keeps PHPStan quiet once it is gone.
+    excludePaths:
+        analyse:
+            - src/IntesaSanPaoloClient.php (?)
+            - src/DataSet (?)
+            - src/Exceptions (?)
+            - src/Models (?)
+
+    tmpDir: build/phpstan

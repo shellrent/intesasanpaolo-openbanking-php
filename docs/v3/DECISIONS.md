@@ -23,7 +23,7 @@ Si abbandona lo stile della 2.x (tab, `if( ... )`, proprietà PascalCase, getter
 - classi `final` se non sono pensate per l'estensione;
 - DTO `readonly` con **proprietà pubbliche** al posto dei getter, più metodi di comodo dove servono (es. `$vop->isMatch()`).
 
-Lo strumento di formattazione (Laravel Pint con preset `laravel`, oppure PHP-CS-Fixer con `@PER-CS`) si sceglie in T2 (O-02).
+Lo strumento di formattazione è Laravel Pint (D-17).
 
 ### D-05 · PHP 8.3+, compatibile con 8.4 e 8.5
 - Requisito `php: ^8.3`.
@@ -32,11 +32,16 @@ Lo strumento di formattazione (Laravel Pint con preset `laravel`, oppure PHP-CS-
 - CI su 8.3, 8.4 e 8.5, con le deprecation trattate come errori.
 - PHPUnit 12.5: è l'ultima versione che supporta 8.3 (la 13 richiede 8.4).
 
-### D-06 · Guzzle `^7.9 || ^8.0`
+### D-06 · Guzzle `^7.15.2 || ^8.0.1`
 Guzzle diventa una dipendenza diretta e si rimuove `php-http/guzzle7-adapter`, che non viene usato.
-- Il vincolo include la 7 perché il gestionale è su Guzzle 7.
+- Il vincolo include la 7 perché il gestionale è su Guzzle 7 e perché Guzzle 8 non funziona con l'estensione PECL `psr` (D-20).
+- I minimi 7.15.2 e 8.0.1 escludono le versioni con advisory di sicurezza note (aggiornamento del 2026-11-12, in T2).
 - Il client Guzzle si può iniettare, così i test possono usare un `MockHandler`.
-- La compatibilità con Guzzle 8 si verifica in T2.
+- Compatibilità con Guzzle 8 verificata in T2 sul codice 2.x: `tests/Unit/Legacy/ClientTest.php` passa con Guzzle 7.15.2 e 8.4.0.
+- Indicazioni per il codice 3.0, dalla guida di upgrade di Guzzle 8:
+  - gli errori di rete si intercettano con `Psr\Http\Client\NetworkExceptionInterface`, quelli con risposta con `BadResponseException` (valido per entrambe le versioni);
+  - i valori degli header devono essere sempre stringhe;
+  - i metodi HTTP vanno scritti in maiuscolo.
 
 ### D-07 · Date senza Carbon
 - Input: `DateTimeInterface` (quindi anche Carbon).
@@ -90,12 +95,29 @@ Un rilascio 2.2.0 con le sole correzioni urgenti (VoP, resubmit, date) è stato 
 ### D-15 · Finding lato consumer fuori da questo repo
 Il repo è pubblico: i problemi trovati nel gestionale interno (task T9) non si tracciano qui, ma nel repository del gestionale.
 
+### D-16 · `composer.lock` non versionato — T2
+Per una libreria il lock non ha effetto su chi la installa e darebbe una falsa garanzia. La CI prova invece sia le dipendenze minime sia le massime consentite. Chiude O-01.
+
+### D-17 · Formatter: Laravel Pint — T2
+Si usa Laravel Pint con il preset `laravel`, coerente con D-04, più le regole `declare_strict_types`, `strict_comparison` e `strict_param` (`pint.json`). Pint richiede PHP 8.3, in linea con D-05. Chiude O-02.
+
+### D-18 · Codice 2.x escluso dagli strumenti — T2
+I file 2.x sono esclusi dall'analisi di PHPStan e da Pint finché non vengono riscritti: riformattarli o "correggerli" per gli strumenti rischierebbe di cambiarne il comportamento (per esempio con `strict_types`), proprio mentre fanno da riferimento per la riscrittura. L'unica modifica fatta è stata rendere espliciti i nullable impliciti, che non cambia il comportamento. Il comportamento 2.x, compresi i quirk di trasporto, è fissato dai test in `tests/Unit/Legacy/`. Ogni esclusione si rimuove quando il file viene sostituito.
+
+### D-19 · PHPStan livello max — T2
+PHPStan è configurato al livello massimo, con `phpVersion` da 8.3 a 8.5, su `src` e `tests`. Senza baseline: il codice nuovo nasce già conforme. In CI l'analisi gira con le dipendenze massime, perché i PHPDoc generici di Guzzle 7 e 8 non sono compatibili tra loro.
+
+### D-20 · Estensione PECL `psr` — T2
+L'estensione PECL `psr` (1.2.0), presente in molti ambienti Phalcon, ridefinisce le interfacce PSR-7 senza tipi, e ci sono due conseguenze:
+- con Guzzle 8 (psr7 3.x) PHP va in errore fatale (`Declaration of GuzzleHttp\Psr7\Request::withRequestTarget(string $requestTarget) must be compatible with PsrExt\...`);
+- PHPStan legge come `mixed` tutti i metodi di `Psr\Http\Message\*`.
+
+Decisione: il vincolo resta aperto anche a Guzzle 7 (D-06), il problema è documentato nel README e in `AGENTS.md`, e in locale l'analisi si esegue con un PHP senza l'estensione. Il codice 3.0 deve funzionare anche con le interfacce dell'estensione: il gestionale usa Phalcon e potrebbe girare con l'estensione attiva (in locale è presente).
+
 ## Aperte
 
 | ID | Questione | Da decidere in |
 |---|---|---|
-| O-01 | Togliere `composer.lock` dal repo (prassi comune per le librerie; la CI prova dipendenze minime e massime) | T2 |
-| O-02 | Formatter: Laravel Pint (preset `laravel`) o PHP-CS-Fixer (`@PER-CS`) | T2 |
 | O-03 | Cache del token tra istanze: interfaccia propria minimale o PSR-16 | T3 |
 | O-04 | Logging opzionale con PSR-3 (metadati delle chiamate, mai segreti) | T3 |
 | O-05 | Rendere il mTLS obbligatorio, visto che tutte le spec attuali usano `/twa/` | T3 |

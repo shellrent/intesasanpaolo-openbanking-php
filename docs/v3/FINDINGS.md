@@ -16,7 +16,7 @@ I riferimenti `file:riga` sono relativi al codice 2.1.1.
 | F-04 | Viene convertita solo `ClientException` (4xx): gli errori 5xx (500 e 502 sono documentati) e quelli di rete arrivano come eccezioni Guzzle | `IntesaSanPaoloClient.php:215` | T3 | aperto |
 | F-05 | JSON non validato e `success` ignorato: un body non JSON produce un model vuoto senza errori, perché il costruttore accetta `null` | `IntesaSanPaoloClient.php:219`, `GenericModel.php:23` | T3 | aperto |
 | F-06 | Nessun timeout HTTP: il default di Guzzle è infinito | `IntesaSanPaoloClient.php:110` | T3 | aperto |
-| F-07 | La suite di test fallisce: senza `env/.env` fallisce l'avvio (Dotenv), e `PaymentExecutedModelTest` costruisce la risposta senza `payload` | `tests/TestCase.php:57`, `tests/PaymentExecutedModelTest.php:15` | T2 | aperto |
+| F-07 | La suite di test fallisce: senza `env/.env` fallisce l'avvio (Dotenv), e `PaymentExecutedModelTest` costruisce la risposta senza `payload` | `tests/TestCase.php:57`, `tests/PaymentExecutedModelTest.php:15` | T2 | risolto (T2) |
 
 ## Gravità media
 
@@ -45,13 +45,13 @@ I riferimenti `file:riga` sono relativi al codice 2.1.1.
 | ID | Problema | Dove (2.x) | Task | Stato |
 |---|---|---|---|---|
 | F-25 | Commenti sbagliati e codice inutile: `simulateDelayedPayment` descritto come "Instant", `unset` di `siaCode` che non c'è, `instanceof` superfluo, refuso "retreive" | `IntesaSanPaoloClient.php:364`, `:390`, `:540`, `:725`, `Exceptions/HttpException.php:29` | T3, T5, T6 | aperto |
-| F-26 | `composer.json` richiede `php-http/guzzle7-adapter`, che non serve, ma non Guzzle, che invece è usato direttamente | `composer.json` | T2 | aperto |
+| F-26 | `composer.json` richiede `php-http/guzzle7-adapter`, che non serve, ma non Guzzle, che invece è usato direttamente | `composer.json` | T2 | risolto (T2) |
 | F-27 | Il README indica PHP ≥ 7.3 (il requisito reale è ^8.0) e rimanda al vecchio portale | `README.md` | T1 | risolto (T1) |
-| F-28 | Parametri nullable impliciti, deprecati in PHP 8.4 | varie firme in `src/` | T2, T3–T6 | aperto |
+| F-28 | Parametri nullable impliciti, deprecati in PHP 8.4 | varie firme in `src/` | T2, T3–T6 | risolto (T2): nullable resi espliciti nel codice 2.x |
 | F-29 | L'HTTP client non si può iniettare, quindi il client non è testabile | `IntesaSanPaoloClient.php:110` | T3 | aperto |
 | F-30 | Il mTLS è opzionale, ma tutte le spec attuali richiedono `/twa/` (O-05) | `IntesaSanPaoloClient.php:118-123` | T3 | aperto |
 | F-31 | Struttura: client monolitico, richieste e risposte nella stessa gerarchia mutabile, stati come stringhe (D-09, D-10) | `src/` | T3–T6 | aperto |
 | F-32 | Gli importi sono float senza arrotondamento a 2 decimali | `Models/GenericPayment.php:173` | T5, T6 | aperto |
 | F-33 | `CurrencySet` è incompleto e superfluo, perché l'SCT è solo in EUR | `DataSet/CurrencySet.php` | T6 | aperto |
-| F-34 | I test usano dati casuali (Faker) invece di fixture deterministiche | `tests/` | T2, T3 | aperto |
+| F-34 | I test usano dati casuali (Faker) invece di fixture deterministiche | `tests/` | T2, T3 | in parte (T2): test 2.x deterministici; fixture delle API da T3 |
 | F-35 | La spec "Verifica esistenza IBAN" è una copia del formal-check (O-06) | spec locali | T7 | aperto |

@@ -22,6 +22,10 @@ Il dettaglio per endpoint è in [docs/api-coverage.md](docs/api-coverage.md).
 ## Requisiti
 
 - PHP 8.3 o superiore (la 2.x richiede PHP 8.0), con estensione `json`.
+- Guzzle 7.15.2+ oppure Guzzle 8.0.1+.
+
+  > [!NOTE]
+  > Se il tuo PHP carica l'estensione PECL `psr` (frequente negli ambienti Phalcon), usa Guzzle 7: le interfacce dell'estensione sono incompatibili con Guzzle 8 (psr7 3.x).
 - Un'app registrata su SmartHub con le API necessarie attive, e le relative credenziali (client ID e client secret).
 - Il certificato di mutua autenticazione (mTLS), che si scarica dalla sezione *Certificates Management* dell'area riservata SmartHub.
 
@@ -51,7 +55,7 @@ Gli esempi d'uso della 3.0 verranno aggiunti man mano che le API vengono riscrit
 
 ```bash
 composer install
-composer test
+composer ci      # validate, formattazione (Pint), analisi statica (PHPStan), test (PHPUnit)
 ```
 
 Le regole del progetto (convenzioni, quirk delle API, uso delle spec) sono in [AGENTS.md](AGENTS.md) e nella cartella [docs](docs/README.md). Per contribuire leggi [CONTRIBUTING.md](CONTRIBUTING.md).

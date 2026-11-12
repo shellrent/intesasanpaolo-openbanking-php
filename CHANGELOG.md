@@ -12,8 +12,15 @@ Versione 3.0.0 in sviluppo sul branch `3.x`. Contiene modifiche incompatibili co
 - Documentazione per agent AI e sviluppatori: `AGENTS.md`, `CLAUDE.md`.
 - Documentazione tecnica in `docs/`: copertura delle API, quirk e comportamenti reali delle API, riferimento alle spec.
 - `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `.editorconfig`, `.gitattributes`.
+- CI con GitHub Actions: test su PHP 8.3, 8.4 e 8.5 con dipendenze minime e massime, analisi statica e controllo della formattazione.
+- Strumenti di sviluppo: PHPStan (livello max), Laravel Pint, script `composer ci`.
 
 ### Modificato
+- **Requisito minimo PHP 8.3.**
+- **Guzzle è ora una dipendenza diretta, `^7.15.2 || ^8.0.1`** (minimi scelti per escludere le versioni con advisory di sicurezza). Rimosso `php-http/guzzle7-adapter`, che non veniva usato.
+- Parametri nullable resi espliciti: nessuna deprecation su PHP 8.4 e 8.5.
+- Test riscritti con PHPUnit 12 e dati deterministici; rimosse le dipendenze di sviluppo Faker e phpdotenv.
+- `composer.lock` non è più versionato.
 - README riscritto.
 - Branch predefinito rinominato da `master` a `main`.
 - Line ending normalizzati a LF.

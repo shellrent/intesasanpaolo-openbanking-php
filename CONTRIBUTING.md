@@ -10,7 +10,7 @@ Grazie per l'interesse. Prima di iniziare leggi [AGENTS.md](AGENTS.md): contiene
 
 ## Requisiti di una pull request
 
-- I test sono verdi (`composer test`). Da T2 della roadmap 3.0 anche analisi statica e formattazione.
+- `composer ci` passa: validazione di `composer.json`, formattazione (`composer format` la corregge), analisi statica e test. La CI ripete i test su PHP 8.3, 8.4 e 8.5, con dipendenze minime e massime.
 - Il codice nuovo ha i suoi test. Per le API si usano fixture deterministiche, senza chiamate reali.
 - La documentazione in `docs/` e il `CHANGELOG.md` (sezione *Unreleased*) sono aggiornati.
 - Un comportamento delle API diverso dalla spec è documentato in [docs/api-quirks.md](docs/api-quirks.md), con la sua fonte.
