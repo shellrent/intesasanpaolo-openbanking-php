@@ -27,10 +27,11 @@ final class IbanToolsApi
     public function __construct(private readonly Transport $transport) {}
 
     /**
-     * Formal (syntactic) check of an IBAN, of any bank: real time, OK/KO.
+     * Formal (syntactic) check of an Intesa Sanpaolo IBAN, split into its parts.
      *
-     * The IBAN is sent as given (only spaces removed and letters uppercased): an invalid one gives
-     * an IbanFormalCheck with isValid() false, not an exception.
+     * In Live it answers only for Intesa Sanpaolo IBANs (ABI 03069), and does not check that the account
+     * exists. Any other IBAN gives an ApiException: "WI01" for another bank or a foreign IBAN, HTTP 500 for
+     * wrong check digits (docs/api-quirks.md, Q-52). The IBAN is sent as given (spaces removed, uppercase).
      *
      * @throws InvalidRequestException When the IBAN is empty.
      * @throws ApiException
@@ -50,15 +51,17 @@ final class IbanToolsApi
     }
 
     /**
-     * Checks that an IBAN exists and, with a fiscal code or VAT number, that it belongs to that holder.
+     * Checks that an Italian IBAN exists and belongs to the holder with this fiscal code or VAT number.
      *
+     * At least one of the two is required: the API refuses the IBAN alone (docs/decisions.md, D-64).
      * Works for Intesa Sanpaolo accounts and for the banks joining the CBI Globe "Check IBAN" service.
-     * With the IBAN alone it is the existence check ("Verifica esistenza IBAN", docs/decisions.md, D-51).
+     * A negative outcome (unknown account, other holder) is a result with isAllowed() false; a foreign IBAN
+     * or a bank outside the service gives an ApiException (docs/api-quirks.md, Q-20).
      *
      * @param  string|null  $fiscalCode  Codice fiscale of the expected holder.
      * @param  string|null  $vatNumber  Partita IVA of the expected holder.
      *
-     * @throws InvalidRequestException When the IBAN, the fiscal code or the VAT number is malformed.
+     * @throws InvalidRequestException When both the fiscal code and the VAT number are missing, or an input is malformed.
      * @throws ApiException
      * @throws AuthenticationException
      * @throws TransportException
@@ -70,6 +73,10 @@ final class IbanToolsApi
 
         $fiscalCode = Validator::taxCode($fiscalCode, 'fiscal code');
         $vatNumber = Validator::taxCode($vatNumber, 'VAT number');
+
+        if ($fiscalCode === null && $vatNumber === null) {
+            throw new InvalidRequestException('A fiscal code or a VAT number of the holder is required to verify an IBAN.');
+        }
 
         if ($fiscalCode !== null) {
             $query['fiscalCode'] = $fiscalCode;

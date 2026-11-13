@@ -93,7 +93,7 @@ final class InstantPaymentTest extends TestCase
         yield 'negative amount' => [['amount' => -5.0], 'positive'];
         yield 'infinite amount' => [['amount' => INF], 'positive'];
         yield 'three decimals' => [['amount' => 10.567], 'more than two decimals'];
-        yield 'end-to-end ID too long' => [['endToEndId' => str_repeat('E', 36)], 'end-to-end ID must be at most 35'];
+        yield 'end-to-end ID too long' => [['endToEndId' => str_repeat('E', 37)], 'end-to-end ID must be at most 36'];
         yield 'creditor name not in UTF-8' => [['creditorName' => "Societ\xE0 Rossi"], 'creditor name is not valid UTF-8'];
         yield 'payment information not in UTF-8' => [['paymentInformation' => "Caff\xE8"], 'payment information is not valid UTF-8'];
     }

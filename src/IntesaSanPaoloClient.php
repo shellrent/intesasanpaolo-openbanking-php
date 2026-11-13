@@ -88,7 +88,7 @@ final class IntesaSanPaoloClient
     }
 
     /**
-     * IBAN checks: formal check, existence and consistency with the holder's fiscal code or VAT number.
+     * IBAN checks: formal check of Intesa Sanpaolo IBANs, existence and consistency with the holder's fiscal code or VAT number.
      */
     public function ibanTools(): IbanToolsApi
     {

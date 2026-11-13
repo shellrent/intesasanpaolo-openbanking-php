@@ -9,7 +9,8 @@ use Shellrent\OpenBanking\Http\ApiResponse;
 /**
  * Formal (syntactic) check of an IBAN (GET /tools/iban/formal-check).
  *
- * It says nothing about the existence of the account: see IbanToolsApi::verify().
+ * It answers only for Intesa Sanpaolo IBANs and says nothing about the existence of the account:
+ * see IbanToolsApi::verify() (docs/api-quirks.md, Q-52).
  */
 final readonly class IbanFormalCheck
 {

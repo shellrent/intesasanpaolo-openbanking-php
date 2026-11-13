@@ -81,19 +81,21 @@ final class IbanToolsApiTest extends TestCase
     }
 
     /**
-     * D-51: with the IBAN alone, chargeabilityMulti is the existence check.
+     * D-64: the API refuses the IBAN alone, so the SDK requires a fiscal code or a VAT number.
      */
     #[Test]
-    public function it_verifies_the_existence_of_an_iban(): void
+    public function it_requires_a_fiscal_code_or_a_vat_number(): void
     {
-        $http = new MockHttp(MockHttp::token(), MockHttp::fixture('Iban/verify'));
+        $http = new MockHttp;
 
-        $verification = $this->api($http)->verify(self::CHECKED_IBAN);
+        $this->expectException(InvalidRequestException::class);
+        $this->expectExceptionMessage('fiscal code or a VAT number');
 
-        self::assertSame(self::BASE.'/chargeabilityMulti?iban='.self::CHECKED_IBAN, (string) $http->request(1)->getUri());
-        self::assertTrue($verification->isAllowed());
-        self::assertFalse($verification->isTransferred());
-        self::assertNull($verification->additionalInfo);
+        try {
+            $this->api($http)->verify(self::CHECKED_IBAN);
+        } finally {
+            self::assertSame(0, $http->count());
+        }
     }
 
     #[Test]
@@ -117,7 +119,7 @@ final class IbanToolsApiTest extends TestCase
     {
         $http = new MockHttp(MockHttp::token(), MockHttp::fixture('Iban/verify-transferred'));
 
-        $verification = $this->api($http)->verify(self::CHECKED_IBAN);
+        $verification = $this->api($http)->verify(self::CHECKED_IBAN, vatNumber: '01234567890');
 
         self::assertTrue($verification->isAllowed());
         self::assertTrue($verification->isTransferred());
@@ -160,19 +162,22 @@ final class IbanToolsApiTest extends TestCase
         self::assertFalse($this->api($http)->verify(self::CHECKED_IBAN, vatNumber: '01234567890')->isAllowed());
     }
 
+    /**
+     * Q-20: a foreign IBAN (WI03) or a bank outside the service is an error, not an outcome.
+     */
     #[Test]
     public function it_still_reports_unsuccessful_responses_with_errors(): void
     {
         $http = new MockHttp(MockHttp::token(), MockHttp::json([
             'success' => false,
-            'errors' => [['type' => 'WRONG_INPUT_EXCEPTION', 'code' => 'WI05', 'description' => 'At least one field among fiscalCode and vatNumber must be present']],
+            'errors' => [['type' => 'WRONG_INPUT_EXCEPTION', 'code' => 'WI03', 'description' => 'Functionality limited to Current Accounts Italy']],
             'payload' => ['isAllowed' => false],
-        ]));
+        ], 400));
 
         $this->expectException(ApiException::class);
-        $this->expectExceptionMessage('WI05');
+        $this->expectExceptionMessage('WI03');
 
-        $this->api($http)->verify(self::CHECKED_IBAN);
+        $this->api($http)->verify(self::CHECKED_IBAN, vatNumber: '01234567890');
     }
 
     #[Test]

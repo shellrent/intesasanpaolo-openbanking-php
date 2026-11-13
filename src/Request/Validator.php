@@ -24,7 +24,8 @@ final class Validator
 
     public const int MAX_PAYMENT_INFORMATION_LENGTH = 140;
 
-    public const int MAX_END_TO_END_ID_LENGTH = 35;
+    // SEPA allows 35 characters, but the bank accepts the 36-character UUIDs of its own test cases (D-56).
+    public const int MAX_END_TO_END_ID_LENGTH = 36;
 
     /**
      * Amounts are compared in cents with this tolerance, to absorb float errors such as 0.1 + 0.2.

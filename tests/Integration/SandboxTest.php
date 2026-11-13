@@ -10,16 +10,19 @@ use PHPUnit\Framework\Attributes\Test;
 use Shellrent\OpenBanking\Config\Environment;
 use Shellrent\OpenBanking\Enum\InstantStatus;
 use Shellrent\OpenBanking\Enum\PaymentStatus;
-use Shellrent\OpenBanking\Exception\ApiException;
+use Shellrent\OpenBanking\Enum\ValidationStatus;
+use Shellrent\OpenBanking\Enum\VopMatchResult;
 use Shellrent\OpenBanking\Exception\UnexpectedResponseException;
 use Shellrent\OpenBanking\Request\InstantPayment;
+use Shellrent\OpenBanking\Request\SctPayment;
+use Shellrent\OpenBanking\Response\Sct\SctSimulation;
 use Shellrent\OpenBanking\Response\SctInstant\InstantSimulation;
 
 /**
  * Test cases of the sandbox (docs/api-quirks.md, Q-51), with their fictitious data.
  *
- * The sandbox answers only the exact inputs of its test cases. Most simulation and execution cases use
- * a 36-character end-to-end ID, which the SDK refuses (SEPA allows 35, D-56): they are not covered here.
+ * The sandbox answers only the exact inputs of its test cases, including the 36-character end-to-end ID
+ * of most simulation and execution cases (D-56). Executions in the sandbox move no money.
  *
  * Run with ISP_ENVIRONMENT=sandbox and the sandbox credentials (docs/testing.md).
  */
@@ -32,6 +35,8 @@ final class SandboxTest extends IntegrationTestCase
     private const string X5 = 'IT04G0306901000XTESTXCASEX5';
 
     private const string SCT_STATUS_IBAN = 'IT60X0306911101000000765432';
+
+    private const string E2E = '4271ce32-ba61-41cb-954a-25cf762e9621';
 
     protected static function environment(): Environment
     {
@@ -71,21 +76,85 @@ final class SandboxTest extends IntegrationTestCase
     }
 
     /**
+     * @return iterable<string, array{float, string, string, ValidationStatus, VopMatchResult|null, string|null}>
+     */
+    public static function instantSimulations(): iterable
+    {
+        yield 'match' => [450, 'Mr. Receiver', 'SCT instant payment simulation', ValidationStatus::Accepted, VopMatchResult::Match, null];
+        yield 'rejected, no VoP outcome' => [24.8, 'Mr. Receiver', 'SCT instant payment simulation', ValidationStatus::Rejected, null, null];
+        yield 'close match' => [4.5, 'Paolo Bianchini', 'SCT instant payment simulation VOP CLOSE MATCH', ValidationStatus::Accepted, VopMatchResult::CloseMatch, 'Paolo Bianchi'];
+        yield 'check not possible' => [4.5, 'Paolo Bianchi', 'SCT instant payment simulation VOP ERROR', ValidationStatus::Accepted, VopMatchResult::NotPossible, null];
+    }
+
+    /**
+     * Q-37: the sandbox sends the FAQ labels in the VoP headers, and the string "null" on a rejection (Q-50).
+     */
+    #[Test]
+    #[DataProvider('instantSimulations')]
+    public function it_simulates_an_instant_payment(
+        float $amount,
+        string $creditorName,
+        string $information,
+        ValidationStatus $status,
+        ?VopMatchResult $vop,
+        ?string $matchedName,
+    ): void {
+        $payment = new InstantPayment($creditorName, self::X2, $amount, $information, 'Mr. Sender', null, self::E2E, '');
+
+        $simulation = $this->client(self::X1)->sctInstant()->simulate($payment);
+
+        self::assertSame($status, $simulation->validationStatus);
+        self::assertSame($vop, $simulation->vop->result);
+        self::assertSame($matchedName, $simulation->vop->matchedName);
+        self::assertSame($vop === null, ! $simulation->vop->wasPerformed());
+    }
+
+    /**
+     * D-36, D-62: simulation and execution of the same test case, with a full VoP match.
+     */
+    #[Test]
+    public function it_executes_a_simulated_instant_payment(): void
+    {
+        $client = $this->client(self::X1);
+        $simulation = $client->sctInstant()->simulate(new InstantPayment('Mr. Receiver', self::X2, 450, 'SCT instant payment simulation', 'Mr. Sender', null, self::E2E, ''));
+        $payment = new InstantPayment('Mr. Receiver', self::X2, 450, 'SCT instant payment', 'Mr. Sender', null, self::E2E, '');
+
+        $execution = $client->sctInstant()->execute($payment, $simulation);
+
+        self::assertSame(PaymentStatus::Executed, $execution->paymentStatus);
+        self::assertNotNull($execution->orderId);
+    }
+
+    /**
+     * @return iterable<string, array{float, PaymentStatus}>
+     */
+    public static function instantExecutions(): iterable
+    {
+        yield 'rejected' => [1500, PaymentStatus::Rejected];
+        yield 'to verify, with "null" strings (Q-50)' => [330, PaymentStatus::ToVerify];
+    }
+
+    #[Test]
+    #[DataProvider('instantExecutions')]
+    public function it_reads_the_outcome_of_an_instant_execution(float $amount, PaymentStatus $expected): void
+    {
+        $payment = new InstantPayment('Mr. Receiver', self::X2, $amount, 'SCT instant payment', 'Mr. Sender', null, self::E2E, '');
+
+        $execution = $this->client(self::X1)->sctInstant()->execute($payment, $this->instantSimulation($amount));
+
+        self::assertSame($expected, $execution->paymentStatus);
+        self::assertFalse($execution->canBeResubmitted());
+    }
+
+    /**
      * Q-27, Q-36: the pending test case answers "PDNG" with a resubmit ID.
      */
     #[Test]
     public function it_executes_an_instant_payment_that_stays_pending(): void
     {
         $payment = new InstantPayment('Mr. Receiver', self::X2, 20, 'SCT instant payment', 'Mr. Sender', null, '02INTER20180305HSRT1590814298', '');
-        $simulation = InstantSimulation::fromArray([
-            'validationStatus' => 'ACCP',
-            'simulationId' => '123456789',
-            'amount' => 20,
-            'creditor' => ['iban' => self::X2],
-            'vop' => ['rawResult' => 'MATCH'],
-        ]);
 
-        $execution = $this->client(self::X1)->sctInstant()->execute($payment, $simulation);
+        $execution = $this->client(self::X1)->sctInstant()->execute($payment, $this->instantSimulation(20));
 
         self::assertSame(PaymentStatus::Pending, $execution->paymentStatus);
         self::assertSame('PDNG', $execution->rawPaymentStatus);
@@ -111,6 +180,59 @@ final class SandboxTest extends IntegrationTestCase
 
         self::assertSame($expected, $details->status);
         self::assertSame($orderId, $details->orderId);
+    }
+
+    /**
+     * Q-26, Q-37: SCT simulation with the VoP outcome; the test case requires the execution date (Q-38).
+     */
+    #[Test]
+    public function it_simulates_an_sct_payment(): void
+    {
+        $accepted = $this->client(self::X5)->sct()->simulate($this->sctPayment(40, 'SCT payment simulation', 'IT94H0306901000XTESTXCASEX6'));
+        $rejected = $this->client('IT04G0306901000XTESTXCASEX7')->sct()->simulate($this->sctPayment(50, 'SCT payment simulation', 'IT94H0306901000XTESTXCASEX8'));
+
+        self::assertSame(ValidationStatus::Accepted, $accepted->validationStatus);
+        self::assertSame(VopMatchResult::Match, $accepted->vop->result);
+        self::assertNotNull($accepted->executionDate, 'Q-10: d/m/Y date');
+        self::assertSame(ValidationStatus::Rejected, $rejected->validationStatus);
+        self::assertFalse($rejected->vop->wasPerformed());
+    }
+
+    /**
+     * @return iterable<string, array{string, string, float, string, string|null, PaymentStatus}>
+     */
+    public static function sctExecutions(): iterable
+    {
+        yield 'in progress' => [self::X5, 'IT94H0306901000XTESTXCASEX6', 20, '123456789123456789', null, PaymentStatus::InProgress];
+        yield 'accepted, future date' => [self::X5, 'IT94H0306901000XTESTXCASEX6', 40, '123456789123456789', '2099-12-31', PaymentStatus::Accepted];
+        yield 'to verify' => ['IT04G0306901000XTESTXCASEX9', 'IT94H0306901000XTESTXCASEX10', 50, '12349087654321', null, PaymentStatus::ToVerify];
+    }
+
+    /**
+     * Q-28.
+     */
+    #[Test]
+    #[DataProvider('sctExecutions')]
+    public function it_reads_the_outcome_of_an_sct_execution(
+        string $debtorIban,
+        string $creditorIban,
+        float $amount,
+        string $simulationId,
+        ?string $date,
+        PaymentStatus $expected,
+    ): void {
+        $payment = $this->sctPayment($amount, 'SCT payment execution', $creditorIban, $date === null ? null : new DateTimeImmutable($date));
+        $simulation = SctSimulation::fromArray([
+            'validationStatus' => 'ACCP',
+            'simulationId' => $simulationId,
+            'amount' => $amount,
+            'creditor' => ['iban' => $creditorIban, 'name' => 'Paolo Bianchi'],
+            'vop' => ['rawResult' => 'MATCH'],
+        ]);
+
+        $execution = $this->client($debtorIban)->sct()->execute($payment, $simulation);
+
+        self::assertSame($expected, $execution->paymentStatus);
     }
 
     #[Test]
@@ -189,14 +311,21 @@ final class SandboxTest extends IntegrationTestCase
     }
 
     /**
-     * Q-51: the sandbox requires a fiscal code or a VAT number (D-51).
+     * The execution test cases use the fixed simulation ID "123456789".
      */
-    #[Test]
-    public function it_requires_a_tax_code_to_verify_an_iban_in_the_sandbox(): void
+    private function instantSimulation(float $amount): InstantSimulation
     {
-        $this->expectException(ApiException::class);
-        $this->expectExceptionMessage('WI05');
+        return InstantSimulation::fromArray([
+            'validationStatus' => 'ACCP',
+            'simulationId' => '123456789',
+            'amount' => $amount,
+            'creditor' => ['iban' => self::X2, 'name' => 'Mr. Receiver'],
+            'vop' => ['rawResult' => 'MATCH'],
+        ]);
+    }
 
-        $this->client(self::X1)->ibanTools()->verify(self::X1);
+    private function sctPayment(float $amount, string $information, string $creditorIban, ?DateTimeImmutable $date = null): SctPayment
+    {
+        return new SctPayment('Paolo Bianchi', $creditorIban, $amount, $information, 'Mario Rossi', null, $date ?? new DateTimeImmutable('today'), self::E2E, 'CASH');
     }
 }

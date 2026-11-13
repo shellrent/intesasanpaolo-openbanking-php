@@ -65,7 +65,7 @@ final readonly class SctPayment
      * @param  string  $debtorName  Name of the payer, i.e. the account holder (max 70 characters).
      * @param  string|null  $debtorIban  IBAN of the payer; null for the IBAN of the client configuration.
      * @param  DateTimeInterface|null  $requestedExecutionDate  Execution date (its calendar date is used); null leaves it to the bank.
-     * @param  string|null  $endToEndId  Identifier chosen by the payer (max 35 characters); "" and "NOTPROVIDED" mean none.
+     * @param  string|null  $endToEndId  Identifier chosen by the payer (max 36 characters, e.g. a UUID); "" and "NOTPROVIDED" mean none.
      * @param  string  $categoryPurpose  ISO 20022 category purpose code, four uppercase letters (default CASH, as in 2.x).
      * @param  string  $currency  ISO 4217 currency code (default EUR).
      *
