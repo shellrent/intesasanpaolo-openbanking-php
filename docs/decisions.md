@@ -97,7 +97,7 @@ Un rilascio 2.2.0 con le sole correzioni urgenti (VoP, resubmit, date) è stato 
 Durante la riscrittura roadmap, finding e decisioni stavano nell'area temporanea `docs/v3/`, eliminata in T8 (D-60).
 
 ### D-15 · Finding lato consumer fuori da questo repo
-Il repo è pubblico: i problemi trovati nel gestionale interno (task T9) non si tracciano qui, ma nel repository del gestionale.
+Il repo è pubblico: i problemi trovati nelle applicazioni interne che usano la libreria (task T9) non si tracciano qui, ma nei loro repository.
 
 ### D-16 · `composer.lock` non versionato — T2
 Per una libreria il lock non ha effetto su chi la installa e darebbe una falsa garanzia. La CI prova invece sia le dipendenze minime sia le massime consentite.
@@ -360,4 +360,4 @@ La firma di `verify()` non cambia, perché codice fiscale e partita IVA si posso
 | T6 | API SCT, controlli di esecuzione condivisi, eliminazione del codice 2.x |
 | T7 | strumenti IBAN e raggiungibilità SCT Instant |
 | T8 | verifiche reali in sandbox e Live, suite di integrazione, rilascio 3.0.0 |
-| T9 | migrazione del gestionale, nel repository del gestionale (D-15) |
+| T9 | adozione della 3.0 nelle applicazioni interne: i pagamenti passano a una nuova applicazione, nata sulla 3.0, mentre il gestionale resta sulla 2.x per l'import dei movimenti (fuori da questo repo, D-15) |
