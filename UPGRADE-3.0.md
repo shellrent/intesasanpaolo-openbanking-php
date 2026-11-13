@@ -10,7 +10,7 @@ La 3.0 è una riscrittura e non è compatibile con la 2.x: la configurazione, le
 | Guzzle | tramite `php-http/guzzle7-adapter` | **`guzzlehttp/guzzle` ^7.15.2 o ^8.0.1**, dipendenza diretta |
 | Certificato mTLS | opzionale | **obbligatorio** |
 
-Con l'estensione PECL `psr` attiva serve Guzzle 7: le interfacce dell'estensione sono incompatibili con Guzzle 8.
+Con l'estensione PECL `psr` attiva serve Guzzle 7: le interfacce dell'estensione sono incompatibili con Guzzle 8. Phalcon 5 non richiede l'estensione (serviva a Phalcon 4): se nessun altro la usa, si può disattivare e usare Guzzle 8.
 
 ## Configurazione
 

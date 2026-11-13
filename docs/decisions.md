@@ -118,6 +118,8 @@ L'estensione PECL `psr` (1.2.0), presente in molti ambienti Phalcon, ridefinisce
 
 Decisione: il vincolo resta aperto anche a Guzzle 7 (D-06), il problema è documentato nel README e in `AGENTS.md`, e in locale l'analisi si esegue con un PHP senza l'estensione. Il codice 3.0 deve funzionare anche con le interfacce dell'estensione: il gestionale usa Phalcon e potrebbe girare con l'estensione attiva (in locale è presente).
 
+Verifica del 13/11/2026: l'estensione era richiesta da Phalcon 4, ma Phalcon 5 non la usa. Con Phalcon 5.23.0 compilato in un container PHP 8.3, senza `psr` Phalcon non dichiara dipendenze né interfacce PSR, Guzzle 8.4 (psr7 3.3) si carica e i test dell'SDK passano. Aggiungendo `psr` torna l'errore fatale. Il conflitto dipende quindi solo dall'estensione: con Phalcon 5 si può disattivarla, se nessun altro codice la usa, e passare a Guzzle 8.
+
 ### D-21 · Cache del token: interfaccia propria `TokenStore` — T3
 Il token si condivide tra istanze con un'interfaccia `Auth\TokenStore` di tre metodi (`get`, `put`, `forget`). La predefinita è `InMemoryTokenStore`; `AccessToken::toArray()` e `fromArray()` servono a chi la implementa su una cache esterna.
 - Alternative scartate: PSR-16, che porta una dipendenza esposta agli stessi conflitti dell'estensione PECL `psr` (D-20); nessuna cache, che lascerebbe un login per ogni istanza.

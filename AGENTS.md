@@ -55,7 +55,7 @@ La CI (GitHub Actions, `.github/workflows/ci.yml`) esegue i test su PHP 8.3, 8.4
 
 ### Ambiente locale: estensione PECL `psr`
 
-Se il PHP locale carica l'estensione PECL `psr`, spesso installata insieme a Phalcon (verificalo con `php -m | grep psr`), ci sono due conseguenze:
+Se il PHP locale carica l'estensione PECL `psr`, spesso rimasta installata dagli ambienti Phalcon 4 (verificalo con `php -m | grep psr`), ci sono due conseguenze. Phalcon 5 non la richiede (D-20):
 - **Guzzle 8 non funziona**: psr7 3.x è incompatibile con le interfacce definite dall'estensione e il caricamento di `GuzzleHttp\Psr7\Request` va in errore fatale. Con Guzzle 7 non ci sono problemi.
 - **PHPStan legge male i tipi PSR-7**: tutti i metodi di `Psr\Http\Message\*` risultano `mixed`.
 

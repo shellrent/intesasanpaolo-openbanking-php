@@ -27,11 +27,11 @@ Il dettaglio per endpoint è in [docs/api-coverage.md](docs/api-coverage.md).
 
 - PHP 8.3 o superiore (la 2.x richiede PHP 8.0), con estensione `json`.
 - Guzzle 7.15.2+ oppure Guzzle 8.0.1+.
-
-  > [!NOTE]
-  > Se il tuo PHP carica l'estensione PECL `psr` (frequente negli ambienti Phalcon), usa Guzzle 7: le interfacce dell'estensione sono incompatibili con Guzzle 8 (psr7 3.x).
 - Un'app registrata su SmartHub con le API necessarie attive, e le relative credenziali (client ID e client secret).
 - Il certificato di mutua autenticazione (mTLS), che si scarica dalla sezione *Certificates Management* dell'area riservata SmartHub.
+
+> [!NOTE]
+> **Estensione PECL `psr` e Guzzle 8.** Se il PHP carica l'estensione `psr` (`php -m | grep psr`), Guzzle 8 va in errore fatale, perché le interfacce PSR-7 dell'estensione sono incompatibili con psr7 3.x. L'estensione era richiesta da Phalcon 4, ma **Phalcon 5 non la usa** (verificato con Phalcon 5.23). Se nessun altro codice la usa, disattivala e potrai usare Guzzle 8; altrimenti resta su Guzzle 7, che funziona in entrambi i casi.
 
 ## Installazione
 
