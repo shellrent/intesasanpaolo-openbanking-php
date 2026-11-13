@@ -1,7 +1,11 @@
 # Intesa Sanpaolo Open Banking – PHP SDK
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/shellrent/intesasanpaolo-openbanking-php.svg?style=flat-square)](https://packagist.org/packages/shellrent/intesasanpaolo-openbanking-php)
-[![License](https://img.shields.io/packagist/l/shellrent/intesasanpaolo-openbanking-php.svg?style=flat-square)](LICENSE.md)
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/shellrent/intesasanpaolo-openbanking-php?style=flat-square)](https://packagist.org/packages/shellrent/intesasanpaolo-openbanking-php)
+[![PHP Version](https://img.shields.io/packagist/dependency-v/shellrent/intesasanpaolo-openbanking-php/php?style=flat-square)](https://packagist.org/packages/shellrent/intesasanpaolo-openbanking-php)
+[![CI](https://img.shields.io/github/actions/workflow/status/shellrent/intesasanpaolo-openbanking-php/ci.yml?branch=main&style=flat-square&label=CI)](https://github.com/shellrent/intesasanpaolo-openbanking-php/actions/workflows/ci.yml)
+[![PHPStan](https://img.shields.io/badge/PHPStan-level%20max-brightgreen?style=flat-square)](phpstan.neon.dist)
+[![Total Downloads](https://img.shields.io/packagist/dt/shellrent/intesasanpaolo-openbanking-php?style=flat-square)](https://packagist.org/packages/shellrent/intesasanpaolo-openbanking-php/stats)
+[![License](https://img.shields.io/packagist/l/shellrent/intesasanpaolo-openbanking-php?style=flat-square)](LICENSE.md)
 
 SDK PHP **non ufficiale** per le API [SmartHub](https://smarthub.intesasanpaolo.com/it/homepage/documenti-sviluppo.html) di Intesa Sanpaolo, dedicate a conti correnti e pagamenti delle aziende.
 
@@ -177,7 +181,10 @@ Questo progetto non è affiliato a Intesa Sanpaolo né approvato da Intesa Sanpa
 <!--special start-->
 <p>
   <a href="https://www.shellrent.com" target="_blank">
-      <img height="200" src="./docs/assets/shellrent.jpg">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="./docs/assets/shellrent-negative.png">
+      <img src="./docs/assets/shellrent.png" alt="Shellrent" width="320">
+    </picture>
   </a>
 </p>
 <!--special end-->
