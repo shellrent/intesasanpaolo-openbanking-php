@@ -195,6 +195,7 @@ Nelle liste dei pagamenti è presente solo in caso di remittance, altrimenti è 
 
 ### Q-25 Esito della simulazione SCT Instant (`validationStatus`)
 - Live, spec attuale: `ACSC` / `RJCT`.
+- Live, risposte reali: `ACCP`, con `transactionStatusDescription: "TxSts:ACCP-Prtry:"`, come in sandbox.
 - Sandbox: `ACCP` / `RJCT`.
 - Spec 2021: `ACCP accepted` / `RJCT rejected`.
 - Il gestionale gestisce anche `ACSC acquired`.
@@ -202,7 +203,7 @@ Nelle liste dei pagamenti è presente solo in caso di remittance, altrimenti è 
 Il valore può quindi contenere una descrizione dopo il codice: il codice è il primo token.
 - 3.0: `ValidationStatus::fromApi()` usa il primo token e tratta `ACSC` come `Accepted` (D-11).
 - La sandbox risponde `ACCP` e, sulle simulazioni rifiutate, `simulationId: ""`.
-- Fonti: `SPEC`, `SPEC-OLD`, `CONSUMER`, `SANDBOX`.
+- Fonti: `SPEC`, `SPEC-OLD`, `CONSUMER`, `LIVE`, `SANDBOX`.
 
 ### Q-26 Esito della simulazione SCT (`validationStatus`)
 `ACCP` / `RJCT`.
@@ -266,8 +267,9 @@ Riguarda `endToEndId` e `siaCode` per SCT Instant, e il solo `endToEndId` per SC
 - In sandbox i campi devono essere presenti, anche vuoti.
 - In Live, se vuoti, vanno omessi.
 - 3.0: lo stesso comportamento vale per simulazione ed esecuzione. Nell'esecuzione in sandbox la 2.x inviava `null` per un `endToEndId` mancante.
-- Quasi tutti i casi di test della sandbox usano come `endToEndId` un UUID di 36 caratteri, oltre il limite SEPA di 35, e la banca li accetta. La 3.0 ammette quindi 36 caratteri (D-56).
-- Fonti: `PROD` (commit `2bcbaea`, versione 1.1.2), `SANDBOX`.
+- Lunghezza: quasi tutti i casi di test della sandbox usano come `endToEndId` un UUID di 36 caratteri, e la sandbox li accetta. **Live invece accetta al massimo 35 caratteri**, il limite SEPA: con 36, qualunque sia il formato, la simulazione risponde HTTP 500 `TECHINCAL_EXCEPTION` `007` ("Error from SEIN0: DATI DI INPUT NON VALIDI … Campo: EndToEndId … Tipo di dato non valido"). Minuscole e trattini sono ammessi.
+- 3.0: l'`endToEndId` può avere fino a 36 caratteri, ma in Live l'SDK rifiuta prima dell'invio quelli oltre 35 (D-56).
+- Fonti: `PROD` (commit `2bcbaea`, versione 1.1.2), `LIVE`, `SANDBOX`.
 
 ### Q-35 `endToEndId` non fornito
 Quando non viene fornito un `endToEndId`, la banca restituisce `NOTPROVIDED` (oppure `NOT PROVIDED` negli esempi). Il gestionale lo tratta come valore assente.
@@ -287,18 +289,20 @@ Le simulazioni (SCT e SCT Instant, sia JSON sia ISO) restituiscono l'esito VoP i
 
 Esiti descritti dalla FAQ: MATCH, NO MATCH, CLOSE MATCH, NOT PARTIC, OUT OF SCOPE, NO APP, CHECK NOT POSSIBLE.
 
-Valori reali della sandbox, cioè le etichette della FAQ e non i codici ISO:
+Valori reali, in Live e in sandbox: sono le etichette della FAQ, non i codici ISO.
 
-| Caso | `vopMatchResult` | Altri header |
-|---|---|---|
-| match | `MATCH` | — |
-| close match | `CLOSE MATCH` | `vopMatchedName: Paolo Bianchi` |
-| verifica non possibile | `CHECK NOT POSSIBLE` | `vopResultDescription: NAMECHECK_01.000.A0000 - Generic Error` |
-| simulazione rifiutata | `null` (la stringa) | — |
+| Caso | `vopMatchResult` | Altri header | Dove |
+|---|---|---|---|
+| match | `MATCH` | — | Live (anche IBAN estero SEPA), sandbox |
+| close match | `CLOSE MATCH` | `vopMatchedName` con il nome registrato presso la banca del beneficiario | Live, sandbox |
+| nessuna corrispondenza | `NO MATCH` | — | Live |
+| verifica non possibile | `CHECK NOT POSSIBLE` | `vopResultDescription: NAMECHECK_01.000.A0000 - Generic Error` | sandbox |
+| simulazione rifiutata | `null` (la stringa) | — | sandbox |
 
-La 3.0 riconosce sia le etichette sia i codici ISO (`MTCH`, `CMTC`, `NMTC`, `NOAP`). I valori di Live non sono ancora verificati: serve una simulazione in Live, che va approvata a parte (D-55).
+In Live anche il nome esatto usato finora per un fornitore può dare `CLOSE MATCH`, se la banca lo ha registrato in modo diverso. La 3.0 riconosce sia le etichette sia i codici ISO (`MTCH`, `CMTC`, `NMTC`, `NOAP`).
 
-La risposta della simulazione riporta in `creditorName` il nome inviato, anche nel close match; il nome suggerito è solo nell'header `vopMatchedName` (`SANDBOX`). Su questo si basa il controllo del nome in `execute()` (D-62).
+La risposta della simulazione riporta in `creditorName` il nome inviato, anche nel close match e nel no match; il nome suggerito è solo nell'header `vopMatchedName`. In Live il nome può tornare in maiuscolo. Su questo si basa il controllo del nome in `execute()` (D-62), che ignora maiuscole e spazi.
+- Fonti dei valori: `LIVE` (simulazioni del 13/11/2026), `SANDBOX`.
 
 **Procedere con l'esecuzione equivale ad accettare l'esito VoP.** Per le persone giuridiche con un codice identificativo (es. TXID), se la verifica non è possibile si ripete la simulazione con la sola denominazione. La 2.x scarta gli header, quindi l'esito VoP non è disponibile.
 - 3.0: l'esito è in `VopResult` sulle simulazioni. `execute()` richiede `acceptVopResult: true` se l'esito non è un match pieno, anche quando manca (D-36).
@@ -309,8 +313,9 @@ La risposta della simulazione riporta in `creditorName` il nome inviato, anche n
 - `categoryPurpose` è opzionale; la 2.x invia sempre `CASH`.
 - `requestedExecutionDate` è opzionale; la 2.x la invia sempre.
 - 3.0: `SctPayment` ha come default `EUR` e `CASH`, entrambi configurabili. Senza data di esecuzione il campo viene omesso e decide la banca (la 2.x mandava sempre la data, e il gestionale passava quella del giorno).
-- In sandbox il comportamento senza data non è verificabile: il caso di test richiede la data, e senza la sandbox risponde `WI02` (Q-51). Resta da verificare con una simulazione in Live.
-- Fonti: `SPEC`, `PROD`, `SANDBOX`.
+- **Senza data la banca sceglie il giorno lavorativo successivo, non oggi.** In Live, venerdì alle 11:38 la simulazione senza data ha restituito esecuzione e valuta lunedì e regolamento martedì; con la data di oggi, esecuzione e valuta oggi e regolamento lunedì. Per eseguire in giornata si passa quindi la data di oggi.
+- In sandbox il comportamento senza data non è verificabile: il caso di test richiede la data, e senza la sandbox risponde `WI02` (Q-51).
+- Fonti: `SPEC`, `PROD`, `LIVE`, `SANDBOX`.
 
 ### Q-39 Caratteri ammessi
 Nei testi (nomi, causale) sono ammessi solo i caratteri SEPA del set Latin: `a-z A-Z 0-9 / - ? : ( ) . , ' +` e lo spazio.

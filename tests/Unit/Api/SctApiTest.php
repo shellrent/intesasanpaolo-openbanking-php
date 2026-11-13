@@ -101,6 +101,24 @@ final class SctApiTest extends TestCase
         self::assertSame('', $http->jsonBody(1)['endToEndId'] ?? null);
     }
 
+    /**
+     * Q-34, D-56: Live accepts at most 35 characters, also for the execution.
+     */
+    #[Test]
+    public function it_refuses_a_36_character_end_to_end_id_in_live(): void
+    {
+        $http = new MockHttp;
+        $payment = new SctPayment('Fornitore Esempio Srl', self::CREDITOR_IBAN, 1250, 'Fattura 2/2026', 'Example Srl', endToEndId: str_repeat('E', 36));
+
+        $this->expectException(InvalidRequestException::class);
+
+        try {
+            $this->api($http)->simulate($payment);
+        } finally {
+            self::assertSame(0, $http->count());
+        }
+    }
+
     #[Test]
     public function it_executes_a_simulation_with_a_full_vop_match(): void
     {

@@ -26,8 +26,8 @@ Riscrittura completa dell'SDK, con modifiche incompatibili con la 2.x: la guida 
   - `formalCheck()`, verifica sintattica degli IBAN Intesa Sanpaolo;
   - `verify()`, esistenza dell'IBAN e congruenza con codice fiscale o partita IVA (almeno uno obbligatorio), anche per le banche CBI Globe; un esito negativo è un risultato e non un'eccezione, anche quando arriva con `success: false`.
 - `sctInstant()->reachability()`: verifica se un IBAN può ricevere bonifici istantanei.
-- Richiesta `SctPayment`: valuta e `categoryPurpose` configurabili, data di esecuzione opzionale.
-- Richiesta `InstantPayment`, validata alla creazione (lunghezze SEPA, IBAN, importo con al massimo 2 decimali).
+- Richiesta `SctPayment`: valuta e `categoryPurpose` configurabili, data di esecuzione opzionale (senza data la banca esegue il giorno lavorativo successivo).
+- Richiesta `InstantPayment`, validata alla creazione (lunghezze SEPA, IBAN, importo con al massimo 2 decimali); l'`endToEndId` arriva a 35 caratteri in Live e a 36 in sandbox, come accettano i due ambienti.
 - Simulazioni salvabili e ricaricabili (`toArray()`/`fromArray()`).
 - Enum `ValidationStatus`, `PaymentStatus` (con `isAccepted()`/`isFinal()`), `InstantStatus` e `VopMatchResult`.
 - Helper `SepaText` per pulire i testi dai caratteri non ammessi dalla banca.

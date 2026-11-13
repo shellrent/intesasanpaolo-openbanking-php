@@ -74,6 +74,7 @@ final class SctInstantApi
      *
      * Nothing is paid. The result holds the simulation ID, valid for 5 minutes, and the VoP outcome.
      *
+     * @throws InvalidRequestException When the end-to-end ID is longer than Live accepts (35 characters).
      * @throws ApiException
      * @throws AuthenticationException
      * @throws TransportException
@@ -213,6 +214,10 @@ final class SctInstantApi
      */
     private function body(InstantPayment $payment): array
     {
+        if ($this->config->environment === Environment::Live) {
+            Validator::liveEndToEndId($payment->endToEndId);
+        }
+
         $body = [
             'debtorName' => $payment->debtorName,
             'debtorIBAN' => $payment->debtorIban ?? $this->config->iban,

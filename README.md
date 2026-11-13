@@ -45,25 +45,49 @@ composer require shellrent/intesasanpaolo-openbanking-php
 
 ### Certificato
 
-Il file `.p12` scaricato da SmartHub usa una cifratura legacy (RC2-40) che OpenSSL 3 non legge. Senza conversione la richiesta fallisce con `cURL error 58: could not parse PKCS12 file`, anche se la passphrase è giusta. Basta convertirlo una volta, scegliendo uno dei due formati:
+Dalla funzione *Certificates Management* di SmartHub si scarica un file **PKCS#12** (`.p12`, certificato e chiave privata insieme) con la sua passphrase. Il certificato vale un anno, è lo stesso per Live e sandbox, e se ne possono avere al massimo due attivi: al rinnovo si ripete la stessa procedura.
+
+**1. Verifica se il tuo PHP lo legge.** Il `.p12` di SmartHub usa una cifratura legacy (RC2-40) che **OpenSSL 3** non legge, e PHP/cURL usano l'OpenSSL del sistema:
 
 ```bash
-# PKCS#12 con cifratura moderna (AES-256): chiede la passphrase attuale e quella nuova
+php -r 'echo curl_version()["ssl_version"], PHP_EOL;'   # es. "OpenSSL/3.0.13": serve la conversione
+openssl pkcs12 -in certificato.p12 -noout                # con OpenSSL 3: errore "unsupported … RC2-40-CBC"
+```
+
+Con OpenSSL 3 il `.p12` originale non funziona: la richiesta fallisce con `cURL error 58: could not parse PKCS12 file`, anche se la passphrase è giusta.
+
+**2. Scegli come usarlo:**
+
+| Cosa hai | Cosa fare | Configurazione |
+|---|---|---|
+| `.p12` di SmartHub, PHP con OpenSSL 1.1 | niente | `MutualTlsCertificate::pkcs12('/path/certificato.p12', 'passphrase')` |
+| `.p12` di SmartHub, PHP con OpenSSL 3 (il caso più comune) | convertirlo una volta, in uno dei due formati qui sotto | vedi sotto |
+| certificato e chiave privata già in PEM (file separati) | niente | `MutualTlsCertificate::pem('/path/certificato.pem', '/path/chiave.pem', 'passphrase della chiave')`, senza passphrase se la chiave non è cifrata |
+| file `.pfx` | è un PKCS#12: rinominalo in `.p12`, perché Guzzle riconosce il tipo dall'estensione | come per il `.p12` |
+
+Conversione in un **PKCS#12 con cifratura moderna** (AES-256), la più semplice: resta un solo file con passphrase.
+
+```bash
+# chiede la passphrase attuale e poi quella del nuovo file
 openssl pkcs12 -legacy -in certificato.p12 -nodes | openssl pkcs12 -export -out certificato-aes.p12
 ```
 
+```php
+MutualTlsCertificate::pkcs12('/path/certificato-aes.p12', 'passphrase del nuovo file');
+```
+
+Oppure conversione in **PEM**, con certificato e chiave privata in due file:
+
 ```bash
-# oppure PEM: certificato e chiave privata cifrata in due file
 openssl pkcs12 -legacy -in certificato.p12 -clcerts -nokeys -out certificato.pem
-openssl pkcs12 -legacy -in certificato.p12 -nocerts -out chiave.pem
+openssl pkcs12 -legacy -in certificato.p12 -nocerts -out chiave.pem   # chiave cifrata: chiede una passphrase
 ```
 
 ```php
-MutualTlsCertificate::pkcs12('/path/certificato-aes.p12', 'passphrase');
 MutualTlsCertificate::pem('/path/certificato.pem', '/path/chiave.pem', 'passphrase della chiave');
 ```
 
-Il file convertito contiene la chiave privata: va protetto come l'originale (permessi `600`, mai nel repository).
+Aggiungendo `-nodes` al secondo comando la chiave viene salvata in chiaro, e nella configurazione si omette la passphrase. In ogni formato il file con la chiave privata va protetto come l'originale: permessi `600`, mai nel repository.
 
 ## Verification of Payee (VoP)
 

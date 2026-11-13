@@ -223,7 +223,7 @@ L'`endToEndId` `NOTPROVIDED` restituito dalla banca, con o senza spazi, diventa 
 
 ### D-45 · Default della richiesta SCT — T6
 - `SctPayment` usa `EUR` e `CASH` come default (il `CASH` era fisso nella 2.x), entrambi configurabili e validati come codici: ISO 4217 a 3 lettere, ISO 20022 a 4 lettere.
-- `requestedExecutionDate` è opzionale: senza data il campo non viene inviato, come prevede la spec. La 2.x lo inviava sempre. In sandbox l'effetto dell'omissione non è verificabile (Q-38): resta da verificare con una simulazione in Live.
+- `requestedExecutionDate` è opzionale: senza data il campo non viene inviato, come prevede la spec. La 2.x lo inviava sempre. In Live, senza data la banca fissa l'esecuzione al giorno lavorativo successivo (Q-38): per eseguire in giornata si passa la data di oggi.
 - `CurrencySet` viene eliminato: era incompleto e superfluo, perché l'SCT è solo in EUR.
 
 ### D-46 · Quirk SCT mantenuti — T6
@@ -279,8 +279,8 @@ Punti da verificare:
 Esito delle verifiche del 12/11/2026, con la 3.0 (dettagli in [api-quirks.md](api-quirks.md), fonti `LIVE` e `SANDBOX`):
 - Live, sola lettura: saldo, movimenti di oggi e di fine giornata, liste SCT e SCT Instant, stato SCT per CRO, ID pagamento ed end-to-end ID, raggiungibilità di IBAN italiani ed esteri. Tutto funziona.
 - Sandbox: casi di test di saldo, movimenti, simulazioni con esito VoP, esecuzioni, stati, liste, revoca, strumenti IBAN e raggiungibilità.
-- Valori dell'header VoP: etichette della FAQ in sandbox; Live da verificare con una simulazione, che richiede un'approvazione a parte.
-- SCT senza `requestedExecutionDate`: non verificabile in sandbox, che ha solo il caso con la data.
+- Valori dell'header VoP: etichette della FAQ, in sandbox e in Live (`MATCH`, `CLOSE MATCH`, `NO MATCH`), verificate in Live il 13/11/2026 con sole simulazioni, approvate dal maintainer (Q-37).
+- SCT senza `requestedExecutionDate`: in Live la banca sceglie il giorno lavorativo successivo (Q-38).
 - `nextPage` dei movimenti: in sandbox arriva già completo di `date`; in Live non c'era una giornata con più di 200 movimenti.
 - `localhost:8081`: non si riesce a ottenere un link di questo tipo dalla sandbox (Q-44).
 - Formal-check: in sandbox i campi sono stringhe (Q-19).
@@ -288,11 +288,12 @@ Esito delle verifiche del 12/11/2026, con la 3.0 (dettagli in [api-quirks.md](ap
 - Strumenti IBAN in Live (13/11/2026, dopo l'abilitazione sull'app OAuth di produzione): il formal-check risponde solo per gli IBAN ISP e non verifica l'esistenza (Q-52); `chargeabilityMulti` richiede codice fiscale o partita IVA (D-64) e conferma in Live gli esiti negativi con `success: false` (D-58).
 - Nuovi quirk e correzioni: certificato PKCS#12 (Q-48), millisecondi (Q-49), stringa `"null"` (Q-50, D-57), esiti negativi con `success: false` (D-58), sandbox a casi di test fissi (Q-51).
 
-### D-56 · `endToEndId` di al massimo 36 caratteri — T8
-Quasi tutti i casi di test di simulazione ed esecuzione della sandbox usano come `endToEndId` un UUID di 36 caratteri, e la banca li accetta. Il limite dell'SDK passa quindi da 35, il massimo SEPA (ISO 20022 `Max35Text`), a 36: ci si basa sul comportamento osservato più che sulla norma, e un valore che la banca non accetta viene comunque rifiutato in simulazione, prima di qualsiasi esecuzione. Con questo limite la suite di integrazione copre anche i casi di simulazione ed esecuzione della sandbox.
-- In Live il comportamento con 36 caratteri non è verificato.
-- Alternativa scartata: mantenere 35 caratteri, che avrebbe escluso i casi di test della banca.
-- Decisione del maintainer.
+### D-56 · `endToEndId`: 35 caratteri in Live, 36 in sandbox — T8
+Quasi tutti i casi di test di simulazione ed esecuzione della sandbox usano come `endToEndId` un UUID di 36 caratteri, e la sandbox li accetta. Il maintainer ha deciso di basarsi sulle prove: le simulazioni in Live hanno poi mostrato che Live accetta al massimo 35 caratteri, il limite SEPA, e risponde HTTP 500 a 36 caratteri (Q-34). Quindi:
+- le richieste ammettono fino a 36 caratteri, così la suite di integrazione copre i casi di simulazione ed esecuzione della sandbox;
+- in Live l'SDK rifiuta un `endToEndId` oltre 35 caratteri con un'`InvalidRequestException`, prima dell'invio: un errore 500 su un'esecuzione renderebbe l'esito sconosciuto.
+- Alternative scartate: 35 ovunque, che escluderebbe i casi di test della sandbox; 36 ovunque, che in Live darebbe un errore 500.
+- Decisione del maintainer ("basarsi sulle prove"), applicata alle evidenze di entrambi gli ambienti.
 
 ### D-57 · La stringa `"null"` come valore assente — T8
 `Payload` e la lettura degli header trattano la stringa `"null"` come `null` e la stringa vuota (Q-50). La sandbox la usa nell'esecuzione `VRFY` e nell'header `vopMatchResult` delle simulazioni rifiutate. Senza questa regola l'esecuzione lanciava un'`UnexpectedResponseException` sulla data dopo che il bonifico era già partito. Un valore reale `"null"` (per esempio un nome) non è plausibile.
@@ -323,7 +324,7 @@ Le risposte di `execute()` e `resubmit()` (`InstantExecution`, `SctExecution`) s
 
 ### D-62 · Il nome del creditore deve corrispondere alla simulazione — T8
 L'esito VoP vale per il nome simulato. `PaymentGuard` confronta quindi anche il nome del creditore della richiesta con quello riportato dalla simulazione, oltre a IBAN e importo (D-40). Se sono diversi, `execute()` lancia un'`InvalidRequestException` e non invia nulla. Il confronto ignora maiuscole, spazi multipli e caratteri non SEPA, traslitterati con `SepaText::sanitize()`, così una normalizzazione della banca non blocca un pagamento corretto.
-- In sandbox la simulazione riporta il nome inviato anche nel close match, mentre il nome suggerito sta solo nell'header (Q-37). Per pagare con il nome suggerito si simula di nuovo.
+- In sandbox e in Live la simulazione riporta il nome inviato anche nel close match, mentre il nome suggerito sta solo nell'header (Q-37). In Live il nome può tornare in maiuscolo: il confronto lo ignora, verificato sulle risposte reali. Per pagare con il nome suggerito si simula di nuovo.
 - Emerso dalla revisione finale del codice. Decisione del maintainer.
 
 ### D-63 · Trasporto più difensivo — T8

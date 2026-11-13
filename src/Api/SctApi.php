@@ -59,6 +59,7 @@ final class SctApi
      * Checks the feasibility of the payment, including the Verification of Payee, and returns the planned
      * dates and fees. Nothing is paid; the simulation ID is valid for 5 minutes.
      *
+     * @throws InvalidRequestException When the end-to-end ID is longer than Live accepts (35 characters).
      * @throws ApiException
      * @throws AuthenticationException
      * @throws TransportException
@@ -203,6 +204,10 @@ final class SctApi
      */
     private function body(SctPayment $payment): array
     {
+        if ($this->config->environment === Environment::Live) {
+            Validator::liveEndToEndId($payment->endToEndId);
+        }
+
         $body = [
             'debtorName' => $payment->debtorName,
             'debtorIban' => $payment->debtorIban ?? $this->config->iban,

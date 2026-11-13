@@ -88,6 +88,30 @@ final class SctInstantApiTest extends TestCase
         self::assertSame(['endToEndId' => '', 'siaCode' => ''], array_intersect_key($http->jsonBody(1), ['endToEndId' => 0, 'siaCode' => 0]));
     }
 
+    /**
+     * Q-34, D-56: Live answers HTTP 500 to a 36-character end-to-end ID; only the sandbox accepts it.
+     */
+    #[Test]
+    public function it_refuses_a_36_character_end_to_end_id_in_live_only(): void
+    {
+        $uuid = '4271ce32-ba61-41cb-954a-25cf762e9621';
+        $live = new MockHttp;
+
+        try {
+            $this->api($live)->simulate($this->payment(endToEndId: $uuid));
+            self::fail('InvalidRequestException was not thrown');
+        } catch (InvalidRequestException $exception) {
+            self::assertStringContainsString('at most 35 characters long in Live', $exception->getMessage());
+        }
+
+        self::assertSame(0, $live->count(), 'Nothing was sent');
+
+        $sandbox = new MockHttp(MockHttp::token(), $this->simulationResponse('MTCH'));
+        $this->api($sandbox, Environment::Sandbox)->simulate($this->payment(endToEndId: $uuid));
+
+        self::assertSame($uuid, $sandbox->jsonBody(1)['endToEndId'] ?? null);
+    }
+
     #[Test]
     public function it_sends_the_optional_fields_when_given(): void
     {

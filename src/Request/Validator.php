@@ -24,8 +24,13 @@ final class Validator
 
     public const int MAX_PAYMENT_INFORMATION_LENGTH = 140;
 
-    // SEPA allows 35 characters, but the bank accepts the 36-character UUIDs of its own test cases (D-56).
+    /**
+     * The sandbox accepts the 36-character UUIDs of its own test cases; Live accepts at most 35, the SEPA
+     * maximum, and answers HTTP 500 to a longer one (docs/api-quirks.md, Q-34; D-56).
+     */
     public const int MAX_END_TO_END_ID_LENGTH = 36;
+
+    public const int MAX_LIVE_END_TO_END_ID_LENGTH = 35;
 
     /**
      * Amounts are compared in cents with this tolerance, to absorb float errors such as 0.1 + 0.2.
@@ -89,6 +94,19 @@ final class Validator
         }
 
         return $value;
+    }
+
+    /**
+     * Applies the Live limit of the end-to-end ID, before the request is sent.
+     */
+    public static function liveEndToEndId(?string $value): void
+    {
+        if ($value !== null && self::length($value, 'end-to-end ID') > self::MAX_LIVE_END_TO_END_ID_LENGTH) {
+            throw new InvalidRequestException(sprintf(
+                'The end-to-end ID must be at most %d characters long in Live (36 are accepted only by the sandbox).',
+                self::MAX_LIVE_END_TO_END_ID_LENGTH,
+            ));
+        }
     }
 
     /**

@@ -134,7 +134,7 @@ Nella 2.x i campi testuali assenti diventavano stringhe vuote; nella 3.0 sono `n
 - **Controlli sulla simulazione**: `execute()` rifiuta una simulazione non accettata, o fatta per un altro IBAN, un altro nome del creditore o un altro importo (`InvalidRequestException`). Per pagare con il nome suggerito da un close match si simula di nuovo.
 - **Validazione della richiesta**:
   - campi obbligatori;
-  - nomi al massimo 70 caratteri, causale 140, `endToEndId` 36 (per esempio un UUID);
+  - nomi al massimo 70 caratteri, causale 140, `endToEndId` 35 in Live (36 sono accettati solo dalla sandbox);
   - IBAN validi;
   - importo positivo con al massimo 2 decimali.
 
@@ -172,7 +172,7 @@ Nella 2.x i metodi avevano il suffisso "Delayed"; nella 3.0 l'area si chiama `sc
 
 - **Stesse regole dell'SCT Instant**: blocco VoP in `execute()`, controllo che la simulazione appartenga al pagamento, validazione della richiesta, simulazione salvabile.
 - **`categoryPurpose` configurabile**: nella 2.x era sempre `CASH`, che resta il default.
-- **Data di esecuzione opzionale**: senza data il campo non viene inviato. La 2.x la richiedeva sempre e andava in `TypeError` se mancava. Per mantenere il comportamento del gestionale si passa la data di oggi.
+- **Data di esecuzione opzionale**: senza data il campo non viene inviato. La 2.x la richiedeva sempre e andava in `TypeError` se mancava. **Senza data la banca esegue il giorno lavorativo successivo**: per eseguire in giornata, come faceva il gestionale, si passa la data di oggi.
 - **Date `d/m/Y` corrette**: nella 2.x `getExecutionDate()` scambiava giorno e mese per i giorni da 1 a 12.
 - **Stato per `endToEndId` e `simulationId`**: utile per ricostruire l'esito dopo un errore di rete.
 

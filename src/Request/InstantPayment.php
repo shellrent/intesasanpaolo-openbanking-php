@@ -42,7 +42,7 @@ final readonly class InstantPayment
      * @param  string  $paymentInformation  Payment reason (max 140 characters).
      * @param  string  $debtorName  Name of the payer, i.e. the account holder (max 70 characters).
      * @param  string|null  $debtorIban  IBAN of the payer; null for the IBAN of the client configuration.
-     * @param  string|null  $endToEndId  Identifier chosen by the payer (max 36 characters, e.g. a UUID); "" and "NOTPROVIDED" mean none.
+     * @param  string|null  $endToEndId  Identifier chosen by the payer: at most 35 characters in Live, 36 in the sandbox; "" and "NOTPROVIDED" mean none.
      * @param  string|null  $siaCode  SIA code of the company, for CBI customers.
      *
      * @throws InvalidRequestException
