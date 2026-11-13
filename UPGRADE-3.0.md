@@ -134,7 +134,7 @@ Nella 2.x i campi testuali assenti diventavano stringhe vuote; nella 3.0 sono `n
 - **Controlli sulla simulazione**: `execute()` rifiuta una simulazione non accettata, o fatta per un altro IBAN, un altro nome del creditore o un altro importo (`InvalidRequestException`). Per pagare con il nome suggerito da un close match si simula di nuovo.
 - **Validazione della richiesta**:
   - campi obbligatori;
-  - nomi al massimo 70 caratteri, causale 140, `endToEndId` 35;
+  - nomi al massimo 70 caratteri, causale 140, `endToEndId` 36 (per esempio un UUID);
   - IBAN validi;
   - importo positivo con al massimo 2 decimali.
 
@@ -202,13 +202,13 @@ Nella 2.x non c'erano. Nella 3.0:
 
 | API | Metodo | Risultato |
 |---|---|---|
-| Verifica sintattica | `ibanTools()->formalCheck($iban)` | `IbanFormalCheck`: `isValid()`, `countryCode`, `checkDigits`, `bankCode`, `bankAgency`, `account`, `bban` |
-| Esistenza dell'IBAN | `ibanTools()->verify($iban)` | `IbanVerification`: `isAllowed()`, `additionalInfo`, `isTransferred()` |
-| Congruenza con l'intestatario | `ibanTools()->verify($iban, fiscalCode: …, vatNumber: …)` | come sopra |
+| Esistenza e congruenza con l'intestatario | `ibanTools()->verify($iban, fiscalCode: …, vatNumber: …)`, almeno uno dei due | `IbanVerification`: `isAllowed()`, `additionalInfo`, `isTransferred()` |
+| Verifica sintattica, solo IBAN Intesa Sanpaolo | `ibanTools()->formalCheck($iban)` | `IbanFormalCheck`: `isValid()`, `countryCode`, `checkDigits`, `bankCode`, `bankAgency`, `account`, `bban` |
 | Raggiungibilità SCT Instant | `sctInstant()->reachability($iban)` | `InstantReachability`: `isReachable()`, `status`, `bic` |
 
 Note:
-- **IBAN non valido**: `formalCheck()` lo invia comunque, e il risultato è `isValid()` falso, non un'eccezione.
-- **Input malformati**: `verify()` e `reachability()` rifiutano prima della chiamata IBAN, codici fiscali e partite IVA malformati.
+- **Formal-check**: in Live risponde solo per gli IBAN Intesa Sanpaolo e non verifica l'esistenza del conto; per gli altri IBAN la banca risponde con un errore (`ApiException`, codice `WI01`).
+- **Input malformati**: `verify()` e `reachability()` rifiutano prima della chiamata IBAN, codici fiscali e partite IVA malformati, e `verify()` senza codice fiscale né partita IVA.
+- **Errori**: un IBAN estero (`WI03`) o di una banca non aderente al servizio (`CHK-IBAN_01.001.A0014`) danno un'`ApiException`.
 - **Esito negativo**: è un risultato (`isAllowed()` falso), non un'eccezione, anche quando la banca risponde `success: false`.
-- **Esistenza**: che si verifichi con `chargeabilityMulti` e il solo IBAN è una deduzione dalla documentazione (D-51, in `docs/decisions.md`). La sandbox richiede codice fiscale o partita IVA; in Live va confermato.
+- **Esistenza**: non c'è una verifica con il solo IBAN, perché l'API la rifiuta. Un conto inesistente risulta da `verify()` come esito negativo (D-64, in `docs/decisions.md`).

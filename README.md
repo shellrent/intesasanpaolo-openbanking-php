@@ -15,7 +15,7 @@ SDK PHP **non ufficiale** per le API [SmartHub](https://smarthub.intesasanpaolo.
 | Conti | saldo, movimenti di fine giornata e intraday | ✅ | ✅ |
 | SCT Instant | simulazione (con esito VoP), esecuzione, resubmit, stato, lista | ✅ | ✅ |
 | SCT (bonifico ordinario) | simulazione (con esito VoP), esecuzione, stato, lista, revoca | ✅ | ✅ |
-| Strumenti | verifica IBAN (sintattica, esistenza, congruenza CF/P.IVA), raggiungibilità SCT Instant | — | ✅ |
+| Strumenti | verifica IBAN (sintattica per IBAN ISP, esistenza e congruenza con CF/P.IVA), raggiungibilità SCT Instant | — | ✅ |
 
 Il dettaglio per endpoint è in [docs/api-coverage.md](docs/api-coverage.md).
 
@@ -120,9 +120,8 @@ $execution = $client->sctInstant()->execute($payment, $simulation);   // con VoP
 Verifiche IBAN, utili prima di un bonifico:
 
 ```php
-$client->ibanTools()->formalCheck('IT…')->isValid();                            // formato
-$client->ibanTools()->verify('IT…')->isAllowed();                               // esistenza
-$client->ibanTools()->verify('IT…', vatNumber: '01234567890')->isAllowed();     // intestatario (CF o P.IVA)
+$client->ibanTools()->verify('IT…', vatNumber: '01234567890')->isAllowed();     // esiste ed è dell'intestatario (CF o P.IVA obbligatori)
+$client->ibanTools()->formalCheck('IT…')->isValid();                            // scomposizione, solo IBAN Intesa Sanpaolo
 $client->sctInstant()->reachability('IT…')->isReachable();                      // istantaneo possibile?
 ```
 

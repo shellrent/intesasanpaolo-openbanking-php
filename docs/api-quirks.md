@@ -147,16 +147,28 @@ I campi della risposta sono `isReachable`, `IBAN_Status` e `BIC`, con le maiusco
 ### Q-19 Verifica sintattica IBAN: campi "numerici"
 `checkDigits`, `bankCode`, `bankAgency` e `account` sono dichiarati `number`, ma sono stringhe con zeri iniziali o lettere (es. `"03069"`, `"XTESTCASEX1"`): vanno trattati come stringhe.
 - 3.0: `IbanFormalCheck` espone queste parti come stringhe. Se l'API le inviasse come numeri, gli zeri iniziali andrebbero persi: il `bban` resta il riferimento completo.
-- In sandbox arrivano come stringhe (`"checkDigits": "04"`, `"bankCode": "03069"`).
-- Fonti: `SPEC`, `WEB`, `SANDBOX`.
+- In sandbox e in Live arrivano come stringhe (`"checkDigits": "04"`, `"bankCode": "03069"`).
+- Fonti: `SPEC`, `WEB`, `LIVE`, `SANDBOX`.
 
 ### Q-20 `chargeabilityMulti`: esito
 La spec restituisce `allowed` e `additionalInfo`. La pagina SmartHub mostra invece `IsAllowed`/`isAllowed`, con valore stringa `"true"`: l'esito va letto in modo tollerante.
 - `additionalInfo` vale `AC15` se il conto è stato trasferito: esito OK se è rimasto nel gruppo ISP con nuove coordinate, KO se è passato a un'altra banca.
-- In sandbox alcuni esiti negativi arrivano con HTTP 200 e `success: false`, senza `errors`, ma con l'esito nel `payload`: per esempio `{"isAllowed": false, "additionalInfo": "… vatNumber is mandatory for companies accounts"}` oppure `"vatNumber is not associated with the input iban"`. La spec li elenca tra i casi di test con risposta 200. Gli esiti positivi e gli altri negativi arrivano con `success: true`.
-- Senza codice fiscale né partita IVA la sandbox risponde `WI05` (Q-51).
-- 3.0: `IbanToolsApi::verify()` legge `allowed`, `isAllowed` e `IsAllowed`, anche come stringa `"true"`, più `ibanType`. `IbanVerification::isTransferred()` riconosce `AC15`. Una risposta con `success: false`, un `payload` e nessun errore è un esito negativo, non un errore. Con il solo IBAN è la verifica di esistenza (D-51).
-- Fonti: `SPEC`, `WEB`, `SANDBOX`.
+- **Codice fiscale o partita IVA sono obbligatori**, anche se la spec li dichiara opzionali: con il solo IBAN sia Live sia sandbox rispondono HTTP 400 `WI05` ("At least one field among fiscalCode and vatNumber must be present"). Non esiste quindi una verifica di esistenza con il solo IBAN (D-64).
+- Alcuni esiti negativi arrivano con HTTP 200 e `success: false`, senza `errors`, ma con l'esito nel `payload`, in Live e in sandbox: per esempio `{"isAllowed": false, "additionalInfo": "vatNumber is not associated with the input IBAN"}` oppure `"… vatNumber is mandatory for companies accounts"`. La spec li elenca tra i casi di test con risposta 200. Gli esiti positivi e gli altri negativi arrivano con `success: true`.
+- Esiti osservati in Live (12/11/2026, IBAN di fornitori):
+
+  | Caso | Risposta |
+  |---|---|
+  | intestatario corretto, ISP o altra banca aderente | `isAllowed: true`, `"The customer is allowed to operate on this account"`, a volte con il suffisso `" - Titolare"`; `ibanType: "account"` oppure assente |
+  | partita IVA di un altro intestatario | `isAllowed: false`, `"The customer is NOT allowed to operate on this account"` |
+  | partita IVA su un conto ISP intestato con il codice fiscale | `success: false`, `isAllowed: false`, `"vatNumber is not associated with the input IBAN"`; con il codice fiscale lo stesso conto risulta `isAllowed: true` |
+  | conto ISP inesistente (IBAN formalmente valido) | `isAllowed: false`, `"Not an ISP account"` |
+  | IBAN estero | HTTP 400 `WI03` "Functionality limited to Current Accounts Italy" |
+  | banca non aderente al servizio | HTTP 404 `NOT_FOUND_EXCEPTION` `CHK-IBAN_01.001.A0014` "Service provider not active for the service" |
+
+- Per un conto intestato a una persona fisica (anche con partita IVA) conviene quindi provare anche il codice fiscale.
+- 3.0: `IbanToolsApi::verify()` richiede codice fiscale o partita IVA, legge `allowed`, `isAllowed` e `IsAllowed`, anche come stringa `"true"`, più `ibanType`. `IbanVerification::isTransferred()` riconosce `AC15`. Una risposta con `success: false`, un `payload` e nessun errore è un esito negativo, non un errore; IBAN esteri e banche non aderenti restano un'`ApiException`.
+- Fonti: `SPEC`, `WEB`, `LIVE`, `SANDBOX`.
 
 ## Campi assenti o nulli
 
@@ -254,7 +266,7 @@ Riguarda `endToEndId` e `siaCode` per SCT Instant, e il solo `endToEndId` per SC
 - In sandbox i campi devono essere presenti, anche vuoti.
 - In Live, se vuoti, vanno omessi.
 - 3.0: lo stesso comportamento vale per simulazione ed esecuzione. Nell'esecuzione in sandbox la 2.x inviava `null` per un `endToEndId` mancante.
-- Quasi tutti i casi di test della sandbox usano come `endToEndId` un UUID di 36 caratteri, oltre il limite SEPA di 35. La 3.0 mantiene il limite (D-56), quindi quei casi non si possono eseguire con l'API pubblica dell'SDK.
+- Quasi tutti i casi di test della sandbox usano come `endToEndId` un UUID di 36 caratteri, oltre il limite SEPA di 35, e la banca li accetta. La 3.0 ammette quindi 36 caratteri (D-56).
 - Fonti: `PROD` (commit `2bcbaea`, versione 1.1.2), `SANDBOX`.
 
 ### Q-35 `endToEndId` non fornito
@@ -380,7 +392,17 @@ Alcune risposte serializzano i valori mancanti come stringa `"null"`, per esempi
 
 ### Q-51 La sandbox è un mock a casi di test fissi
 La sandbox non simula un conto: risponde solo agli input esatti dei casi di test della spec (IBAN `…XTESTXCASEX…`, importi, nomi, date, `limit`). Ogni altra richiesta riceve HTTP 403 con `WRONG_INPUT_EXCEPTION` e codice `WI02` ("The query parameter aren't included in the test case"). Le date delle risposte sono quelle del giorno.
-- `chargeabilityMulti` senza codice fiscale né partita IVA risponde `WI05` ("At least one field among fiscalCode and vatNumber must be present"): vedi D-51.
+- `chargeabilityMulti` senza codice fiscale né partita IVA risponde `WI05`, come in Live (Q-20).
 - Alcuni casi di test sono rotti: saldo e movimenti di fine giornata di `IT04G0306901000XTESTXCASEX1` al 30/11/2017 rispondono HTTP 500 `G000`.
 - Per questo i test di integrazione in sandbox usano i dati dei casi di test, e non i propri IBAN.
 - Fonte: `SANDBOX`.
+
+### Q-52 Verifica sintattica IBAN: solo conti Intesa Sanpaolo
+In Live `formal-check` non è una verifica sintattica generica: risponde solo per gli IBAN Intesa Sanpaolo (ABI `03069`), scomponendoli nelle loro parti, e non controlla che il conto esista. Un IBAN ISP formalmente valido ma inesistente risulta `isValid: true`.
+- IBAN di un'altra banca italiana: HTTP 400 `WI01` "Not an ISP account. Information not available.".
+- IBAN estero: HTTP 400 `WI01` "Invalid parameter: IBAN".
+- IBAN in formato ISP con cifre di controllo sbagliate: HTTP 500 `APPLICATION_EXCEPTION` `A00`.
+- Non è mai stato osservato `isValid: false`.
+- Le spec "Validazione sintattica IBAN" e "Verifica esistenza IBAN" sono identiche (specs-reference.md): a catalogo SmartHub i prodotti sono due, verifica sintattica e verifica di esistenza, ma l'attivazione ha aggiunto all'app tre API, di cui due uguali. L'esistenza e la congruenza con l'intestatario si verificano con `chargeabilityMulti` (Q-20).
+- 3.0: `formalCheck()` invia l'IBAN così com'è e lascia gli errori all'API (D-53).
+- Fonte: `LIVE`.

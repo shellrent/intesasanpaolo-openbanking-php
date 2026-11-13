@@ -195,7 +195,7 @@ Il link `nextPage` è documentato con il solo `offsetid`, ma `date` è obbligato
 - Decisione del maintainer. Risolve la codifica non deterministica degli importi della 2.x (`0.1 + 0.2` inviato come `0.30000000000000004`).
 
 ### D-39 · Testi: solo lunghezze, più l'helper `SepaText` — T5
-L'SDK controlla i campi obbligatori e le lunghezze SEPA: nomi 70 caratteri, causale 140, `endToEndId` 35. Le lunghezze si contano in caratteri UTF-8, non in byte. I caratteri si inviano così come sono, come nella 2.x, che funziona in produzione con lettere accentate.
+L'SDK controlla i campi obbligatori e le lunghezze SEPA: nomi 70 caratteri, causale 140, `endToEndId` 35 (portato a 36 in T8, D-56). Le lunghezze si contano in caratteri UTF-8, non in byte. I caratteri si inviano così come sono, come nella 2.x, che funziona in produzione con lettere accentate.
 - `Support\SepaText` (pubblico) offre `isValid()` e `sanitize()`. `sanitize()` traslittera le lettere accentate, converte `&` in `+` e gli apostrofi tipografici in `'`, e rimuove gli altri caratteri non ammessi.
 - La documentazione avverte che modificare il nome del creditore può cambiare l'esito VoP.
 - Decisione del maintainer.
@@ -248,12 +248,14 @@ Con l'SCT riscritto sono stati eliminati `Legacy\IntesaSanPaoloClient`, `Models/
 ### D-51 · "Verifica esistenza IBAN" tramite `chargeabilityMulti` — T7
 La spec scaricata per "Verifica esistenza IBAN" è una copia del formal-check, e il portale non dà altre indicazioni. L'esistenza si verifica quindi con `chargeabilityMulti` passando il solo IBAN (`ibanTools()->verify($iban)`): la sua descrizione dice "Check IBAN existence in addition to verification of IBAN holder", e codice fiscale e partita IVA sono opzionali. In sandbox la chiamata senza codice fiscale né partita IVA è rifiutata (`WI05`, Q-51): va confermata in Live (D-55).
 - Decisione del maintainer.
+- **Superata da D-64**: le verifiche in Live hanno mostrato che anche in produzione il solo IBAN viene rifiutato.
 
 ### D-52 · Raggiungibilità Instant in `sctInstant()` — T7
 La verifica di raggiungibilità SCT Instant è `sctInstant()->reachability()` e non sta negli strumenti IBAN: risponde alla domanda "posso pagare questo IBAN in istantaneo?" e precede la simulazione Instant. Gli strumenti IBAN (`ibanTools()`) non dipendono dal conto configurato.
 
 ### D-53 · Formal-check senza rifiuto locale — T7
-`formalCheck()` normalizza l'IBAN (spazi, maiuscole) ma non lo valida da sé: un IBAN non valido è un esito dell'API (`isValid()` falso), non un'eccezione. Gli altri metodi che ricevono un IBAN lo validano prima della chiamata.
+`formalCheck()` normalizza l'IBAN (spazi, maiuscole) ma non lo valida da sé: decide l'API. Gli altri metodi che ricevono un IBAN lo validano prima della chiamata.
+- Aggiornamento T8: in Live un IBAN non valido o non ISP non dà `isValid()` falso ma un'`ApiException` (`WI01` o HTTP 500), perché l'API risponde solo per gli IBAN Intesa Sanpaolo (Q-52).
 
 ### D-54 · Codice fiscale e partita IVA — T7
 `verify()` normalizza codice fiscale e partita IVA (spazi rimossi, maiuscole) e richiede solo 8–16 caratteri alfanumerici, senza controllo di checksum: le banche CBI Globe possono avere formati diversi, e la verifica vera la fa l'API.
@@ -270,26 +272,27 @@ Punti da verificare:
 - comportamento dell'SCT senza `requestedExecutionDate` (D-45);
 - parametro `date` sul link `nextPage` dei movimenti con più di 200 record (D-35);
 - riscrittura `localhost:8081` → `/twa/sandbox` (Q-44);
-- esistenza IBAN tramite `chargeabilityMulti` (D-51);
+- esistenza IBAN tramite `chargeabilityMulti` (D-51, poi D-64);
 - tipi reali dei campi del formal-check (Q-19);
 - formato di `links` nelle liste.
 
 Esito delle verifiche del 12/11/2026, con la 3.0 (dettagli in [api-quirks.md](api-quirks.md), fonti `LIVE` e `SANDBOX`):
 - Live, sola lettura: saldo, movimenti di oggi e di fine giornata, liste SCT e SCT Instant, stato SCT per CRO, ID pagamento ed end-to-end ID, raggiungibilità di IBAN italiani ed esteri. Tutto funziona.
-- Sandbox: casi di test di saldo, movimenti, esecuzioni, stati, liste, revoca, strumenti IBAN e raggiungibilità.
+- Sandbox: casi di test di saldo, movimenti, simulazioni con esito VoP, esecuzioni, stati, liste, revoca, strumenti IBAN e raggiungibilità.
 - Valori dell'header VoP: etichette della FAQ in sandbox; Live da verificare con una simulazione, che richiede un'approvazione a parte.
 - SCT senza `requestedExecutionDate`: non verificabile in sandbox, che ha solo il caso con la data.
 - `nextPage` dei movimenti: in sandbox arriva già completo di `date`; in Live non c'era una giornata con più di 200 movimenti.
 - `localhost:8081`: non si riesce a ottenere un link di questo tipo dalla sandbox (Q-44).
 - Formal-check: in sandbox i campi sono stringhe (Q-19).
 - `links`: assente in Live con una sola pagina, `null` in sandbox (Q-42, Q-43).
-- Strumenti IBAN in Live: da verificare quando le API saranno abilitate sull'app OAuth di produzione.
+- Strumenti IBAN in Live (13/11/2026, dopo l'abilitazione sull'app OAuth di produzione): il formal-check risponde solo per gli IBAN ISP e non verifica l'esistenza (Q-52); `chargeabilityMulti` richiede codice fiscale o partita IVA (D-64) e conferma in Live gli esiti negativi con `success: false` (D-58).
 - Nuovi quirk e correzioni: certificato PKCS#12 (Q-48), millisecondi (Q-49), stringa `"null"` (Q-50, D-57), esiti negativi con `success: false` (D-58), sandbox a casi di test fissi (Q-51).
 
-### D-56 · `endToEndId` di al massimo 35 caratteri — T8
-Quasi tutti i casi di test di simulazione ed esecuzione della sandbox usano come `endToEndId` un UUID di 36 caratteri. L'SDK mantiene comunque il limite SEPA di 35 caratteri (ISO 20022 `Max35Text`): un valore più lungo verrebbe rifiutato o troncato più avanti nel circuito interbancario. Quei casi di test sono stati verificati una volta con uno script esterno al repo, che usa le classi interne, e restano fuori dalla suite di integrazione.
-- Alternativa scartata: alzare il limite a 36 solo per poter eseguire i casi di test.
-- Proposta dell'agent, in attesa di conferma del maintainer.
+### D-56 · `endToEndId` di al massimo 36 caratteri — T8
+Quasi tutti i casi di test di simulazione ed esecuzione della sandbox usano come `endToEndId` un UUID di 36 caratteri, e la banca li accetta. Il limite dell'SDK passa quindi da 35, il massimo SEPA (ISO 20022 `Max35Text`), a 36: ci si basa sul comportamento osservato più che sulla norma, e un valore che la banca non accetta viene comunque rifiutato in simulazione, prima di qualsiasi esecuzione. Con questo limite la suite di integrazione copre anche i casi di simulazione ed esecuzione della sandbox.
+- In Live il comportamento con 36 caratteri non è verificato.
+- Alternativa scartata: mantenere 35 caratteri, che avrebbe escluso i casi di test della banca.
+- Decisione del maintainer.
 
 ### D-57 · La stringa `"null"` come valore assente — T8
 `Payload` e la lettura degli header trattano la stringa `"null"` come `null` e la stringa vuota (Q-50). La sandbox la usa nell'esecuzione `VRFY` e nell'header `vopMatchResult` delle simulazioni rifiutate. Senza questa regola l'esecuzione lanciava un'`UnexpectedResponseException` sulla data dopo che il bonifico era già partito. Un valore reale `"null"` (per esempio un nome) non è plausibile.
@@ -321,7 +324,7 @@ Le risposte di `execute()` e `resubmit()` (`InstantExecution`, `SctExecution`) s
 ### D-62 · Il nome del creditore deve corrispondere alla simulazione — T8
 L'esito VoP vale per il nome simulato. `PaymentGuard` confronta quindi anche il nome del creditore della richiesta con quello riportato dalla simulazione, oltre a IBAN e importo (D-40). Se sono diversi, `execute()` lancia un'`InvalidRequestException` e non invia nulla. Il confronto ignora maiuscole, spazi multipli e caratteri non SEPA, traslitterati con `SepaText::sanitize()`, così una normalizzazione della banca non blocca un pagamento corretto.
 - In sandbox la simulazione riporta il nome inviato anche nel close match, mentre il nome suggerito sta solo nell'header (Q-37). Per pagare con il nome suggerito si simula di nuovo.
-- Emerso dalla revisione finale del codice. Comportamento più restrittivo: da confermare dal maintainer.
+- Emerso dalla revisione finale del codice. Decisione del maintainer.
 
 ### D-63 · Trasporto più difensivo — T8
 Correzioni emerse dalla revisione finale del codice:
@@ -333,6 +336,15 @@ Correzioni emerse dalla revisione finale del codice:
 - gli interi oltre `PHP_INT_MAX` restano stringhe esatte (`JSON_BIGINT_AS_STRING`);
 - i testi delle richieste devono essere UTF-8 valido, altrimenti `InvalidRequestException` (prima il conteggio dei caratteri falliva in silenzio);
 - i link di paginazione si accettano sia come URL sia come `{"next": …}` (Q-43).
+
+### D-64 · Verifica IBAN solo con codice fiscale o partita IVA — T8
+Sostituisce D-51. In Live, come in sandbox, `chargeabilityMulti` rifiuta il solo IBAN (`WI05`), e il formal-check risponde solo per gli IBAN Intesa Sanpaolo senza verificare che il conto esista (Q-20, Q-52). Quindi:
+- `verify()` richiede almeno uno tra codice fiscale e partita IVA, e senza entrambi lancia un'`InvalidRequestException` prima della chiamata;
+- non c'è una verifica di esistenza con il solo IBAN: un conto inesistente risulta da `verify()` come esito negativo (per i conti ISP `"Not an ISP account"`);
+- `formalCheck()` resta disponibile, documentato come verifica degli IBAN Intesa Sanpaolo.
+
+La firma di `verify()` non cambia, perché codice fiscale e partita IVA si possono passare anche insieme.
+- Decisione basata sulle verifiche reali, secondo l'indicazione del maintainer di seguire le prove (vedi D-56).
 
 ## Task della riscrittura 3.0
 

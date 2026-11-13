@@ -42,9 +42,9 @@ Nella 2.x questi metodi usano il termine "Delayed".
 
 | Operazione | Endpoint | Metodo 2.x | 3.0 | Note |
 |---|---|---|---|---|
-| Verifica sintattica | `GET /tools/iban/formal-check` | — | ✅ `ibanTools()->formalCheck()` | campi "numerici" letti come stringhe |
-| Esistenza e congruenza con CF/P.IVA | `GET /tools/iban/chargeabilityMulti` | — | ✅ `ibanTools()->verify($iban, $cf, $piva)` | anche banche aderenti a CBI Globe |
-| Verifica esistenza | `GET /tools/iban/chargeabilityMulti` | — | ✅ `ibanTools()->verify($iban)` | con il solo IBAN (D-51); la spec scaricata è una copia del formal-check |
+| Verifica sintattica | `GET /tools/iban/formal-check` | — | ✅ `ibanTools()->formalCheck()` | solo IBAN Intesa Sanpaolo, non verifica l'esistenza (Q-52) |
+| Esistenza e congruenza con CF/P.IVA | `GET /tools/iban/chargeabilityMulti` | — | ✅ `ibanTools()->verify($iban, $cf, $piva)` | CF o P.IVA obbligatori (D-64); conti italiani di ISP e delle banche aderenti a CBI Globe |
+| Verifica esistenza | — | — | ✅ `ibanTools()->verify()` | la spec scaricata è una copia del formal-check; l'esistenza si verifica insieme all'intestatario (D-64) |
 
 ## Altre API SmartHub
 

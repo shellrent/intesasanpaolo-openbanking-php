@@ -82,7 +82,7 @@ composer test:integration
 
 ### Sandbox
 
-`SandboxTest` usa i dati fittizi dei casi di test delle spec (IBAN `…XTESTXCASEX…`): la sandbox risponde solo a quelli (Q-51). Comprende saldo, movimenti, esecuzione sospesa (`PDNG`), stati, liste, revoca, strumenti IBAN e raggiungibilità. I casi di simulazione ed esecuzione con un `endToEndId` di 36 caratteri non si possono eseguire con l'SDK (D-56).
+`SandboxTest` usa i dati fittizi dei casi di test delle spec (IBAN `…XTESTXCASEX…`): la sandbox risponde solo a quelli (Q-51). Comprende saldo, movimenti, simulazioni con gli esiti VoP, esecuzioni (eseguita, rifiutata, sospesa `PDNG`, `VRFY`, `ACTC`), stati, liste, revoca, strumenti IBAN e raggiungibilità. In sandbox le esecuzioni non spostano denaro.
 
 ### Live, sola lettura
 

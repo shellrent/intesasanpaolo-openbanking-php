@@ -59,9 +59,9 @@ Per ogni API va usato il file indicato. I doppioni sono elencati più sotto.
 | SCT | Revoca | `GET /payments/bonsct/{iban}/revoke` | `Revoca Pagamento_v1.json` | `sandbox/Revoca Pagamento SCT_v1.json` |
 | SCT | Simulazione ISO 20022 | `POST /payments/bonsct/simulation/iso` | `Simulazione pagamento ISO SCT_v1.json` | `sandbox/Simulazione pagamento ISO SCT_v1.json` |
 | SCT | Esecuzione ISO 20022 | `POST /payments/bonsct/iso` | `Spedizione pagamento ISO SCT_v1.json` | `sandbox/Spedizione pagamento ISO SCT_v1.json` |
-| Strumenti | Verifica sintattica IBAN | `GET /tools/iban/formal-check` | `Validazione sintattica IBAN_v1.json` | `sandbox/Validazione sintattica IBAN_v1.json` |
-| Strumenti | Esistenza IBAN e congruenza CF/P.IVA | `GET /tools/iban/chargeabilityMulti` | `Verifica congruenza IBAN CF_P.IVA Multibanca_v1.json` | `sandbox/Verifica congruenza IBAN CF_P.IVA Multibanca_v1.json` |
-| Strumenti | Verifica esistenza IBAN | `GET /tools/iban/chargeabilityMulti` con il solo IBAN (D-51) | `Verifica esistenza IBAN_v1.json` ⚠️ copia del formal-check | `sandbox/Verifica esistenza IBAN_v1.json` ⚠️ |
+| Strumenti | Verifica sintattica IBAN (solo IBAN ISP, Q-52) | `GET /tools/iban/formal-check` | `Validazione sintattica IBAN_v1.json` | `sandbox/Validazione sintattica IBAN_v1.json` |
+| Strumenti | Esistenza IBAN e congruenza CF/P.IVA | `GET /tools/iban/chargeabilityMulti` (CF o P.IVA obbligatori, D-64) | `Verifica congruenza IBAN CF_P.IVA Multibanca_v1.json` | `sandbox/Verifica congruenza IBAN CF_P.IVA Multibanca_v1.json` |
+| Strumenti | Verifica esistenza IBAN | stesso file del formal-check | `Verifica esistenza IBAN_v1.json` ⚠️ copia del formal-check | `sandbox/Verifica esistenza IBAN_v1.json` ⚠️ |
 | Locator | ATM | `GET /locator/atm` | — | `sandbox/ATM Locator_v1.json` |
 | Locator | Filiali | `GET /locator/branch` | — | `sandbox/Branch Locator_v1.json` |
 
@@ -84,7 +84,7 @@ Questi file Live sono **copie identiche byte per byte** del file canonico: è la
 
 ## Anomalie note
 
-- **"Verifica esistenza IBAN" contiene la spec del formal-check**, sia Live sia sandbox (file identici a "Validazione sintattica IBAN"). Può essere un errore del portale, oppure l'esistenza dell'IBAN si verifica con `chargeabilityMulti`: la sua descrizione dice *"Check IBAN existence in addition to verification of IBAN holder"*, e SmartHub documenta esistenza e congruenza in un'unica pagina. Il controllo nel portale non ha dato altre indicazioni. **Decisione (D-51)**: l'esistenza si verifica con `chargeabilityMulti` passando il solo IBAN (`ibanTools()->verify($iban)`). In sandbox la chiamata richiede codice fiscale o partita IVA (Q-51); in Live è da confermare (D-55).
+- **"Verifica esistenza IBAN" contiene la spec del formal-check**, sia Live sia sandbox (file identici a "Validazione sintattica IBAN", confermato riscaricandoli). A catalogo SmartHub i prodotti sono due, verifica sintattica e verifica di esistenza, ma l'attivazione ha aggiunto all'app tre API, di cui due uguali. Le verifiche in Live (Q-20, Q-52) mostrano che l'esistenza e la congruenza con l'intestatario si verificano con `chargeabilityMulti`, che richiede codice fiscale o partita IVA, mentre il formal-check scompone solo gli IBAN ISP senza verificarne l'esistenza (D-64, che sostituisce D-51).
 - **In sandbox mancano le spec di simulazione e lista SCT.** Gli endpoint esistono: in `old/` ci sono le spec sandbox del 2023.
 - **ISO 20022: versioni diverse.** Live usa `PAIN.001.001.03`, sandbox `pain.001.001.09`.
 - **Differenze di valori tra Live e sandbox** (dettagli in [api-quirks.md](api-quirks.md)): l'esito della simulazione SCT Instant vale `ACSC` in Live e `ACCP` in sandbox; lo stato Instant è `Cancelled` in Live e `Canceled` in sandbox.

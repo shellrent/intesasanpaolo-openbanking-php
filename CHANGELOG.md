@@ -6,7 +6,9 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it-IT/1.1.0/) e i
 
 ## [Unreleased]
 
-Versione 3.0.0 in preparazione sul branch `3.x`. Contiene modifiche incompatibili con la 2.x, documentate in `UPGRADE-3.0.md`.
+## [3.0.0] - 2026-11-13
+
+Riscrittura completa dell'SDK, con modifiche incompatibili con la 2.x: la guida all'aggiornamento è in `UPGRADE-3.0.md`.
 
 ### Aggiunto
 - Nuova facade `IntesaSanPaoloClient` con le API per area.
@@ -21,8 +23,8 @@ Versione 3.0.0 in preparazione sul branch `3.x`. Contiene modifiche incompatibil
   - `status()`, per CRO, ID pagamento, end-to-end ID o simulation ID;
   - `payments()` e `revoke()`; un rifiuto della revoca è un esito (`revoked: false`), anche quando la banca lo invia con `success: false`.
 - Strumenti IBAN `ibanTools()`:
-  - `formalCheck()`, verifica sintattica;
-  - `verify()`, esistenza dell'IBAN e congruenza con codice fiscale o partita IVA, anche per le banche CBI Globe; un esito negativo è un risultato e non un'eccezione, anche quando arriva con `success: false`.
+  - `formalCheck()`, verifica sintattica degli IBAN Intesa Sanpaolo;
+  - `verify()`, esistenza dell'IBAN e congruenza con codice fiscale o partita IVA (almeno uno obbligatorio), anche per le banche CBI Globe; un esito negativo è un risultato e non un'eccezione, anche quando arriva con `success: false`.
 - `sctInstant()->reachability()`: verifica se un IBAN può ricevere bonifici istantanei.
 - Richiesta `SctPayment`: valuta e `categoryPurpose` configurabili, data di esecuzione opzionale.
 - Richiesta `InstantPayment`, validata alla creazione (lunghezze SEPA, IBAN, importo con al massimo 2 decimali).
@@ -154,7 +156,8 @@ Versione 3.0.0 in preparazione sul branch `3.x`. Contiene modifiche incompatibil
 ### Aggiunto
 - Prima versione: saldo, movimenti di fine giornata e intraday, esecuzione e lista dei bonifici SCT Instant.
 
-[Unreleased]: https://github.com/shellrent/intesasanpaolo-openbanking-php/compare/2.1.1...3.x
+[Unreleased]: https://github.com/shellrent/intesasanpaolo-openbanking-php/compare/3.0.0...HEAD
+[3.0.0]: https://github.com/shellrent/intesasanpaolo-openbanking-php/compare/2.1.1...3.0.0
 [2.1.1]: https://github.com/shellrent/intesasanpaolo-openbanking-php/compare/2.1.0...2.1.1
 [2.1.0]: https://github.com/shellrent/intesasanpaolo-openbanking-php/compare/2.0.2...2.1.0
 [2.0.2]: https://github.com/shellrent/intesasanpaolo-openbanking-php/compare/2.0.1...2.0.2
