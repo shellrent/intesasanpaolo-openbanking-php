@@ -37,6 +37,7 @@ La versione corrente è la 3.0, una riscrittura completa della 2.x. **Prima di c
 
   La formattazione la applica Laravel Pint (`pint.json`), che aggiunge anche `declare_strict_types`, `strict_comparison` e `strict_param`.
 - **Date**: nessuna dipendenza da Carbon; in input `DateTimeInterface`, in output `DateTimeImmutable` (D-07).
+- **Importi**: mai `float`. Sono stringhe decimali in ingresso e in uscita, si leggono con `Payload::amount()` e si scrivono con `JsonNumber` (D-65).
 - **Codice 2.x**: è stato eliminato in T6; per confrontare un comportamento con la 2.x si guarda il tag `2.1.1`.
 
 ## Comandi
@@ -79,7 +80,7 @@ Codice 3.0 (dettagli in [docs/architecture.md](docs/architecture.md)):
 | `src/Config/` | `ClientConfig`, `Environment`, `MutualTlsCertificate` (pubblico) |
 | `src/Auth/` | `AccessToken`, `TokenStore`, `InMemoryTokenStore` (pubblici); `TokenProvider` (interno) |
 | `src/Http/` | `Sender`, `Transport`, `ApiResponse`, `Paginator`, `SandboxLinkRewriter` (interni) |
-| `src/Support/` | `DateParser`, `DateFormat`, `Payload`, `Json`, `Url`, `Clock` (interni); `SepaText` (pubblico) |
+| `src/Support/` | `DateParser`, `DateFormat`, `Payload`, `Decimal`, `Json`, `JsonNumber`, `Url`, `Clock` (interni); `Amount`, `SepaText` (pubblici) |
 | `src/Exception/` | eccezioni con l'interfaccia comune `OpenBankingException` (pubbliche) |
 | `tests/Support/` | `MockHttp`, `FrozenClock` |
 | `tests/Unit/` | test del codice 3.0, con la base `TestCase` |

@@ -6,6 +6,7 @@ namespace Shellrent\OpenBanking\Tests\Unit\Api;
 
 use DateTimeImmutable;
 use GuzzleHttp\Psr7\Response;
+use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use Shellrent\OpenBanking\Api\SctInstantApi;
@@ -15,6 +16,7 @@ use Shellrent\OpenBanking\Enum\PaymentStatus;
 use Shellrent\OpenBanking\Enum\ValidationStatus;
 use Shellrent\OpenBanking\Enum\VopMatchResult;
 use Shellrent\OpenBanking\Exception\InvalidRequestException;
+use Shellrent\OpenBanking\Exception\UnexpectedResponseException;
 use Shellrent\OpenBanking\Exception\VopConfirmationRequiredException;
 use Shellrent\OpenBanking\IntesaSanPaoloClient;
 use Shellrent\OpenBanking\Request\InstantPayment;
@@ -64,7 +66,7 @@ final class SctInstantApiTest extends TestCase
         self::assertSame('ACSC', $simulation->rawValidationStatus);
         self::assertSame('SIM-0001', $simulation->simulationId);
         self::assertNull($simulation->endToEndId, 'Q-35: "NOTPROVIDED" means none');
-        self::assertSame(150.25, $simulation->amount);
+        self::assertSame('150.25', $simulation->amount);
         self::assertSame('2026-01-15T10:00:00+00:00', $simulation->date?->format(DATE_ATOM));
         self::assertSame('Mario Rossi', $simulation->creditor->name);
         self::assertSame(self::CREDITOR_IBAN, $simulation->creditor->iban);
@@ -129,13 +131,16 @@ final class SctInstantApiTest extends TestCase
      * D-38: an amount computed with floats is sent with two decimals.
      */
     #[Test]
-    public function it_sends_amounts_without_float_noise(): void
+    public function it_sends_the_exact_amount(): void
     {
-        $http = new MockHttp(MockHttp::token(), $this->simulationResponse('MTCH'));
+        $http = new MockHttp(MockHttp::token(), $this->simulationResponse('MTCH'), $this->simulationResponse('MTCH'));
+        $api = $this->api($http);
 
-        $this->api($http)->simulate($this->payment(amount: 0.1 + 0.2));
+        $api->simulate($this->payment(amount: '999999999999.99'));
+        $api->simulate($this->payment(amount: '1250.1'));
 
-        self::assertStringContainsString('"amount":0.3,', (string) $http->request(1)->getBody());
+        self::assertStringContainsString('"amount":999999999999.99,', (string) $http->request(1)->getBody());
+        self::assertStringContainsString('"amount":1250.1,', (string) $http->request(2)->getBody(), 'Written as 2.x wrote 1250.1');
     }
 
     #[Test]
@@ -158,7 +163,7 @@ final class SctInstantApiTest extends TestCase
         self::assertSame(PaymentStatus::Executed, $execution->paymentStatus);
         self::assertTrue($execution->paymentStatus->isAccepted());
         self::assertFalse($execution->canBeResubmitted());
-        self::assertSame(150.25, $execution->amount);
+        self::assertSame('150.25', $execution->amount);
         self::assertSame(self::CREDITOR_IBAN, $execution->creditor->iban);
         self::assertSame('TX-E', $execution->transactionId);
     }
@@ -222,7 +227,7 @@ final class SctInstantApiTest extends TestCase
         $http = new MockHttp(MockHttp::token(), $this->simulationResponse('MTCH'));
         $api = $this->api($http);
         $simulation = $api->simulate($this->payment());
-        $other = new InstantPayment('Someone Else Srl', self::CREDITOR_IBAN, 150.25, 'Fattura 1/2026', 'Example Srl');
+        $other = new InstantPayment('Someone Else Srl', self::CREDITOR_IBAN, '150.25', 'Fattura 1/2026', 'Example Srl');
 
         try {
             $api->execute($other, $simulation);
@@ -244,7 +249,7 @@ final class SctInstantApiTest extends TestCase
         );
         $api = $this->api($http);
         $simulation = $api->simulate($this->payment());
-        $sameName = new InstantPayment('  MARIO   RÒSSI ', self::CREDITOR_IBAN, 150.25, 'Fattura 1/2026', 'Example Srl');
+        $sameName = new InstantPayment('  MARIO   RÒSSI ', self::CREDITOR_IBAN, '150.25', 'Fattura 1/2026', 'Example Srl');
 
         self::assertSame(PaymentStatus::Executed, $api->execute($sameName, $simulation)->paymentStatus);
     }
@@ -320,7 +325,7 @@ final class SctInstantApiTest extends TestCase
         $simulation = $api->simulate($this->payment());
 
         foreach ([
-            'different amount' => $this->payment(amount: 150.26),
+            'different amount' => $this->payment(amount: '150.26'),
             'different creditor' => $this->payment(creditorIban: 'IT00X0000000000000000000003'),
         ] as $case => $otherPayment) {
             try {
@@ -367,6 +372,28 @@ final class SctInstantApiTest extends TestCase
     /**
      * A simulation saved in one process (e.g. a daemon step) can be executed in another one.
      */
+    /**
+     * D-65: an amount that is not an exact decimal is an error, never rounded.
+     */
+    #[Test]
+    public function it_refuses_a_simulation_with_floating_point_noise_in_the_amount(): void
+    {
+        $http = new MockHttp(MockHttp::token(), new Response(200, ['vopMatchResult' => 'MTCH'], '{"success": true, "payload": {"validationStatus": "ACCP", "simulationId": "SIM-1", "amount": 0.30000000000000004}}'));
+
+        $this->expectException(UnexpectedResponseException::class);
+        $this->expectExceptionMessage('payload.amount: expected a decimal with at most 2 decimals, got 0.30000000000000004');
+
+        $this->api($http)->simulate($this->payment(amount: '0.30'));
+    }
+
+    #[Test]
+    public function it_refuses_to_restore_a_simulation_with_an_invalid_amount(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        InstantSimulation::fromArray(['simulationId' => 'SIM-1', 'vop' => [], 'amount' => '1,50']);
+    }
+
     #[Test]
     public function it_executes_a_simulation_restored_from_storage(): void
     {
@@ -383,6 +410,8 @@ final class SctInstantApiTest extends TestCase
         self::assertSame(VopMatchResult::CloseMatch, $restored->vop->result);
         self::assertSame('2026-01-15T10:00:00+00:00', $restored->date?->format(DATE_ATOM));
         self::assertSame(self::CREDITOR_IBAN, $restored->creditor->iban);
+        self::assertSame('150.25', $restored->amount, 'D-65: the amount is stored as a decimal string');
+        self::assertSame('150.25', $data['amount'] ?? null);
 
         try {
             $api->execute($this->payment(), $restored);
@@ -484,7 +513,7 @@ final class SctInstantApiTest extends TestCase
 
     private function payment(
         string $creditorIban = self::CREDITOR_IBAN,
-        float $amount = 150.25,
+        string $amount = '150.25',
         ?string $debtorIban = null,
         ?string $endToEndId = null,
         ?string $siaCode = null,

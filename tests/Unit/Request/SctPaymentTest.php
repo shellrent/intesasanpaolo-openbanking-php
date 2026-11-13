@@ -23,7 +23,7 @@ final class SctPaymentTest extends TestCase
     #[Test]
     public function it_applies_the_defaults(): void
     {
-        $payment = new SctPayment('Fornitore Esempio Srl', self::IBAN, 1250, 'Fattura 2/2026', 'Example Srl');
+        $payment = new SctPayment('Fornitore Esempio Srl', self::IBAN, '1250', 'Fattura 2/2026', 'Example Srl');
 
         self::assertSame('EUR', $payment->currency);
         self::assertSame('CASH', $payment->categoryPurpose);
@@ -40,7 +40,7 @@ final class SctPaymentTest extends TestCase
         $payment = new SctPayment(
             creditorName: 'Fornitore Esempio Srl',
             creditorIban: 'it00 x000 0000 0000 0000 0000 002',
-            amount: 1250.1 + 0.2,
+            amount: '1250.3',
             paymentInformation: 'Fattura 2/2026',
             debtorName: 'Example Srl',
             requestedExecutionDate: $date,
@@ -52,7 +52,7 @@ final class SctPaymentTest extends TestCase
         $date->modify('+1 day');
 
         self::assertSame('IT00X0000000000000000000002', $payment->creditorIban);
-        self::assertSame(1250.3, $payment->amount);
+        self::assertSame('1250.30', $payment->amount);
         self::assertInstanceOf(DateTimeImmutable::class, $payment->requestedExecutionDate);
         self::assertSame('2026-01-20', $payment->requestedExecutionDate->format('Y-m-d'), 'Later changes to the given DateTime do not leak in');
         self::assertNull($payment->endToEndId);
@@ -66,7 +66,7 @@ final class SctPaymentTest extends TestCase
         $this->expectException(InvalidRequestException::class);
         $this->expectExceptionMessage('category purpose must be a code of 4 letters');
 
-        new SctPayment('Fornitore', self::IBAN, 10, 'Fattura', 'Example Srl', categoryPurpose: 'CASH1');
+        new SctPayment('Fornitore', self::IBAN, '10', 'Fattura', 'Example Srl', categoryPurpose: 'CASH1');
     }
 
     #[Test]
@@ -75,15 +75,15 @@ final class SctPaymentTest extends TestCase
         $this->expectException(InvalidRequestException::class);
         $this->expectExceptionMessage('currency must be a code of 3 letters');
 
-        new SctPayment('Fornitore', self::IBAN, 10, 'Fattura', 'Example Srl', currency: 'EURO');
+        new SctPayment('Fornitore', self::IBAN, '10', 'Fattura', 'Example Srl', currency: 'EURO');
     }
 
     #[Test]
     public function it_shares_the_validation_rules_of_instant_payments(): void
     {
         $this->expectException(InvalidRequestException::class);
-        $this->expectExceptionMessage('more than two decimals');
+        $this->expectExceptionMessage('is not valid');
 
-        new SctPayment('Fornitore', self::IBAN, 10.001, 'Fattura', 'Example Srl');
+        new SctPayment('Fornitore', self::IBAN, '10.001', 'Fattura', 'Example Srl');
     }
 }

@@ -26,6 +26,7 @@ use Shellrent\OpenBanking\Response\SctInstant\InstantReachability;
 use Shellrent\OpenBanking\Response\SctInstant\InstantSimulation;
 use Shellrent\OpenBanking\Support\DateFormat;
 use Shellrent\OpenBanking\Support\DateParser;
+use Shellrent\OpenBanking\Support\JsonNumber;
 use Shellrent\OpenBanking\Support\Url;
 
 /**
@@ -210,7 +211,7 @@ final class SctInstantApi
      *
      * Empty "endToEndId" and "siaCode" are sent as "" in the sandbox and omitted in Live (docs/api-quirks.md, Q-34).
      *
-     * @return array<string, scalar>
+     * @return array<string, scalar|JsonNumber>
      */
     private function body(InstantPayment $payment): array
     {
@@ -223,7 +224,7 @@ final class SctInstantApi
             'debtorIBAN' => $payment->debtorIban ?? $this->config->iban,
             'creditorName' => $payment->creditorName,
             'creditorIBAN' => $payment->creditorIban,
-            'amount' => $payment->amount,
+            'amount' => JsonNumber::amount($payment->amount),
             'paymentInformation' => $payment->paymentInformation,
         ];
 

@@ -37,7 +37,9 @@ src/
 ├── Support/                   strumenti                               [interno]
 │   ├── DateParser, DateFormat date con formato esplicito
 │   ├── Payload                lettura tipizzata e tollerante del JSON
-│   ├── Json, Url, EndToEndId  JSON deterministico, link, normalizzazione end-to-end ID
+│   ├── Decimal, JsonNumber    importi esatti, senza float (D-65)
+│   ├── Json, Url, EndToEndId  JSON esatto, link, normalizzazione end-to-end ID
+│   ├── Amount                 conversione centesimi ↔ stringhe       [pubblico]
 │   ├── SepaText               helper opzionale per i testi SEPA       [pubblico]
 │   └── Clock, SystemClock     ora corrente (sostituibile nei test)
 ├── Exception/                 eccezioni                               [pubblico]
@@ -80,7 +82,7 @@ API                                        Payload → DTO di risposta
 
 ## Richieste
 
-Le richieste di pagamento (`Request/`) sono classi `final readonly` validate e normalizzate alla creazione: IBAN in maiuscolo e senza spazi, importo arrotondato a 2 decimali, `endToEndId` vuoto o `NOTPROVIDED` trasformato in `null`. Un valore non valido genera un'`InvalidRequestException` prima di qualsiasi chiamata. Il corpo JSON lo costruisce l'API (es. `SctInstantApi`), che applica le differenze tra Live e sandbox. La codifica JSON è deterministica (`Support\Json`), indipendente da `serialize_precision`.
+Le richieste di pagamento (`Request/`) sono classi `final readonly` validate e normalizzate alla creazione: IBAN in maiuscolo e senza spazi, importo come stringa decimale normalizzata a 2 decimali (mai `float`, D-65), `endToEndId` vuoto o `NOTPROVIDED` trasformato in `null`. Un valore non valido genera un'`InvalidRequestException` prima di qualsiasi chiamata. Il corpo JSON lo costruisce l'API (es. `SctInstantApi`), che applica le differenze tra Live e sandbox. La codifica JSON è esatta (`Support\Json`): gli importi sono scritti dalla stringa senza passare da un `float`, e un `float` nel corpo è un errore.
 
 ## Eccezioni
 
@@ -136,6 +138,7 @@ Il token è una credenziale: lo store non deve essere leggibile da terzi.
 `Payload` incapsula un oggetto JSON decodificato e fa da unico punto di contatto tra il JSON delle API e i DTO di risposta:
 - ogni getter accetta più nomi di campo e usa il primo che ha un valore, così si coprono le varianti come `debtorIBAN`/`debtorIban` (Q-12) e `orderId`/`order-id` (Q-13);
 - un campo mancante, `null`, stringa vuota o stringa `"null"` (Q-50) non ha valore e restituisce `null`;
+- gli importi si leggono con `amount()`, che restituisce una stringa decimale con 2 decimali e rifiuta i valori non esatti (D-65);
 - un valore di tipo sbagliato genera un'`UnexpectedResponseException` con il percorso del campo, per esempio `payload.accountedTransactions[3].amount`;
 - le risposte delle esecuzioni di pagamento si leggono in modalità tollerante (`lenient()`): un valore di tipo o formato sbagliato vale `null`, perché a quel punto la banca ha già agito e l'esito e gli identificativi non devono andare persi (D-61);
 - i link di paginazione si leggono con `link()`, che accetta sia una URL sia un oggetto `{"next": …}` (Q-41…Q-43);

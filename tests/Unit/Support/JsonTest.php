@@ -4,21 +4,24 @@ declare(strict_types=1);
 
 namespace Shellrent\OpenBanking\Tests\Unit\Support;
 
+use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use Shellrent\OpenBanking\Support\Json;
+use Shellrent\OpenBanking\Support\JsonNumber;
 use Shellrent\OpenBanking\Support\Url;
 use Shellrent\OpenBanking\Tests\Unit\TestCase;
 
 #[CoversClass(Json::class)]
+#[CoversClass(JsonNumber::class)]
 #[CoversClass(Url::class)]
 final class JsonTest extends TestCase
 {
     /**
-     * D-38: amounts are encoded exactly whatever the "serialize_precision" setting.
+     * D-65: amounts are written exactly from their decimal string, whatever the "serialize_precision" setting.
      */
     #[Test]
-    public function it_encodes_floats_independently_of_serialize_precision(): void
+    public function it_writes_numbers_exactly_without_floats(): void
     {
         $original = ini_get('serialize_precision');
         self::assertIsString($original);
@@ -26,10 +29,62 @@ final class JsonTest extends TestCase
         try {
             ini_set('serialize_precision', '17');
 
-            self::assertSame('{"amount":0.3,"fees":150.25,"round":10}', Json::encode(['amount' => 0.3, 'fees' => 150.25, 'round' => 10.0]));
-            self::assertSame('17', ini_get('serialize_precision'), 'The setting is restored');
+            self::assertSame(
+                '{"amount":0.3,"fees":1250,"max":999999999999.99,"nested":{"cent":0.01},"count":2}',
+                Json::encode([
+                    'amount' => JsonNumber::amount('0.30'),
+                    'fees' => JsonNumber::amount('1250.00'),
+                    'max' => JsonNumber::amount('999999999999.99'),
+                    'nested' => ['cent' => JsonNumber::amount('0.01')],
+                    'count' => 2,
+                ]),
+            );
         } finally {
             ini_set('serialize_precision', $original);
+        }
+    }
+
+    /**
+     * D-65: the bytes are the same the 2.x SDK sent through a float with the default precision.
+     */
+    #[Test]
+    public function it_writes_amounts_as_the_2x_sdk_did(): void
+    {
+        foreach (['0.01', '0.30', '1.05', '150.25', '1250.10', '1250.00', '999999999999.99'] as $amount) {
+            self::assertSame(
+                json_encode(['amount' => (float) $amount], JSON_THROW_ON_ERROR),
+                Json::encode(['amount' => JsonNumber::amount($amount)]),
+                $amount,
+            );
+        }
+    }
+
+    #[Test]
+    public function it_refuses_floats_in_request_bodies(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        Json::encode(['payment' => ['amount' => 0.3]]);
+    }
+
+    #[Test]
+    public function it_does_not_confuse_texts_with_numbers(): void
+    {
+        $encoded = Json::encode(['text' => '@number-0@', 'amount' => JsonNumber::amount('5.00')]);
+
+        self::assertSame('{"text":"@number-0@","amount":5}', $encoded);
+    }
+
+    #[Test]
+    public function it_accepts_only_plain_json_numbers(): void
+    {
+        foreach (['1e3', '01', '1.', '.5', '1,5', ' 1'] as $literal) {
+            try {
+                new JsonNumber($literal);
+                self::fail(sprintf('"%s" was accepted', $literal));
+            } catch (InvalidArgumentException) {
+                $this->addToAssertionCount(1);
+            }
         }
     }
 

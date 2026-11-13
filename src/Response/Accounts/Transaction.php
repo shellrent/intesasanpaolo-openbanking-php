@@ -20,8 +20,8 @@ final readonly class Transaction
     /**
      * @param  string|null  $uniqueId  Unique identifier: present for accounted transactions only.
      * @param  string|null  $reference  Accounting reference.
-     * @param  float  $amount  Signed amount: negative for debits.
-     * @param  float|null  $originalAmount  Original amount, for accounts held at other banks.
+     * @param  string  $amount  Signed amount as a decimal string with two decimals: negative for debits (e.g. "-525.00", D-65).
+     * @param  string|null  $originalAmount  Original amount, for accounts held at other banks: up to four decimals, for currencies other than the euro.
      * @param  string|null  $type  Short description, e.g. the transaction category code.
      * @param  string|null  $description  Extended description.
      * @param  string|null  $additionalInfo  Additional information (in 2.x: getReason()).
@@ -33,9 +33,9 @@ final readonly class Transaction
     public function __construct(
         public ?string $uniqueId,
         public ?string $reference,
-        public float $amount,
+        public string $amount,
         public ?string $currency,
-        public ?float $originalAmount,
+        public ?string $originalAmount,
         public ?string $originalCurrency,
         public ?float $exchangeRate,
         public ?string $type,
@@ -58,9 +58,9 @@ final readonly class Transaction
         return new self(
             uniqueId: $payload->string('uniqueId'),
             reference: $payload->string('reference'),
-            amount: $payload->requireFloat('amount'),
+            amount: $payload->requireAmount('amount'),
             currency: $payload->string('currency'),
-            originalAmount: $payload->float('originalAmount'),
+            originalAmount: $payload->decimal(4, 'originalAmount'),
             originalCurrency: $payload->string('originalCurrency'),
             exchangeRate: $payload->float('exchangeRate'),
             type: $payload->string('type'),

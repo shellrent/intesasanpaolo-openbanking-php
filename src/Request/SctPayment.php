@@ -30,9 +30,9 @@ final readonly class SctPayment
     public string $creditorIban;
 
     /**
-     * Amount, rounded to two decimals.
+     * Amount, as a decimal string with two decimals, e.g. "1250.10" (D-65).
      */
-    public float $amount;
+    public string $amount;
 
     public string $paymentInformation;
 
@@ -60,7 +60,8 @@ final readonly class SctPayment
     /**
      * @param  string  $creditorName  Name of the beneficiary (max 70 characters): it is checked by the Verification of Payee.
      * @param  string  $creditorIban  IBAN of the beneficiary.
-     * @param  float  $amount  Amount, positive, with at most two decimals.
+     * @param  string  $amount  Amount as a decimal string, positive, with a dot and at most two decimals
+     *                          (e.g. "1250.10"), never a float; Amount::fromCents() converts integer cents.
      * @param  string  $paymentInformation  Payment reason (max 140 characters).
      * @param  string  $debtorName  Name of the payer, i.e. the account holder (max 70 characters).
      * @param  string|null  $debtorIban  IBAN of the payer; null for the IBAN of the client configuration.
@@ -75,7 +76,7 @@ final readonly class SctPayment
     public function __construct(
         string $creditorName,
         string $creditorIban,
-        float $amount,
+        string $amount,
         string $paymentInformation,
         string $debtorName,
         ?string $debtorIban = null,

@@ -27,7 +27,8 @@ Riscrittura completa dell'SDK, con modifiche incompatibili con la 2.x: la guida 
   - `verify()`, esistenza dell'IBAN e congruenza con codice fiscale o partita IVA (almeno uno obbligatorio), anche per le banche CBI Globe; un esito negativo è un risultato e non un'eccezione, anche quando arriva con `success: false`.
 - `sctInstant()->reachability()`: verifica se un IBAN può ricevere bonifici istantanei.
 - Richiesta `SctPayment`: valuta e `categoryPurpose` configurabili, data di esecuzione opzionale (senza data la banca esegue il giorno lavorativo successivo).
-- Richiesta `InstantPayment`, validata alla creazione (lunghezze SEPA, IBAN, importo con al massimo 2 decimali); l'`endToEndId` arriva a 35 caratteri in Live e a 36 in sandbox, come accettano i due ambienti.
+- **Importi come stringhe decimali, mai `float`**, in richieste e risposte (`'1250.10'`): formato rigoroso in ingresso, nessun arrotondamento, eccezione sugli importi della banca non esatti, confronto esatto tra simulazione ed esecuzione, JSON inviato identico alla 2.x. `Support\Amount` converte da e verso i centesimi.
+- Richiesta `InstantPayment`, validata alla creazione (lunghezze SEPA, IBAN, importo come stringa decimale con al massimo 2 decimali); l'`endToEndId` arriva a 35 caratteri in Live e a 36 in sandbox, come accettano i due ambienti.
 - Simulazioni salvabili e ricaricabili (`toArray()`/`fromArray()`).
 - Enum `ValidationStatus`, `PaymentStatus` (con `isAccepted()`/`isFinal()`), `InstantStatus` e `VopMatchResult`.
 - Helper `SepaText` per pulire i testi dai caratteri non ammessi dalla banca.
@@ -69,7 +70,7 @@ Riscrittura completa dell'SDK, con modifiche incompatibili con la 2.x: la guida 
 - Movimenti: una data di valuta assente, vuota o `"0"` vale `null` (la 2.x usava la data corrente); un movimento senza importo è un errore (la 2.x usava 0).
 - Movimenti di fine giornata: il parametro `date` viene mantenuto anche sulle pagine successive.
 - SCT: le date `d/m/Y` (esecuzione, valuta, regolamento) sono lette correttamente; nella 2.x i giorni da 1 a 12 erano letti con giorno e mese invertiti.
-- Corpo JSON delle richieste generato in modo deterministico: gli importi non risentono di `serialize_precision` né del rumore dei float.
+- Corpo JSON delle richieste generato in modo esatto: gli importi sono scritti dalla stringa decimale, senza passare da un `float`, e non risentono di `serialize_precision`.
 - Resubmit SCT Instant: `resubmit` e `resubmitId` vengono sempre inviati insieme (nella 2.x `resubmitId` veniva ignorato senza `setResubmit(true)`).
 - **Requisito minimo PHP 8.3.**
 - **Guzzle è ora una dipendenza diretta, `^7.15.2 || ^8.0.1`** (minimi scelti per escludere le versioni con advisory di sicurezza). Rimosso `php-http/guzzle7-adapter`, che non veniva usato.

@@ -195,6 +195,7 @@ Il link `nextPage` è documentato con il solo `offsetid`, ma `date` è obbligato
 - Gli importi restano `float`: sono positivi, finiti e hanno al massimo 2 decimali. Il confronto avviene in centesimi con tolleranza 1e-6, quindi `0.1 + 0.2` diventa `0.3` e `10.567` viene rifiutato.
 - Tutti i body JSON passano da `Support\Json`, che imposta temporaneamente `serialize_precision = -1` e usa gli stessi flag dell'opzione `json` di Guzzle usata dalla 2.x. I byte inviati sono identici a quelli della 2.x, salvo il rumore dei float.
 - Decisione del maintainer. Risolve la codifica non deterministica degli importi della 2.x (`0.1 + 0.2` inviato come `0.30000000000000004`).
+- **Superata da D-65** per il tipo degli importi, che diventano stringhe decimali; resta valido il principio dei byte identici alla 2.x.
 
 ### D-39 · Testi: solo lunghezze, più l'helper `SepaText` — T5
 L'SDK controlla i campi obbligatori e le lunghezze SEPA: nomi 70 caratteri, causale 140, `endToEndId` 35 (portato a 36 in T8, D-56). Le lunghezze si contano in caratteri UTF-8, non in byte. I caratteri si inviano così come sono, come nella 2.x, che funziona in produzione con lettere accentate.
@@ -348,6 +349,18 @@ Sostituisce D-51. In Live, come in sandbox, `chargeabilityMulti` rifiuta il solo
 
 La firma di `verify()` non cambia, perché codice fiscale e partita IVA si possono passare anche insieme.
 - Decisione basata sulle verifiche reali, secondo l'indicazione del maintainer di seguire le prove (vedi D-56).
+
+### D-65 · Importi come stringhe decimali, mai `float` — T8
+Su richiesta del maintainer, prima del rilascio, gli importi non sono più `float` in nessuna parte dell'API pubblica. Chi paga davvero non può usare i `float`: l'applicazione dei pagamenti interna, che nasce sulla 3.0, ha come regola vincolante "importi mai in `float`" e avrebbe dovuto isolare la conversione in un proprio adattatore. Inoltre la libreria doveva difendersi dai `float` con tolleranze (`CENT_TOLERANCE`, `AMOUNT_TOLERANCE`) e arrotondava in silenzio il rumore di virgola mobile, mentre in un'applicazione di pagamenti l'errore deve emergere.
+- **Richieste**: `InstantPayment` e `SctPayment` ricevono l'importo come stringa decimale (`'1250.10'`), validata con un formato rigoroso: positivo, al massimo 12 cifre intere e 2 decimali, punto come separatore, niente segno, esponente, separatore delle migliaia, spazi o zeri iniziali. È normalizzata a due decimali (`'1250.1'` → `'1250.10'`) e niente viene arrotondato. Un `float` non è accettato (`strict_types`).
+- **Centesimi**: `Support\Amount::fromCents()` e `toCents()` convertono in modo esatto. Si è preferito un helper a un costruttore nominato in più per ogni richiesta, che avrebbe duplicato tutti i parametri.
+- **Invio**: l'importo non passa mai da un `float`. `Support\Json` scrive il numero direttamente dalla stringa (`JsonNumber`), nell'unico punto in cui si costruisce il JSON, e rifiuta qualsiasi `float` nel corpo. Il numero è scritto come lo scriveva la 2.x tramite `json_encode()` (`1250.1`, `1250`, `0.3`), quindi i byte inviati non cambiano: lo confermano i casi di test della sandbox, che riconoscono solo gli importi esatti.
+- **Risposte**: gli importi sono `?string` normalizzati con due decimali (`'14980.10'`, `'-525.00'`). `json_decode()` produce `float`: ognuno si converte con la sua rappresentazione più breve, la stessa di `json_encode()`, e deve risultare un decimale con al massimo 2 cifre dopo la virgola, altrimenti è un'`UnexpectedResponseException` (`0.30000000000000004` non viene arrotondato). Fino a 15 cifre significative la conversione è esatta. Sono accettati anche gli importi inviati come stringa, come il saldo della sandbox (`"250000.00"`). Nelle risposte di esecuzione, lette in modo tollerante (D-61), un importo non valido vale `null`, per non nascondere l'esito.
+- **Importo originale** dei movimenti (`originalAmount`), in una valuta che può non essere l'euro: fino a 4 decimali, con almeno 2 nella stringa.
+- **Confronti**: `PaymentGuard` confronta le stringhe normalizzate, senza tolleranza.
+- **Nessuna nuova dipendenza**: bastano validazione e confronto tra stringhe normalizzate; `brick/math` non serve, perché la libreria non fa calcoli sugli importi.
+- Restano `float` i valori che non sono importi: `exchangeRate` dei movimenti e i timeout della configurazione.
+- Decisione del maintainer.
 
 ## Task della riscrittura 3.0
 

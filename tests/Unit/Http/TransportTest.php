@@ -17,6 +17,7 @@ use Shellrent\OpenBanking\Exception\UnexpectedResponseException;
 use Shellrent\OpenBanking\Http\ApiResponse;
 use Shellrent\OpenBanking\Http\Sender;
 use Shellrent\OpenBanking\Http\Transport;
+use Shellrent\OpenBanking\Support\JsonNumber;
 use Shellrent\OpenBanking\Tests\Support\MockHttp;
 use Shellrent\OpenBanking\Tests\Unit\TestCase;
 
@@ -82,12 +83,12 @@ final class TransportTest extends TestCase
     {
         $http = new MockHttp(MockHttp::token(), MockHttp::envelope(['simulationId' => 'SIM-1']));
 
-        $response = $this->transport($http)->post('payments/sct/instant/simulation', ['amount' => 10.5, 'endToEndId' => '']);
+        $response = $this->transport($http)->post('payments/sct/instant/simulation', ['amount' => JsonNumber::amount('10.50'), 'endToEndId' => '']);
 
         self::assertSame('SIM-1', $response->requirePayload()->string('simulationId'));
         self::assertSame('POST', $http->request(1)->getMethod());
         self::assertSame('application/json', $http->request(1)->getHeaderLine('Content-Type'));
-        self::assertSame(['amount' => 10.5, 'endToEndId' => ''], $http->jsonBody(1));
+        self::assertSame('{"amount":10.5,"endToEndId":""}', (string) $http->request(1)->getBody());
     }
 
     #[Test]

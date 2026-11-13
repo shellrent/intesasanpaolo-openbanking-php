@@ -136,7 +136,7 @@ $today = $client->accounts()->todayTransactions();
 $payment = new InstantPayment(
     creditorName: 'Mario Rossi',
     creditorIban: 'IT…',
-    amount: 150.25,
+    amount: '150.25',                  // stringa decimale, mai float
     paymentInformation: 'Fattura 1/2026',
     debtorName: 'Example Srl',
 );

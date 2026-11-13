@@ -18,11 +18,6 @@ use Shellrent\OpenBanking\Support\SepaText;
 final class PaymentGuard
 {
     /**
-     * Tolerance when comparing the simulated amount with the executed one.
-     */
-    private const float AMOUNT_TOLERANCE = 0.001;
-
-    /**
      * Returns the simulation ID to execute, after checking that:
      * - the simulation was accepted;
      * - it belongs to the payment (same creditor IBAN, name and amount, when the response reports them):
@@ -36,7 +31,7 @@ final class PaymentGuard
         InstantSimulation|SctSimulation $simulation,
         string $creditorIban,
         string $creditorName,
-        float $amount,
+        string $amount,
         bool $acceptVopResult,
     ): string {
         if (! $simulation->isAccepted() || $simulation->simulationId === null) {
@@ -61,7 +56,8 @@ final class PaymentGuard
             );
         }
 
-        if ($simulation->amount !== null && abs($simulation->amount - $amount) > self::AMOUNT_TOLERANCE) {
+        // Both amounts are decimal strings with two decimals: compared exactly, without tolerance (D-65).
+        if ($simulation->amount !== null && $simulation->amount !== $amount) {
             throw new InvalidRequestException('The simulation belongs to a payment with a different amount.');
         }
 

@@ -35,11 +35,11 @@ final readonly class TransactionList
         public ?string $siaCode,
         public ?string $accountType,
         public ?string $accountCurrency,
-        public ?float $initialAccountingBalance,
-        public ?float $finalAccountingBalance,
-        public ?float $liquidBalance,
-        public ?float $availableBalance,
-        public ?float $creditLine,
+        public ?string $initialAccountingBalance,
+        public ?string $finalAccountingBalance,
+        public ?string $liquidBalance,
+        public ?string $availableBalance,
+        public ?string $creditLine,
         public array $transactionIds = [],
     ) {}
 
@@ -94,11 +94,11 @@ final readonly class TransactionList
             siaCode: $first->string('SIACode', 'siaCode'),
             accountType: $first->string('accountType'),
             accountCurrency: $first->string('accountCurrency'),
-            initialAccountingBalance: $first->float('initialAccountingBalance'),
-            finalAccountingBalance: $first->float('finalAccountingBalance'),
-            liquidBalance: $first->float('liquidBalance'),
-            availableBalance: $first->float('availableBalance'),
-            creditLine: $first->float('creditLine'),
+            initialAccountingBalance: $first->amount('initialAccountingBalance'),
+            finalAccountingBalance: $first->amount('finalAccountingBalance'),
+            liquidBalance: $first->amount('liquidBalance'),
+            availableBalance: $first->amount('availableBalance'),
+            creditLine: $first->amount('creditLine'),
             transactionIds: $transactionIds,
         );
     }

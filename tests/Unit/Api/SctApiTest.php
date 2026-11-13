@@ -67,8 +67,8 @@ final class SctApiTest extends TestCase
         self::assertSame(ValidationStatus::Accepted, $simulation->validationStatus);
         self::assertSame('SIM-SCT-0001', $simulation->simulationId);
         self::assertNull($simulation->endToEndId);
-        self::assertSame(1250.0, $simulation->amount);
-        self::assertSame(0.9, $simulation->fees, 'Q-15: "fees" in the current spec');
+        self::assertSame('1250.00', $simulation->amount);
+        self::assertSame('0.90', $simulation->fees, 'Q-15: "fees" in the current spec');
         self::assertSame('INTESA SANPAOLO SPA', $simulation->creditorAgent);
         self::assertSame('2026-01-02', $simulation->executionDate?->format('Y-m-d'), 'Q-09: "02/01/2026" is January 2nd');
         self::assertSame('2026-01-02', $simulation->valueDate?->format('Y-m-d'));
@@ -108,7 +108,7 @@ final class SctApiTest extends TestCase
     public function it_refuses_a_36_character_end_to_end_id_in_live(): void
     {
         $http = new MockHttp;
-        $payment = new SctPayment('Fornitore Esempio Srl', self::CREDITOR_IBAN, 1250, 'Fattura 2/2026', 'Example Srl', endToEndId: str_repeat('E', 36));
+        $payment = new SctPayment('Fornitore Esempio Srl', self::CREDITOR_IBAN, '1250', 'Fattura 2/2026', 'Example Srl', endToEndId: str_repeat('E', 36));
 
         $this->expectException(InvalidRequestException::class);
 
@@ -137,7 +137,7 @@ final class SctApiTest extends TestCase
         self::assertSame(PaymentStatus::Accepted, $execution->paymentStatus, 'Q-28: ACTC, accepted but funds not yet blocked');
         self::assertTrue($execution->paymentStatus->isAccepted(), 'M-03: an ACTC order must not be paid again');
         self::assertFalse($execution->paymentStatus->isFinal());
-        self::assertSame(0.9, $execution->fees, 'Q-15: "commissioni" in older responses');
+        self::assertSame('0.90', $execution->fees, 'Q-15: "commissioni" in older responses');
         self::assertSame('BCITITMM', $execution->creditor->bic);
         self::assertSame('2026-01-02', $execution->executionDate?->format('Y-m-d'));
         self::assertSame('2026-01-05', $execution->settlementDate?->format('Y-m-d'));
@@ -176,7 +176,7 @@ final class SctApiTest extends TestCase
         $this->expectException(InvalidRequestException::class);
         $this->expectExceptionMessage('different amount');
 
-        $api->execute($this->payment(amount: 1250.01), $api->simulate($this->payment()));
+        $api->execute($this->payment(amount: '1250.01'), $api->simulate($this->payment()));
     }
 
     #[Test]
@@ -190,7 +190,7 @@ final class SctApiTest extends TestCase
         $restored = SctSimulation::fromArray($data);
 
         self::assertSame('2026-01-02', $restored->executionDate?->format('Y-m-d'));
-        self::assertSame(0.9, $restored->fees);
+        self::assertSame('0.90', $restored->fees);
         self::assertSame(VopMatchResult::Match, $restored->vop->result);
         self::assertSame('PAY-SCT-0001', $api->execute($this->payment(), $restored)->paymentId);
     }
@@ -265,7 +265,7 @@ final class SctApiTest extends TestCase
         self::assertSame('2026-01-02', $first->executionDate?->format('Y-m-d'));
         self::assertSame(PaymentStatus::Canceled, $second->paymentStatus);
         self::assertNull($second->endToEndId);
-        self::assertSame(80.5, $second->amount);
+        self::assertSame('80.50', $second->amount);
     }
 
     /**
@@ -369,7 +369,7 @@ final class SctApiTest extends TestCase
         $this->api(new MockHttp)->revoke();
     }
 
-    private function payment(float $amount = 1250, ?DateTimeImmutable $requestedExecutionDate = null): SctPayment
+    private function payment(string $amount = '1250', ?DateTimeImmutable $requestedExecutionDate = null): SctPayment
     {
         return new SctPayment(
             creditorName: 'Fornitore Esempio Srl',

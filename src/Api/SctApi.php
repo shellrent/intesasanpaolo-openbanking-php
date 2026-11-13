@@ -26,6 +26,7 @@ use Shellrent\OpenBanking\Response\Sct\SctRevocation;
 use Shellrent\OpenBanking\Response\Sct\SctSimulation;
 use Shellrent\OpenBanking\Support\DateFormat;
 use Shellrent\OpenBanking\Support\DateParser;
+use Shellrent\OpenBanking\Support\JsonNumber;
 use Shellrent\OpenBanking\Support\Url;
 
 /**
@@ -200,7 +201,7 @@ final class SctApi
      *
      * An empty "endToEndId" is sent as "" in the sandbox and omitted in Live (docs/api-quirks.md, Q-34).
      *
-     * @return array<string, scalar>
+     * @return array<string, scalar|JsonNumber>
      */
     private function body(SctPayment $payment): array
     {
@@ -213,7 +214,7 @@ final class SctApi
             'debtorIban' => $payment->debtorIban ?? $this->config->iban,
             'creditorName' => $payment->creditorName,
             'creditorIban' => $payment->creditorIban,
-            'amount' => $payment->amount,
+            'amount' => JsonNumber::amount($payment->amount),
             'currency' => $payment->currency,
             'paymentInformation' => $payment->paymentInformation,
         ];

@@ -11,6 +11,7 @@ use Shellrent\OpenBanking\Http\ApiResponse;
 use Shellrent\OpenBanking\Response\Party;
 use Shellrent\OpenBanking\Response\VopResult;
 use Shellrent\OpenBanking\Support\DateParser;
+use Shellrent\OpenBanking\Support\Decimal;
 use Shellrent\OpenBanking\Support\EndToEndId;
 
 /**
@@ -34,7 +35,7 @@ final readonly class InstantSimulation
         public ?string $simulationId,
         public ?string $transactionStatusDescription,
         public ?string $endToEndId,
-        public ?float $amount,
+        public ?string $amount,
         public ?string $currency,
         public ?DateTimeImmutable $date,
         public ?string $categoryPurpose,
@@ -67,7 +68,7 @@ final readonly class InstantSimulation
             simulationId: $payload->string('simulationId'),
             transactionStatusDescription: $payload->string('transactionStatusDescription'),
             endToEndId: EndToEndId::normalize($payload->string('endToEndId')),
-            amount: $payload->float('amount'),
+            amount: $payload->amount('amount'),
             currency: $payload->string('currency'),
             date: $payload->dateTime('date'),
             categoryPurpose: $payload->string('categoryPurpose'),
@@ -114,7 +115,6 @@ final readonly class InstantSimulation
     {
         $text = static fn (string $key): ?string => is_string($data[$key] ?? null) ? $data[$key] : null;
         $array = static fn (string $key): array => is_array($data[$key] ?? null) ? $data[$key] : [];
-        $amount = $data['amount'] ?? null;
         $date = $text('date');
 
         if (! array_key_exists('simulationId', $data) || ! array_key_exists('vop', $data)) {
@@ -127,7 +127,7 @@ final readonly class InstantSimulation
             simulationId: $text('simulationId'),
             transactionStatusDescription: $text('transactionStatusDescription'),
             endToEndId: $text('endToEndId'),
-            amount: is_int($amount) || is_float($amount) ? (float) $amount : null,
+            amount: Decimal::fromSaved($data, 'amount'),
             currency: $text('currency'),
             date: $date === null ? null : DateParser::dateTime($date),
             categoryPurpose: $text('categoryPurpose'),

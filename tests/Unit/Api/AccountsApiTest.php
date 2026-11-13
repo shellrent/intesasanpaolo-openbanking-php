@@ -36,9 +36,9 @@ final class AccountsApiTest extends TestCase
 
         self::assertSame(self::BASE.'/balance', (string) $http->request(1)->getUri());
         self::assertSame('EUR', $balance->currency);
-        self::assertSame(15230.45, $balance->availableBalance);
-        self::assertSame(14980.1, $balance->accountingBalance);
-        self::assertSame(0.0, $balance->creditLine);
+        self::assertSame('15230.45', $balance->availableBalance);
+        self::assertSame('14980.10', $balance->accountingBalance, 'D-65: two decimals');
+        self::assertSame('0.00', $balance->creditLine);
         self::assertSame('2026-01-14 00:00:00 Europe/Rome', $balance->inquiryDate?->format('Y-m-d H:i:s e'));
         self::assertSame('2026-01-15T09:52:10+01:00', $balance->executionDate?->format(DATE_ATOM));
         self::assertSame('TX-B', $balance->transactionId);
@@ -102,11 +102,11 @@ final class AccountsApiTest extends TestCase
         self::assertSame('AB123', $list->siaCode);
         self::assertSame('CC', $list->accountType);
         self::assertSame('EUR', $list->accountCurrency);
-        self::assertSame(10000.0, $list->initialAccountingBalance);
-        self::assertSame(9850.5, $list->finalAccountingBalance);
-        self::assertSame(9850.5, $list->liquidBalance);
-        self::assertSame(9700.25, $list->availableBalance);
-        self::assertSame(0.0, $list->creditLine);
+        self::assertSame('10000.00', $list->initialAccountingBalance);
+        self::assertSame('9850.50', $list->finalAccountingBalance);
+        self::assertSame('9850.50', $list->liquidBalance);
+        self::assertSame('9700.25', $list->availableBalance);
+        self::assertSame('0.00', $list->creditLine);
     }
 
     #[Test]
@@ -122,9 +122,9 @@ final class AccountsApiTest extends TestCase
 
         self::assertSame('TX-0001', $debit->uniqueId);
         self::assertSame('REF-0001', $debit->reference);
-        self::assertSame(-149.5, $debit->amount);
+        self::assertSame('-149.50', $debit->amount);
         self::assertSame('EUR', $debit->currency);
-        self::assertSame(-149.5, $debit->originalAmount);
+        self::assertSame('-149.50', $debit->originalAmount);
         self::assertSame('EUR', $debit->originalCurrency);
         self::assertSame(1.0, $debit->exchangeRate);
         self::assertSame('BONIFICO', $debit->type);
@@ -137,7 +137,7 @@ final class AccountsApiTest extends TestCase
         self::assertSame('accounted', $debit->rawStatus);
 
         self::assertSame('20260002', $reversed->reference);
-        self::assertSame(250.0, $reversed->amount);
+        self::assertSame('250.00', $reversed->amount);
         self::assertNull($reversed->originalAmount);
         self::assertNull($reversed->additionalInfo);
         self::assertSame(TransactionStatus::Reversed, $reversed->status);
@@ -189,7 +189,7 @@ final class AccountsApiTest extends TestCase
         self::assertNull($first->valueDate);
         self::assertNull($second->valueDate);
         self::assertSame(TransactionStatus::Unaccounted, $first->status);
-        self::assertSame(-20.0, $first->amount);
+        self::assertSame('-20.00', $first->amount);
     }
 
     #[Test]

@@ -15,7 +15,7 @@ Documentazione tecnica dell'SDK. Per installazione e uso parti dal [README](../R
 | Documento | Contenuto |
 |---|---|
 | [architecture.md](architecture.md) | struttura del codice, percorso di una richiesta, eccezioni, token, API pubblica e interna |
-| [dates-and-formats.md](dates-and-formats.md) | come l'SDK legge e scrive le date, fusi orari, uso con Carbon |
+| [dates-and-formats.md](dates-and-formats.md) | come l'SDK legge e scrive date e importi, fusi orari, uso con Carbon e con i centesimi |
 | [payment-flows.md](payment-flows.md) | simulazione, VoP, esecuzione, resubmit, stati, revoca, simulazioni salvate (SCT Instant e SCT) |
 | [testing.md](testing.md) | comandi, struttura dei test, `MockHttp`, regole sulle fixture, test di integrazione con sandbox e Live |
 | [adding-an-endpoint.md](adding-an-endpoint.md) | ricetta per integrare una nuova API, con l'esempio delle verifiche IBAN |

@@ -17,18 +17,18 @@ final readonly class Balance
 {
     /**
      * @param  string|null  $currency  Currency of the account.
-     * @param  float|null  $availableBalance  Today's available balance.
-     * @param  float|null  $accountingBalance  Accounting balance on the requested date.
-     * @param  float|null  $creditLine  Credit line of the account.
+     * @param  string|null  $availableBalance  Today's available balance, as a decimal string (e.g. "14980.10", D-65).
+     * @param  string|null  $accountingBalance  Accounting balance on the requested date.
+     * @param  string|null  $creditLine  Credit line of the account.
      * @param  DateTimeImmutable|null  $inquiryDate  Requested date (midnight, Europe/Rome).
      * @param  DateTimeImmutable|null  $executionDate  When the balance was extracted.
      * @param  string|null  $transactionId  "X-ISP-Transaction-ID" of the response, for the ISP support.
      */
     public function __construct(
         public ?string $currency,
-        public ?float $availableBalance,
-        public ?float $accountingBalance,
-        public ?float $creditLine,
+        public ?string $availableBalance,
+        public ?string $accountingBalance,
+        public ?string $creditLine,
         public ?DateTimeImmutable $inquiryDate,
         public ?DateTimeImmutable $executionDate,
         public ?string $transactionId = null,
@@ -41,9 +41,9 @@ final readonly class Balance
     {
         return new self(
             currency: $payload->string('currency'),
-            availableBalance: $payload->float('availableBalance'),
-            accountingBalance: $payload->float('accountingBalance'),
-            creditLine: $payload->float('creditLine'),
+            availableBalance: $payload->amount('availableBalance'),
+            accountingBalance: $payload->amount('accountingBalance'),
+            creditLine: $payload->amount('creditLine'),
             inquiryDate: $payload->date(DateFormat::Compact, 'inquiryDate'),
             executionDate: $payload->dateTime('executionDate'),
             transactionId: $payload->transactionId(),

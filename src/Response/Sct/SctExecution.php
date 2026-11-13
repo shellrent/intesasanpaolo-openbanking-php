@@ -18,7 +18,7 @@ final readonly class SctExecution
      * @param  string|null  $customerCro  Unique identifier (CRO) of the payment, used by status and revoke.
      * @param  PaymentStatus|null  $paymentStatus  ACSP, ACTC, VRFY or RJCT; null for an unknown value: see $rawPaymentStatus.
      * @param  Party  $creditor  Only the creditor BIC is returned by this API.
-     * @param  float|null  $fees  Fees of the payment ("fees" or "commissioni": docs/api-quirks.md, Q-15).
+     * @param  string|null  $fees  Fees, as a decimal string, of the payment ("fees" or "commissioni": docs/api-quirks.md, Q-15).
      * @param  DateTimeImmutable|null  $revokeDate  Revoke deadline, with the time of "revokeTime" when present.
      * @param  string|null  $transactionId  "X-ISP-Transaction-ID" of the response, for the ISP support.
      */
@@ -28,11 +28,11 @@ final readonly class SctExecution
         public ?PaymentStatus $paymentStatus,
         public ?string $rawPaymentStatus,
         public ?string $transactionStatusDescription,
-        public ?float $amount,
+        public ?string $amount,
         public ?string $currency,
         public Party $creditor,
         public ?string $creditorAgent,
-        public ?float $fees,
+        public ?string $fees,
         public ?DateTimeImmutable $executionDate,
         public ?DateTimeImmutable $valueDate,
         public ?DateTimeImmutable $settlementDate,
@@ -57,11 +57,11 @@ final readonly class SctExecution
             paymentStatus: PaymentStatus::fromApi($rawStatus),
             rawPaymentStatus: $rawStatus,
             transactionStatusDescription: $payload->string('transactionStatusDescription'),
-            amount: $payload->float('amount'),
+            amount: $payload->amount('amount'),
             currency: $payload->string('currency'),
             creditor: Party::fromPayload($payload, 'creditor'),
             creditorAgent: $payload->string('creditorAgent'),
-            fees: $payload->float('fees', 'commissioni'),
+            fees: $payload->amount('fees', 'commissioni'),
             executionDate: SctDates::read($payload, 'executionDate'),
             valueDate: SctDates::read($payload, 'valueDate'),
             settlementDate: SctDates::read($payload, 'settlementDate'),

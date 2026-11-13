@@ -8,7 +8,7 @@ Come si esegue un bonifico con l'SDK, e cosa fare in ogni esito. I comportamenti
 2. **Eseguire equivale ad accettare l'esito della Verification of Payee (VoP)** (Q-37). L'SDK esegue in automatico solo con un match pieno. In ogni altro caso, compreso un esito assente o sconosciuto, `execute()` lancia `VopConfirmationRequiredException` finché non si passa `acceptVopResult: true` (D-36).
 3. **Nessun retry automatico.** Dopo una `TransportException`, una `UnexpectedResponseException` o un'`ApiException` con stato 5xx su un'esecuzione l'esito è **sconosciuto**: il bonifico potrebbe essere partito. Prima di riprovare si controlla lo stato o la lista dei pagamenti.
 4. **La simulazione deve corrispondere al pagamento.** `execute()` rifiuta una simulazione non accettata, o fatta per un altro IBAN del creditore, un altro nome del creditore o un altro importo (`InvalidRequestException`). Il nome conta perché l'esito VoP vale per il nome simulato: dopo un close match, per pagare con il nome suggerito si simula di nuovo (D-62). Nel confronto non contano maiuscole, spazi e accenti.
-5. **Importi**: euro, positivi, al massimo 2 decimali. L'errore di calcolo dei float viene assorbito (`0.1 + 0.2` diventa `0.3`), un importo come `10.567` viene rifiutato (D-38).
+5. **Importi**: euro, come **stringa decimale** (`'1250.10'`), positivi, al massimo 2 decimali, mai `float`. Un formato non valido (`'1,50'`, `'1.005'`, `'1e3'`) viene rifiutato e niente viene arrotondato; nelle risposte gli importi sono stringhe con 2 decimali (D-65, [dates-and-formats.md](dates-and-formats.md)).
 6. **Testi**: l'SDK controlla solo i campi obbligatori e le lunghezze SEPA (nomi 70 caratteri, causale 140, `endToEndId` 35 in Live e 36 in sandbox, D-56) e invia i caratteri così come sono. Per restare nel set ammesso dalla banca c'è l'helper opzionale `SepaText::sanitize()`. Attenzione: cambiare il nome del creditore può cambiare l'esito VoP (D-39).
 
 ## SCT Instant
@@ -29,7 +29,7 @@ use Shellrent\OpenBanking\Request\InstantPayment;
 $payment = new InstantPayment(
     creditorName: 'Mario Rossi',
     creditorIban: 'IT…',
-    amount: 150.25,
+    amount: '150.25',
     paymentInformation: 'Fattura 1/2026',
     debtorName: 'Example Srl',      // intestatario del conto
     // debtorIban: null              → IBAN della configurazione
@@ -113,7 +113,7 @@ use Shellrent\OpenBanking\Request\SctPayment;
 $payment = new SctPayment(
     creditorName: 'Fornitore Esempio Srl',
     creditorIban: 'IT…',
-    amount: 1250.00,
+    amount: '1250.00',
     paymentInformation: 'Fattura 2/2026',
     debtorName: 'Example Srl',
     requestedExecutionDate: new DateTimeImmutable('today'),   // opzionale, ma senza data la banca esegue il giorno lavorativo successivo (Q-38)

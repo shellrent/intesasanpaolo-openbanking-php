@@ -49,7 +49,7 @@ final class SandboxTest extends IntegrationTestCase
         $balance = $this->client('IT10B0306901000100000005479')->accounts()->balance(new DateTimeImmutable('2018-01-31'));
 
         self::assertSame('EUR', $balance->currency);
-        self::assertSame(250000.0, $balance->availableBalance);
+        self::assertSame('250000.00', $balance->availableBalance, 'D-65: the sandbox sends the balance as a string');
         self::assertNotNull($balance->executionDate, 'Q-49: date-time with ":" before the milliseconds');
     }
 
@@ -76,14 +76,14 @@ final class SandboxTest extends IntegrationTestCase
     }
 
     /**
-     * @return iterable<string, array{float, string, string, ValidationStatus, VopMatchResult|null, string|null}>
+     * @return iterable<string, array{string, string, string, ValidationStatus, VopMatchResult|null, string|null}>
      */
     public static function instantSimulations(): iterable
     {
-        yield 'match' => [450, 'Mr. Receiver', 'SCT instant payment simulation', ValidationStatus::Accepted, VopMatchResult::Match, null];
-        yield 'rejected, no VoP outcome' => [24.8, 'Mr. Receiver', 'SCT instant payment simulation', ValidationStatus::Rejected, null, null];
-        yield 'close match' => [4.5, 'Paolo Bianchini', 'SCT instant payment simulation VOP CLOSE MATCH', ValidationStatus::Accepted, VopMatchResult::CloseMatch, 'Paolo Bianchi'];
-        yield 'check not possible' => [4.5, 'Paolo Bianchi', 'SCT instant payment simulation VOP ERROR', ValidationStatus::Accepted, VopMatchResult::NotPossible, null];
+        yield 'match' => ['450', 'Mr. Receiver', 'SCT instant payment simulation', ValidationStatus::Accepted, VopMatchResult::Match, null];
+        yield 'rejected, no VoP outcome' => ['24.8', 'Mr. Receiver', 'SCT instant payment simulation', ValidationStatus::Rejected, null, null];
+        yield 'close match' => ['4.5', 'Paolo Bianchini', 'SCT instant payment simulation VOP CLOSE MATCH', ValidationStatus::Accepted, VopMatchResult::CloseMatch, 'Paolo Bianchi'];
+        yield 'check not possible' => ['4.5', 'Paolo Bianchi', 'SCT instant payment simulation VOP ERROR', ValidationStatus::Accepted, VopMatchResult::NotPossible, null];
     }
 
     /**
@@ -92,7 +92,7 @@ final class SandboxTest extends IntegrationTestCase
     #[Test]
     #[DataProvider('instantSimulations')]
     public function it_simulates_an_instant_payment(
-        float $amount,
+        string $amount,
         string $creditorName,
         string $information,
         ValidationStatus $status,
@@ -116,8 +116,8 @@ final class SandboxTest extends IntegrationTestCase
     public function it_executes_a_simulated_instant_payment(): void
     {
         $client = $this->client(self::X1);
-        $simulation = $client->sctInstant()->simulate(new InstantPayment('Mr. Receiver', self::X2, 450, 'SCT instant payment simulation', 'Mr. Sender', null, self::E2E, ''));
-        $payment = new InstantPayment('Mr. Receiver', self::X2, 450, 'SCT instant payment', 'Mr. Sender', null, self::E2E, '');
+        $simulation = $client->sctInstant()->simulate(new InstantPayment('Mr. Receiver', self::X2, '450', 'SCT instant payment simulation', 'Mr. Sender', null, self::E2E, ''));
+        $payment = new InstantPayment('Mr. Receiver', self::X2, '450', 'SCT instant payment', 'Mr. Sender', null, self::E2E, '');
 
         $execution = $client->sctInstant()->execute($payment, $simulation);
 
@@ -126,17 +126,17 @@ final class SandboxTest extends IntegrationTestCase
     }
 
     /**
-     * @return iterable<string, array{float, PaymentStatus}>
+     * @return iterable<string, array{string, PaymentStatus}>
      */
     public static function instantExecutions(): iterable
     {
-        yield 'rejected' => [1500, PaymentStatus::Rejected];
-        yield 'to verify, with "null" strings (Q-50)' => [330, PaymentStatus::ToVerify];
+        yield 'rejected' => ['1500', PaymentStatus::Rejected];
+        yield 'to verify, with "null" strings (Q-50)' => ['330', PaymentStatus::ToVerify];
     }
 
     #[Test]
     #[DataProvider('instantExecutions')]
-    public function it_reads_the_outcome_of_an_instant_execution(float $amount, PaymentStatus $expected): void
+    public function it_reads_the_outcome_of_an_instant_execution(string $amount, PaymentStatus $expected): void
     {
         $payment = new InstantPayment('Mr. Receiver', self::X2, $amount, 'SCT instant payment', 'Mr. Sender', null, self::E2E, '');
 
@@ -152,9 +152,9 @@ final class SandboxTest extends IntegrationTestCase
     #[Test]
     public function it_executes_an_instant_payment_that_stays_pending(): void
     {
-        $payment = new InstantPayment('Mr. Receiver', self::X2, 20, 'SCT instant payment', 'Mr. Sender', null, '02INTER20180305HSRT1590814298', '');
+        $payment = new InstantPayment('Mr. Receiver', self::X2, '20', 'SCT instant payment', 'Mr. Sender', null, '02INTER20180305HSRT1590814298', '');
 
-        $execution = $this->client(self::X1)->sctInstant()->execute($payment, $this->instantSimulation(20));
+        $execution = $this->client(self::X1)->sctInstant()->execute($payment, $this->instantSimulation('20'));
 
         self::assertSame(PaymentStatus::Pending, $execution->paymentStatus);
         self::assertSame('PDNG', $execution->rawPaymentStatus);
@@ -188,8 +188,8 @@ final class SandboxTest extends IntegrationTestCase
     #[Test]
     public function it_simulates_an_sct_payment(): void
     {
-        $accepted = $this->client(self::X5)->sct()->simulate($this->sctPayment(40, 'SCT payment simulation', 'IT94H0306901000XTESTXCASEX6'));
-        $rejected = $this->client('IT04G0306901000XTESTXCASEX7')->sct()->simulate($this->sctPayment(50, 'SCT payment simulation', 'IT94H0306901000XTESTXCASEX8'));
+        $accepted = $this->client(self::X5)->sct()->simulate($this->sctPayment('40', 'SCT payment simulation', 'IT94H0306901000XTESTXCASEX6'));
+        $rejected = $this->client('IT04G0306901000XTESTXCASEX7')->sct()->simulate($this->sctPayment('50', 'SCT payment simulation', 'IT94H0306901000XTESTXCASEX8'));
 
         self::assertSame(ValidationStatus::Accepted, $accepted->validationStatus);
         self::assertSame(VopMatchResult::Match, $accepted->vop->result);
@@ -199,13 +199,13 @@ final class SandboxTest extends IntegrationTestCase
     }
 
     /**
-     * @return iterable<string, array{string, string, float, string, string|null, PaymentStatus}>
+     * @return iterable<string, array{string, string, string, string, string|null, PaymentStatus}>
      */
     public static function sctExecutions(): iterable
     {
-        yield 'in progress' => [self::X5, 'IT94H0306901000XTESTXCASEX6', 20, '123456789123456789', null, PaymentStatus::InProgress];
-        yield 'accepted, future date' => [self::X5, 'IT94H0306901000XTESTXCASEX6', 40, '123456789123456789', '2099-12-31', PaymentStatus::Accepted];
-        yield 'to verify' => ['IT04G0306901000XTESTXCASEX9', 'IT94H0306901000XTESTXCASEX10', 50, '12349087654321', null, PaymentStatus::ToVerify];
+        yield 'in progress' => [self::X5, 'IT94H0306901000XTESTXCASEX6', '20', '123456789123456789', null, PaymentStatus::InProgress];
+        yield 'accepted, future date' => [self::X5, 'IT94H0306901000XTESTXCASEX6', '40', '123456789123456789', '2099-12-31', PaymentStatus::Accepted];
+        yield 'to verify' => ['IT04G0306901000XTESTXCASEX9', 'IT94H0306901000XTESTXCASEX10', '50', '12349087654321', null, PaymentStatus::ToVerify];
     }
 
     /**
@@ -216,7 +216,7 @@ final class SandboxTest extends IntegrationTestCase
     public function it_reads_the_outcome_of_an_sct_execution(
         string $debtorIban,
         string $creditorIban,
-        float $amount,
+        string $amount,
         string $simulationId,
         ?string $date,
         PaymentStatus $expected,
@@ -313,7 +313,7 @@ final class SandboxTest extends IntegrationTestCase
     /**
      * The execution test cases use the fixed simulation ID "123456789".
      */
-    private function instantSimulation(float $amount): InstantSimulation
+    private function instantSimulation(string $amount): InstantSimulation
     {
         return InstantSimulation::fromArray([
             'validationStatus' => 'ACCP',
@@ -324,7 +324,7 @@ final class SandboxTest extends IntegrationTestCase
         ]);
     }
 
-    private function sctPayment(float $amount, string $information, string $creditorIban, ?DateTimeImmutable $date = null): SctPayment
+    private function sctPayment(string $amount, string $information, string $creditorIban, ?DateTimeImmutable $date = null): SctPayment
     {
         return new SctPayment('Paolo Bianchi', $creditorIban, $amount, $information, 'Mario Rossi', null, $date ?? new DateTimeImmutable('today'), self::E2E, 'CASH');
     }

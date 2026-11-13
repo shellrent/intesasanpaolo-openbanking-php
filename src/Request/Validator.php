@@ -33,9 +33,10 @@ final class Validator
     public const int MAX_LIVE_END_TO_END_ID_LENGTH = 35;
 
     /**
-     * Amounts are compared in cents with this tolerance, to absorb float errors such as 0.1 + 0.2.
+     * Integer digits of an amount: up to 999999999999.99, the range of a numeric(14,2) column.
+     * The SEPA limits are lower and are enforced by the bank.
      */
-    private const float CENT_TOLERANCE = 0.000001;
+    public const int MAX_AMOUNT_INTEGER_DIGITS = 12;
 
     public static function text(string $value, string $field, int $maxLength): string
     {
@@ -64,22 +65,29 @@ final class Validator
     }
 
     /**
-     * Validates a positive amount with at most two decimals and rounds away float noise
-     * (0.30000000000000004 becomes 0.3, 10.567 is rejected).
+     * Validates an amount given as a decimal string and normalizes it to two decimals ("1250.1" is "1250.10").
+     *
+     * The format is strict (docs/decisions.md, D-65): digits, optionally a dot and one or two decimals;
+     * no sign, exponent, thousands separator, comma, spaces or leading zeros. Nothing is rounded.
      */
-    public static function amount(float $amount): float
+    public static function amount(string $amount): string
     {
-        if (! is_finite($amount) || $amount <= 0) {
-            throw new InvalidRequestException('The amount must be a positive number.');
+        $pattern = sprintf('/^(0|[1-9]\d{0,%d})(?:\.(\d{1,2}))?$/', self::MAX_AMOUNT_INTEGER_DIGITS - 1);
+
+        if (preg_match($pattern, $amount, $parts) !== 1) {
+            throw new InvalidRequestException(sprintf(
+                'The amount "%s" is not valid: use a positive decimal string with a dot and at most two decimals, e.g. "1250.10".',
+                $amount,
+            ));
         }
 
-        $cents = $amount * 100;
+        $normalized = $parts[1].'.'.str_pad($parts[2] ?? '', 2, '0');
 
-        if (abs($cents - round($cents)) > self::CENT_TOLERANCE) {
-            throw new InvalidRequestException(sprintf('The amount %s has more than two decimals.', (string) $amount));
+        if ($normalized === '0.00') {
+            throw new InvalidRequestException('The amount must be greater than zero.');
         }
 
-        return round($amount, 2);
+        return $normalized;
     }
 
     /**

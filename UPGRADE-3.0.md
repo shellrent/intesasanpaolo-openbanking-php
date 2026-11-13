@@ -62,6 +62,22 @@ Il namespace cambia da `Exceptions` (plurale) a `Exception` (singolare). Le ecce
 - Corretto il parsing delle date `d/m/Y`: nella 2.x i giorni da 1 a 12 delle date di esecuzione SCT erano letti con giorno e mese invertiti.
 - Dettagli in `docs/dates-and-formats.md`.
 
+## Importi
+
+Nella 2.x gli importi erano `float`, sia nelle richieste sia nei model. Nella 3.0 **non sono mai `float`**: sono stringhe decimali con il punto come separatore.
+
+| | 2.x | 3.0 |
+|---|---|---|
+| richieste | `setAmount(1250.1)` | `amount: '1250.10'` (anche `'1250.1'` o `'1250'`), validata e normalizzata a 2 decimali |
+| risposte | `getAmount()`: `float` | `amount`: `?string` con 2 decimali, es. `'1250.10'`, `'-525.00'` |
+| confronto tra simulazione ed esecuzione | — | esatto, senza tolleranza |
+
+- Un `float` passato come importo è un `TypeError`. Un formato non valido (`'1,50'`, `'1.005'`, `'1e3'`, `'-1'`, `'0'`) dà un'`InvalidRequestException`: niente viene arrotondato.
+- Un importo della banca con più di 2 decimali, come il rumore `0.30000000000000004`, dà un'`UnexpectedResponseException`.
+- `Support\Amount::fromCents()` e `toCents()` convertono da e verso i centesimi in modo esatto. Con `brick/money` si passa `(string) $money->getAmount()`.
+- Il JSON inviato alla banca è identico a quello della 2.x (`1250.1`, `1250`).
+- Dettagli in `docs/dates-and-formats.md`.
+
 ## Token OAuth2
 
 - Il token si può condividere tra istanze con un `TokenStore` (vedi `docs/architecture.md`). Nella 2.x ogni istanza rifaceva il login.
@@ -87,7 +103,7 @@ $client = new IntesaSanPaoloClient($config, $guzzle, $tokenStore);  // client Gu
 
 ### `Balance`
 
-I getter diventano le proprietà `currency`, `availableBalance`, `accountingBalance`, `creditLine`, `inquiryDate` ed `executionDate`, tutte nullable. Nuova proprietà: `transactionId`.
+I getter diventano le proprietà `currency`, `availableBalance`, `accountingBalance`, `creditLine`, `inquiryDate` ed `executionDate`, tutte nullable. I saldi sono stringhe decimali (`'14980.10'`), non `float`. Nuova proprietà: `transactionId`.
 
 ### `Transactions` → `TransactionList`
 
@@ -98,8 +114,8 @@ I getter diventano le proprietà `currency`, `availableBalance`, `accountingBala
 | `getTotalAccountedTransactions()` | `totalAccounted` (null se l'API non lo indica) |
 | `getTotalUnaccountedTransactions()` (0 se assente) | `totalUnaccounted` (null se assente) |
 | `getSIACode()` | `siaCode` |
-| `getInitialAccountingBalance()`, `getFinalAccountingBalance()`, `getLiquidBalance()` (stringhe) | `initialAccountingBalance`, `finalAccountingBalance`, `liquidBalance` (**float**) |
-| `getBankCode()`, `getCustomerCode()`, `getAccountType()`, `getAccountCurrency()`, `getAvailableBalance()`, `getCreditLine()` | proprietà con lo stesso nome |
+| `getInitialAccountingBalance()`, `getFinalAccountingBalance()`, `getLiquidBalance()` (stringhe), `getAvailableBalance()`, `getCreditLine()` | `initialAccountingBalance`, `finalAccountingBalance`, `liquidBalance`, `availableBalance`, `creditLine`: **stringhe decimali con 2 decimali** (`'9850.50'`) |
+| `getBankCode()`, `getCustomerCode()`, `getAccountType()`, `getAccountCurrency()` | proprietà con lo stesso nome |
 | `getInquiryDate()`, `getExecutionDate()` | `inquiryDate`, `executionDate` |
 | — | `iban`, `transactionIds` (uno per pagina), `isComplete()` |
 
@@ -112,8 +128,9 @@ I getter diventano le proprietà `currency`, `availableBalance`, `accountingBala
 | `getReason()` | **`additionalInfo`** (il nome del campo dell'API) |
 | `getStatus()` (stringa) | `status` (enum `TransactionStatus`, null se il valore è sconosciuto) e `rawStatus` (stringa originale) |
 | `getValueDate()`: **data corrente** se l'API non la indica | `valueDate`: **null** se l'API non la indica, o se manda `""` o `"0"` |
-| `getAmount()`: 0.0 se l'importo manca | `amount`: un movimento senza importo genera un'`UnexpectedResponseException` |
-| `getUniqueId()`, `getReference()`, `getDate()`, `getAccountingDate()`, `getCurrency()`, `getOriginalAmount()`, `getOriginalCurrency()`, `getExchangeRate()`, `getType()`, `getDescription()` | proprietà con lo stesso nome |
+| `getAmount()`: `float`, 0.0 se l'importo manca | `amount`: stringa decimale con segno (`'-525.00'`); un movimento senza importo genera un'`UnexpectedResponseException` |
+| `getOriginalAmount()` | `originalAmount`: stringa decimale, fino a 4 decimali per le valute diverse dall'euro |
+| `getUniqueId()`, `getReference()`, `getDate()`, `getAccountingDate()`, `getCurrency()`, `getOriginalCurrency()`, `getExchangeRate()`, `getType()`, `getDescription()` | proprietà con lo stesso nome (`exchangeRate` resta `float`: non è un importo) |
 
 Nella 2.x i campi testuali assenti diventavano stringhe vuote; nella 3.0 sono `null`.
 
@@ -121,7 +138,7 @@ Nella 2.x i campi testuali assenti diventavano stringhe vuote; nella 3.0 sono `n
 
 | 2.x | 3.0 |
 |---|---|
-| `new PaymentExecution()` + setter | `new InstantPayment(creditorName, creditorIban, amount, paymentInformation, debtorName, …)`, immutabile e validata |
+| `new PaymentExecution()` + setter | `new InstantPayment(creditorName, creditorIban, amount, paymentInformation, debtorName, …)`, immutabile e validata; `amount` è una stringa decimale |
 | `simulateInstantPayment($execution)` → `PaymentSimulated` | `sctInstant()->simulate($payment)` → `InstantSimulation` |
 | `createInstantPayment($execution)` con `setSimulationId()` | `sctInstant()->execute($payment, $simulation, acceptVopResult: false)` → `InstantExecution` |
 | `createInstantPayment()` con `setResubmit(true)` + `setResubmitId()` | `sctInstant()->resubmit($payment, $simulationId, $resubmitId)` |
@@ -136,7 +153,7 @@ Nella 2.x i campi testuali assenti diventavano stringhe vuote; nella 3.0 sono `n
   - campi obbligatori;
   - nomi al massimo 70 caratteri, causale 140, `endToEndId` 35 in Live (36 sono accettati solo dalla sandbox);
   - IBAN validi;
-  - importo positivo con al massimo 2 decimali.
+  - importo come stringa decimale positiva con al massimo 2 decimali.
 
   I caratteri dei testi non sono controllati, come nella 2.x; c'è l'helper opzionale `SepaText::sanitize()`.
 - **IBAN del debitore**: è opzionale, e il default è quello della configurazione.

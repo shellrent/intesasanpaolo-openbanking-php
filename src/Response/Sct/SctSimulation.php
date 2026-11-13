@@ -12,6 +12,7 @@ use Shellrent\OpenBanking\Response\Party;
 use Shellrent\OpenBanking\Response\VopResult;
 use Shellrent\OpenBanking\Support\DateFormat;
 use Shellrent\OpenBanking\Support\DateParser;
+use Shellrent\OpenBanking\Support\Decimal;
 use Shellrent\OpenBanking\Support\EndToEndId;
 
 /**
@@ -24,7 +25,7 @@ final readonly class SctSimulation
 {
     /**
      * @param  ValidationStatus|null  $validationStatus  Outcome, or null for an unknown value: see $rawValidationStatus.
-     * @param  float|null  $fees  Fees of the payment ("fees", or "commissioni" in older responses: docs/api-quirks.md, Q-15).
+     * @param  string|null  $fees  Fees, as a decimal string, of the payment ("fees", or "commissioni" in older responses: docs/api-quirks.md, Q-15).
      * @param  DateTimeImmutable|null  $executionDate  Planned execution date.
      * @param  DateTimeImmutable|null  $valueDate  Planned value date.
      * @param  DateTimeImmutable|null  $settlementDate  Planned settlement date.
@@ -37,14 +38,14 @@ final readonly class SctSimulation
         public ?string $simulationId,
         public ?string $transactionStatusDescription,
         public ?string $endToEndId,
-        public ?float $amount,
+        public ?string $amount,
         public ?string $currency,
         public ?string $categoryPurpose,
         public ?string $paymentInformation,
         public Party $debtor,
         public Party $creditor,
         public ?string $creditorAgent,
-        public ?float $fees,
+        public ?string $fees,
         public ?DateTimeImmutable $executionDate,
         public ?DateTimeImmutable $valueDate,
         public ?DateTimeImmutable $settlementDate,
@@ -74,14 +75,14 @@ final readonly class SctSimulation
             simulationId: $payload->string('simulationId'),
             transactionStatusDescription: $payload->string('transactionStatusDescription'),
             endToEndId: EndToEndId::normalize($payload->string('endToEndId')),
-            amount: $payload->float('amount'),
+            amount: $payload->amount('amount'),
             currency: $payload->string('currency'),
             categoryPurpose: $payload->string('categoryPurpose'),
             paymentInformation: $payload->string('paymentInformation'),
             debtor: Party::fromPayload($payload, 'debtor'),
             creditor: Party::fromPayload($payload, 'creditor'),
             creditorAgent: $payload->string('creditorAgent'),
-            fees: $payload->float('fees', 'commissioni'),
+            fees: $payload->amount('fees', 'commissioni'),
             executionDate: SctDates::read($payload, 'executionDate'),
             valueDate: SctDates::read($payload, 'valueDate'),
             settlementDate: SctDates::read($payload, 'settlementDate'),
@@ -132,7 +133,7 @@ final readonly class SctSimulation
         }
 
         $text = static fn (string $key): ?string => is_string($data[$key] ?? null) ? $data[$key] : null;
-        $number = static fn (string $key): ?float => is_int($data[$key] ?? null) || is_float($data[$key] ?? null) ? (float) $data[$key] : null;
+        $number = static fn (string $key): ?string => Decimal::fromSaved($data, $key);
         $array = static fn (string $key): array => is_array($data[$key] ?? null) ? $data[$key] : [];
         $date = static fn (string $key): ?DateTimeImmutable => $text($key) === null ? null : DateParser::date((string) $text($key), DateFormat::Compact);
 

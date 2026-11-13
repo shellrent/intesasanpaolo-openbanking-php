@@ -92,6 +92,57 @@ final readonly class Payload
         return $this->float(...$keys) ?? throw $this->missing($keys);
     }
 
+    /**
+     * Reads an amount as a decimal string with two decimals, e.g. "14980.10" (docs/decisions.md, D-65).
+     *
+     * Accepts JSON numbers and numeric strings; a value with more than two decimals, such as the
+     * floating-point noise 0.30000000000000004, is an error and is never rounded.
+     */
+    public function amount(string ...$keys): ?string
+    {
+        return $this->decimal(2, ...$keys);
+    }
+
+    public function requireAmount(string ...$keys): string
+    {
+        return $this->amount(...$keys) ?? throw $this->missing($keys);
+    }
+
+    /**
+     * Reads a decimal with up to $maxDecimals decimals (at least two in the result), e.g. an amount in a
+     * foreign currency with three decimals.
+     */
+    public function decimal(int $maxDecimals, string ...$keys): ?string
+    {
+        $found = $this->first($keys);
+
+        if ($found === null) {
+            return null;
+        }
+
+        [$key, $value] = $found;
+
+        if (! is_int($value) && ! is_float($value) && ! is_string($value)) {
+            return $this->reject($this->unexpected($key, 'a decimal amount', $value));
+        }
+
+        $decimal = Decimal::fromApi($value, $maxDecimals);
+
+        if ($decimal === null) {
+            return $this->reject(new UnexpectedResponseException(
+                sprintf(
+                    'Unexpected value for %s: expected a decimal with at most %d decimals, got %s.',
+                    $this->pathOf($key),
+                    $maxDecimals,
+                    is_float($value) ? Decimal::shortest($value) : (string) $value,
+                ),
+                $this->transactionId,
+            ));
+        }
+
+        return $decimal;
+    }
+
     public function int(string ...$keys): ?int
     {
         $found = $this->first($keys);
