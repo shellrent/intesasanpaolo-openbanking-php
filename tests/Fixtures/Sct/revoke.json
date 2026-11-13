@@ -1,0 +1,9 @@
+{
+    "success": true,
+    "errors": null,
+    "payload": {
+        "paymentId": "PAY-SCT-0001",
+        "customerCRO": "CRO-SCT-0001",
+        "status": "OK"
+    }
+}

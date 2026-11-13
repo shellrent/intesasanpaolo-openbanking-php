@@ -1,0 +1,25 @@
+{
+    "success": true,
+    "errors": null,
+    "payload": {
+        "paymentsTotalCount": 3,
+        "pageSize": 1,
+        "inquiryFromDate": "20251215",
+        "inquiryToDate": "20260115",
+        "links": {
+            "next": "",
+            "last": "https://external-api.intesasanpaolo.com/twa/live/v1/payments/sct/instant/IT00X0000000000000000000001/history?offset=2&limit=2"
+        },
+        "payments": [
+            {
+                "orderId": "ORD-0003",
+                "paymentId": "PAY-0003",
+                "status": "Returned",
+                "amount": 99.9,
+                "creditorIBAN": "IT00X0000000000000000000002",
+                "remittanceInformation": "Rimborso",
+                "valueDate": "14/01/2026"
+            }
+        ]
+    }
+}

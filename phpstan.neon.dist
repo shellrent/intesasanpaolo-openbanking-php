@@ -1,0 +1,13 @@
+parameters:
+    level: max
+
+    # Supported PHP range (D-05): analyse against 8.3 up to 8.5.
+    phpVersion:
+        min: 80300
+        max: 80599
+
+    paths:
+        - src
+        - tests
+
+    tmpDir: build/phpstan

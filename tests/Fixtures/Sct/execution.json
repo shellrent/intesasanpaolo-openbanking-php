@@ -1,0 +1,20 @@
+{
+    "success": true,
+    "errors": null,
+    "payload": {
+        "customerCRO": "CRO-SCT-0001",
+        "paymentId": "PAY-SCT-0001",
+        "transactionStatusDescription": "Accepted for future execution",
+        "paymentStatus": "ACTC",
+        "amount": 1250,
+        "currency": "EUR",
+        "creditorBic": "BCITITMM",
+        "creditorAgent": "INTESA SANPAOLO SPA",
+        "commissioni": 0.9,
+        "executionDate": "02/01/2026",
+        "valueDate": "02/01/2026",
+        "settlementDate": "05/01/2026",
+        "revokeDate": "02/01/2026",
+        "revokeTime": "17:30:00"
+    }
+}

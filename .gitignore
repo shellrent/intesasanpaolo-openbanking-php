@@ -1,10 +1,31 @@
-/nbproject/*
-/.idea/*
-/vendor
+# Dipendenze (libreria: il lock non si versiona, la CI prova dipendenze minime e massime)
+/vendor/
 /composer.phar
+/composer.lock
 
-/env/*
-!/env/.env.example
-
+# Cache e report di test e strumenti
+/.phpunit.cache/
 .phpunit.result.cache
+/build/
+/coverage/
 
+# Override locali delle configurazioni versionate come .dist
+/phpunit.xml
+/phpstan.neon
+
+# IDE e sistema operativo
+/.idea/
+/.vscode/
+/nbproject/
+.DS_Store
+
+# Credenziali e certificati locali (mai nel repo)
+/env/*
+!/env/integration.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Spec ISP locali (mai nel repo, vedi docs/specs-reference.md)
+/specs

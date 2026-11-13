@@ -1,0 +1,12 @@
+{
+    "success": true,
+    "errors": null,
+    "payload": {
+        "currency": "EUR",
+        "availableBalance": 15230.45,
+        "accountingBalance": 14980.1,
+        "creditLine": 0,
+        "inquiryDate": "20260114",
+        "executionDate": "2026-01-15T09:52:10.289+0100"
+    }
+}

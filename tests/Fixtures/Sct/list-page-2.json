@@ -1,0 +1,26 @@
+{
+    "success": true,
+    "errors": null,
+    "payload": {
+        "paymentsTotalCount": 2,
+        "inquiryFromDate": "20251215",
+        "inquiryToDate": "20260115",
+        "pageSize": 1,
+        "links": {
+            "next": ""
+        },
+        "paymentsResults": [
+            {
+                "customerCRO": "CRO-SCT-0002",
+                "paymentId": "PAY-SCT-0002",
+                "paymentStatus": "CANC",
+                "amount": 80.5,
+                "currency": "EUR",
+                "executionDate": "10/01/2026",
+                "endToEndId": "NOTPROVIDED",
+                "creditorIban": "IT00X0000000000000000000003",
+                "categoryPurpose": "CASH"
+            }
+        ]
+    }
+}

@@ -1,0 +1,34 @@
+{
+    "success": true,
+    "errors": null,
+    "payload": {
+        "paymentsTotalCount": 2,
+        "inquiryFromDate": "20251215",
+        "inquiryToDate": "20260115",
+        "executionInquiry": "2026-01-15T10:05:00Z",
+        "pageSize": 1,
+        "links": {
+            "next": "https://external-api.intesasanpaolo.com/twa/live/v1/payments/bonsct/IT00X0000000000000000000001/list?offset=PAY-SCT-0001"
+        },
+        "paymentsResults": [
+            {
+                "customerCRO": "CRO-SCT-0001",
+                "paymentId": "PAY-SCT-0001",
+                "paymentStatus": "ACSC",
+                "amount": 1250,
+                "currency": "EUR",
+                "executionDate": "02/01/2026",
+                "valueDate": "02/01/2026",
+                "settlementDate": "05/01/2026",
+                "endToEndId": "E2E-SCT-0001",
+                "simulationId": "SIM-SCT-0001",
+                "debtorName": "Example Srl",
+                "debtorIban": "IT00X0000000000000000000001",
+                "creditorName": "Fornitore Esempio Srl",
+                "creditorIban": "IT00X0000000000000000000002",
+                "remittanceInformation": null,
+                "categoryPurpose": "SUPP"
+            }
+        ]
+    }
+}

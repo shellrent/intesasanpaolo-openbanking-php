@@ -1,0 +1,23 @@
+{
+    "success": true,
+    "errors": null,
+    "payload": {
+        "endToEndId": "NOTPROVIDED",
+        "transactionStatusDescription": "ACSC-Prtry:",
+        "validationStatus": "ACSC",
+        "amount": 150.25,
+        "currency": "EUR",
+        "date": "2026-01-15T10:00:00Z",
+        "categoryPurpose": "CASH",
+        "paymentInformation": "Fattura 1/2026",
+        "debtorName": "Example Srl",
+        "debtorIBAN": "IT00X0000000000000000000001",
+        "debtorBic": "BCITITMM",
+        "ultimateDebtorName": "Example Srl",
+        "creditorName": "Mario Rossi",
+        "creditorIBAN": "IT00X0000000000000000000002",
+        "creditorBic": "BCITITMM",
+        "ultimateCreditorName": "Mario Rossi",
+        "simulationId": "SIM-0001"
+    }
+}

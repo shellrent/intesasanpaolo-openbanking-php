@@ -1,0 +1,9 @@
+{
+    "success": true,
+    "errors": null,
+    "payload": {
+        "isReachable": true,
+        "IBAN_Status": "IBAN reachable",
+        "BIC": "BCITITMM"
+    }
+}
